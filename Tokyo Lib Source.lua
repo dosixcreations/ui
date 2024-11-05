@@ -53,10 +53,10 @@ local library = {
         ['ping'] = 0;
     };
     images = {
-        ['gradientp90'] = 'rbxassetid://92578604874894';
-        ['gradientp45'] = 'rbxassetid://136084231471991';
-        ['colorhue'] = 'rbxassetid://77456802370880';
-        ['colortrans'] = 'rbxassetid://95291546676692';
+        ['gradientp90'] = 'https://raw.githubusercontent.com/portallol/luna/main/modules/gradient90.png';
+        ['gradientp45'] = 'https://raw.githubusercontent.com/portallol/luna/main/modules/gradient45.png';
+        ['colorhue'] = 'https://raw.githubusercontent.com/portallol/luna/main/modules/lgbtqshit.png';
+        ['colortrans'] = 'https://raw.githubusercontent.com/portallol/luna/main/modules/trans.png';
     };
     numberStrings = {['Zero'] = 0, ['One'] = 1, ['Two'] = 2, ['Three'] = 3, ['Four'] = 4, ['Five'] = 5, ['Six'] = 6, ['Seven'] = 7, ['Eight'] = 8, ['Nine'] = 9};
     signal = loadstring(game:HttpGet('https://raw.githubusercontent.com/drillygzzly/Other/main/1414'))();
@@ -911,7 +911,7 @@ function library:init()
 
             notification.gradient = utility:Draw('Image', {
                 Size = newUDim2(1,0,1,0);
-                Data = self.images.gradientp90;
+                Data = game:HttpGet(self.images.gradientp90)();
                 Parent = notification.background;
                 Transparency = .5;
                 ZIndex = z+1;
@@ -1428,14 +1428,14 @@ function library:init()
 
                 objs.sat1 = utility:Draw('Image', {
                     Size = newUDim2(1,0,1,0);
-                    Data = library.images.gradientp90,
+                    Data = crypt.base64decode("iVBORw0KGgoAAAANSUhEUgAAAaQAAAGkCAQAAADURZm+AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQflBwwSLzK3wl3KAAADrElEQVR42u3TORLCMBBFwT+6/50hMqXSZgonBN0BWCDGYPwqeSWVZPWYVHd0Pc5H86v9areu4Sz9u7XZXT/vvtZtu6dtJtYw525iGya05afnWW17ltPE8fzfTZy/yf3vmCes59xf0Sf/42l3lnvGOyyH+y/bo/X689wCPCYkEBIICYQECAmEBEICIQFCAiGBkEBIgJBASCAkEBIgJBASCAmEBAgJhARCAiEBQgIhgZAAIYGQQEggJEBIICQQEggJEBIICYQEQgKEBEICIYGQACGBkEBIICRASCAkEBIICRASCAmEBAgJhARCAiEBQgIhgZBASICQQEggJBASICQQEggJhAQICYQEQgIhAUICIYGQQEguAQgJhARCAoQEQgIhgZAAIYGQQEggJEBIICQQEggJEBIICYQEQgKEBEICIYGQACGBkEBIgJBASCAkEBIgJBASCAmEBAgJhARCAiEBQgIhgZBASICQQEggJBASICQQEggJhAQICYQEQgKEBEICIYGQACGBkEBIICRASCAkEBIICRASCAmEBEIChARCAiGBkAAhgZBASCAkQEggJBASICQQEggJhAQICYQEQgIhAUICIYGQQEiAkEBIICQQEiAkEBIICYQECAmEBEIChARCAiGBkAAhgZBASCAkQEggJBASCAkQEggJhARCAoQEQgIhgZAAIYGQQEggJEBIICQQEiAkEBIICYQECAmEBEICIQFCAiGBkEBIgJBASCAkEBIgJBASCAmEBAgJhARCAiEBQgIhgZAAIYGQQEggJEBIICQQEggJEBIICYQEQgKEBEICIYGQACGBkEBIICRASCAkEBIgJBASCAmEBAgJhARCAiEBQgIhgZBASICQQEggJBASICQQEggJhAQICYQEQgIhAUICIYGQACGBkEBIICRASCAkEBIICRASCAmEBEIChARCAiGBkAAhgZBASCAkQEggJBASCAkQEggJhAQICYQEQgIhAUICIYGQQEiAkEBIICQQEiAkEBIICYQECAmEBEICIQFCAiGBkEBILgEICYQEQgKEBEICIYGQACGBkEBIICRASCAkEBIICRASCAmEBEIChARCAiGBkAAhgZBASICQQEggJBASICQQEggJhAQICYQEQgIhAUICIYGQQEiAkEBIICQQEiAkEBIICYQECAmEBEIChARCAiGBkAAhgZBASCAkQEggJBASCAkQEggJhARCAoQEQgIhgZAAIYGQQEggJEBIICQQEiAkEBL8lzft9AVFFzN+ywAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMS0wNy0xMlQxODo0Nzo1MCswMDowMIxlM90AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjEtMDctMTJUMTg6NDc6NTArMDA6MDD9OIthAAAAAElFTkSuQmCC");
                     ZIndex = z+3;
                     Parent = objs.mainColor;
                 })
 
                 objs.sat2 = utility:Draw('Image', {
                     Size = newUDim2(1,0,1,0);
-                    Data = library.images.gradientp90,
+                    Data = crypt.base64decode("iVBORw0KGgoAAAANSUhEUgAAAaQAAAGkCAQAAADURZm+AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQflBwwSLyBEeyyCAAAD4klEQVR42u3YwQnAQAhFQTek/5pz9eBtEYzMlBD4PDcRADDBieMjwK3HJwBDghFepx0oEhgSOO0ARQJDAqcdKBJgSGBI4I0EhgQ47cCQwJDAGwlQJDAkcNqBIgGKBIoEhgROO0CRQJFAkQBDAqcdGBI47QBFAkUCQwKnHaBIoEigSKBIgCKBIYHTDhQJUCQwJHDagSIBigSGBE47UCRAkcCQwGkHKBIoEigSGBLgtANDAkMCbyTAkMBpB4oEigQoEhgSOO1AkQBDAqcdKBIoEqBIYEjgtANFUiRQJFAkMCTAaQeKBIoEigQYEjjtQJFAkQBFAkMCpx0oEmBI4LQDRQJFAhQJDAmcdqBIgCKBIoEhAU47UCRQJFAkwJDAaQeKBIYEOO1AkUCRYHuRTAmcduC0A0UCFAkUCQwJnHaAIoEigSKBIQFOO2gvkimBIoE3EhgS4LQDRQJDAqcdoEigSKBIYEiAIYEhwXx+NoAigSGB0w5QJDAkMCQwJKDiZwMoEhgSOO0ARQJFgnlFMiVw2oHTDhQJUCRQJDAkcNoBVZFMCRQJvJHAkACnHSgSKBIoElANSZPAaQdOOzAkwGkHigSGBIYEGBK08LMBFAkUCRQJMCQwJDAkWMjPBlAkMCRw2gG5SKYEigTeSGBIgNMOFAkMCQwJMCRo4WcDKBIYEjjtgFwkUwJFAm8kMCTAaQeKBIoEigRUQ9IkcNqB0w4MCXDagSKBIsHCIpkSOO3AaQeKBCgSKBIYEhgSYEjQws8GUCQwJHDaAblIpgSKBN5IYEiA0w4UCQwJDAkwJGjhZwMoEhgSOO0ARQJDAkMCQwIqfjaAIoEigSIBhgROO5hXJFMCpx047UCRAEUCRQJDAqcdUBXJlECRwBsJDAlw2oEigSKBIgGGBIYEhgSL+dkAigSGBE47QJHAkMBpB4oEGBIYEhgSrOZnAygSKBIoEmBI4LQDRQJFAhQJDAmcdrC8SKYEigTeSGBIgNMOFAkMCZx2gCKBIoEigSEBTjtQJFAkUCTAkMBpB4oEigQoEhgSOO1AkQBDAqcdKBKgSKBIYEjgtAMUCRQJFAkMCXDagSKBIoEiAYYETjtQJFAkQJHAkMBpB4oEGBI47UCRQJEARQJDAqcdoEigSGBI4LQDFAkUCRQJFAkwJHDagSKBIQFOOzAkMCTwRgIMCZx2oEigSIAigSKBIYHTzkcARQJFAkMCnHZgSGBI4I0EGBI47UCRQJEAQwKnHSgSKBKgSGBI4LQDRQIUCRQJDAmcdoAigSGB0w5QJFAkUCQwJMBpB4oEhgROO0CRwJDAkMAbCVAkMCT4gw/reQYigE05fAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMS0wNy0xMlQxODo0NzozMiswMDowMN2VK3MAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjEtMDctMTJUMTg6NDc6MzIrMDA6MDCsyJPPAAAAAElFTkSuQmCC");
                     ZIndex = z+4;
                     Parent = objs.mainColor;
                 })
@@ -1458,7 +1458,7 @@ function library:init()
                 objs.hue = utility:Draw('Image', {
                     Size = newUDim2(0,175,0,10);
                     Position = newUDim2(0,5,0,205);
-                    Data = library.images.colorhue;
+                    Data = game:HttpGet(library.images.colorhue)();
                     ZIndex = z+2;
                     Parent = objs.background;
                 })
@@ -1488,7 +1488,7 @@ function library:init()
 
                 objs.trans = utility:Draw('Image', {
                     Size = newUDim2(1,0,1,0);
-                    Data = library.images.colortrans;
+                    Data = game:HttpGet(library.images.colortrans)();
                     ZIndex = z+3;
                     Parent = objs.transColor;
                 })
@@ -2141,7 +2141,7 @@ function library:init()
 
                         objs.gradient = utility:Draw('Image', {
                             Size = newUDim2(1,0,1,0);
-                            Data = library.images.gradientp45;
+                            Data = game:HttpGet(library.images.gradientp45)();
                             Transparency = .25;
                             ZIndex = z+4;
                             Parent = objs.background;
@@ -2289,7 +2289,7 @@ function library:init()
     
                             objs.gradient = utility:Draw('Image', {
                                 Size = newUDim2(1,0,1,0);
-                                Data = library.images.gradientp45;
+                                Data = game:HttpGet(library.images.gradientp45)();
                                 Transparency = .25;
                                 ZIndex = z+4;
                                 Parent = objs.background;
@@ -2651,7 +2651,7 @@ function library:init()
     
                             objs.gradient = utility:Draw('Image', {
                                 Size = newUDim2(1,0,1,0);
-                                Data = library.images.gradientp90;
+                                Data = game:HttpGet(library.images.gradientp90)();
                                 Transparency = .65;
                                 ZIndex = z+4;
                                 Parent = objs.background;
@@ -2822,7 +2822,7 @@ function library:init()
     
                             objs.gradient = utility:Draw('Image', {
                                 Size = newUDim2(1,0,1,0);
-                                Data = library.images.gradientp90;
+                                Data = game:HttpGet(library.images.gradientp90)();
                                 Transparency = .65;
                                 ZIndex = z+4;
                                 Parent = objs.background;
@@ -3025,7 +3025,7 @@ function library:init()
 
                         objs.gradient = utility:Draw('Image', {
                             Size = newUDim2(1,0,1,0);
-                            Data = library.images.gradientp90;
+                            Data = game:HttpGet(library.images.gradientp90)();
                             Transparency = .65;
                             ZIndex = z+4;
                             Parent = objs.background;
@@ -3255,7 +3255,7 @@ function library:init()
 
                         objs.gradient = utility:Draw('Image', {
                             Size = newUDim2(1,0,1,0);
-                            Data = library.images.gradientp90;
+                            Data = game:HttpGet(library.images.gradientp90)();
                             Transparency = .65;
                             ZIndex = z+3;
                             Parent = objs.background;
@@ -3390,7 +3390,7 @@ function library:init()
     
                             objs.gradient = utility:Draw('Image', {
                                 Size = newUDim2(1,0,1,0);
-                                Data = library.images.gradientp90;
+                                Data = game:HttpGet(library.images.gradientp90)();
                                 Transparency = .65;
                                 ZIndex = z+3;
                                 Parent = objs.background;
@@ -3643,7 +3643,7 @@ function library:init()
 
                         objs.gradient = utility:Draw('Image', {
                             Size = newUDim2(1,0,1,0);
-                            Data = library.images.gradientp45;
+                            Data = game:HttpGet(library.images.gradientp45)();
                             Transparency = .25;
                             ZIndex = z+4;
                             Parent = objs.background;
@@ -3820,7 +3820,7 @@ function library:init()
 
                         objs.gradient = utility:Draw('Image', {
                             Size = newUDim2(1,0,1,0);
-                            Data = library.images.gradientp90;
+                            Data = game:HttpGet(library.images.gradientp90)();
                             Transparency = .65;
                             ZIndex = z+4;
                             Parent = objs.background;
@@ -4218,7 +4218,7 @@ function library:init()
 
                         objs.gradient = utility:Draw('Image', {
                             Size = newUDim2(1,0,1,0);
-                            Data = library.images.gradientp90;
+                            Data = game:HttpGet(library.images.gradientp90)();
                             Transparency = .65;
                             ZIndex = z+4;
                             Parent = objs.background;
