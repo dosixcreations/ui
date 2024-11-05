@@ -1428,14 +1428,14 @@ function library:init()
 
                 objs.sat1 = utility:Draw('Image', {
                     Size = newUDim2(1,0,1,0);
-                    Data = library.images.gradientp90
+                    Data = library.images.gradientp90;
                     ZIndex = z+3;
                     Parent = objs.mainColor;
                 })
 
                 objs.sat2 = utility:Draw('Image', {
                     Size = newUDim2(1,0,1,0);
-                    Data = library.images.gradientp90
+                    Data = library.images.gradientp90;
                     ZIndex = z+4;
                     Parent = objs.mainColor;
                 })
