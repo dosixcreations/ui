@@ -9812,3 +9812,5 @@ local function dropdownChangeValues(flag, newValues)
 		warn("Dropdown with flag '" .. tostring(flag) .. "' not found or does not support SetValues.")
 	end
 end
+
+return Library
