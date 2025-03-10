@@ -1,9817 +1,4282 @@
+-- // Lib \\ --
+--[[
+    local UI = loadstring(game:HttpGet("https://abyss.best/assets/files/gayasf.ui2?key=5y1lxXSfWKhlQkSqhUuFyB8kPp8hsCau"))()
+]]
+-- // Library Init \\ --
+local Start = tick()
+local LoadTime = tick()
+local Secure = setmetatable({}, {
+    __index = function(Idx, Val)
+        return game:GetService(Val)
+    end
+})
+--
+local UserInput = Secure.UserInputService
+local RunService = Secure.RunService
+local CoreGui = Secure.CoreGui
+local Players = Secure.Players
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+local HttpService = Secure.HttpService
+local Mouse = LocalPlayer:GetMouse()
+local InputGUI = Instance.new("ScreenGui", CoreGui)
+-- local Stats = Secure.Stats.Network.ServerStatsItem["Data Ping"] 
+--
+-- Aimware = {6, [[{"Outline":"000005","Accent":"c82828","LightText":"e8e8e8","DarkText":"afafaf","LightContrast":"2b2b2b","CursorOutline":"191919","DarkContrast":"191919","TextBorder":"0a0a0a","Inline":"373737"}]]},
+--
 local Library = {
-	Flags = {},
-	Items = {},
-	KeybindsListEnabled = false
+    Theme = {
+        Accent = {
+            Color3.fromHex("#7885f5"), -- Color3.fromHex("#a280d9"), -- Color3.fromRGB(255, 42, 10), Color3.fromHex("#3599d4")
+            Color3.fromRGB(180, 156, 255),
+            Color3.fromRGB(114, 0, 198),
+            Color3.fromRGB(139, 130, 185),
+            Color3.fromHex("#a83299")
+        },
+        Notification = {
+            Error = Color3.fromHex("#c82828"),
+            Warning = Color3.fromHex("#fc9803")
+        },
+        Hitbox = Color3.fromRGB(69, 69, 69),
+        Friend = Color3.fromRGB(0, 200, 0),
+        Outline = Color3.fromHex("#000005"),
+        Inline = Color3.fromHex("#323232"),
+        LightContrast = Color3.fromHex("#202020"),
+        DarkContrast = Color3.fromHex("#191919"),
+        Text = Color3.fromHex("#e8e8e8"),
+        TextInactive = Color3.fromHex("#aaaaaa"),
+        Font = Drawing.Fonts.Plex,
+        TextSize = 13,
+        UseOutline = false
+    },
+    Icons = {},
+    Flags = {},
+    Items = {},
+    Drawings = {},
+    Ignores = {},
+    Keybind = {},
+    Watermark = {},
+    Connections = {},
+    Keys = {
+        KeyBoard = {["Q"] = "Q", ["W"] = "W", ["E"] = "E", ["R"] = "R", ["T"] = "T", ["Y"] = "Y", ["U"] = "U", ["I"] = "I", ["O"] = "O", ["P"] = "P", ["A"] = "A", ["S"] = "S", ["D"] = "D", ["F"] = "F", ["G"] = "G", ["H"] = "H", ["J"] = "J", ["K"] = "K", ["L"] = "L", ["Z"] = "Z", ["X"] = "X", ["C"] = "C", ["V"] = "V", ["B"] = "B", ["N"] = "N", ["M"] = "M", ["One"] = {"1", "!"}, ["Two"] = {"2", "\""}, ["Three"] = {"3", "£"}, ["Four"] = {"4", "$"}, ["Five"] = {"5", "%"}, ["Six"] = {"6", "^"}, ["Seven"] = {"7", "&"}, ["Eight"] = {"8", "*"}, ["Nine"] = {"9", "("}, ["Zero"] = {"0", ")"}, ["Space"] = " ", ["Slash"] = {"/", "?"}, ["BackSlash"] = {"\\", "|"}, ["Minus"] = {"-", "_"}, ["Equals"] = {"=", "+"}, ["RightBracket"] = {"]", "}"}, ["LeftBracket"] = {"[", "{"}, ["Semicolon"] = {";", ":"}, ["Quote"] = {"'", "@"}, ["Comma"] = {",", "<"}, ["Period"] = {".", ">"}},
+        Letters = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C", "V", "B", "N", "M"},
+        KeyCodes = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C", "V", "B", "N", "M", "One", "Two", "Three", "Four", "Five", "Six", "Seveen", "Eight", "Nine", "Zero", "Insert", "Tab", "Home", "End", "LeftAlt", "LeftControl", "LeftShift", "RightAlt", "RightControl", "RightShift", "CapsLock"},
+        Inputs = {"MouseButton1", "MouseButton2", "MouseButton3"},
+        Shortened = {["MouseButton1"] = "M1", ["MouseButton2"] = "M2", ["MouseButton3"] = "M3", ["Insert"] = "INS", ["LeftAlt"] = "LA", ["LeftControl"] = "LC", ["LeftShift"] = "LS", ["RightAlt"] = "RA", ["RightControl"] = "RC", ["RightShift"] = "RS", ["CapsLock"] = "CL"}
+    },
+    Input = {
+        Caplock = false,
+        LeftShift = false
+    },
+    Images = {},
+    WindowVisible = true,
+    Communication = Instance.new("BindableEvent")
+}
+--
+local Utility = {}
+--
+getgenv().Library = Library
+getgenv().Utility = Utility
+syn.protect_gui(InputGUI)
+-----------------------------------------------------------------
+do
+    Utility.AddInstance = function(NewInstance, Properties)
+        local NewInstance = Instance.new(NewInstance)
+        --
+        for Index, Value in pairs(Properties) do
+            NewInstance[Index] = Value
+        end
+        --
+        return NewInstance
+    end
+    --
+    Utility.CLCheck = function()
+        repeat task.wait() until iswindowactive()
+        do
+            local InputHandle = Utility.AddInstance("TextBox", {
+                Position = UDim2.new(0, 0, 0, 0)
+            })
+            --
+            InputHandle:CaptureFocus() task.wait() keypress(0x4E) task.wait() keyrelease(0x4E) InputHandle:ReleaseFocus()
+            Library.Input.Caplock = InputHandle.Text == "N" and true or false
+            InputHandle:Destroy()
+        end
+    end
+    --
+    Utility.Loop = function(Delay, Call)
+        local Callback = typeof(Call) == "function" and Call or function() end
+        --
+        task.spawn(function()
+            while task.wait(Delay) do
+                local Success, Error = pcall(function()
+                    Callback()
+                end)
+                --
+                if Error then 
+                    return 
+                end
+            end
+        end)
+    end
+    --
+    Utility.RemoveDrawing = function(Instance, Location)
+        local SpecificDrawing = 0
+        --
+        Location = Location or Library.Drawings
+        --
+        for Index, Value in pairs(Location) do 
+            if Value[1] == Instance then
+                if Value[1] then
+                    Value[1]:Remove()
+                end
+                if Value[2] then
+                    Value[2] = nil
+                end
+                SpecificDrawing = Index
+            end
+        end
+        --
+        table.remove(Location, table.find(Location, Location[SpecificDrawing]))
+    end
+    --
+    Utility.AddConnection = function(Type, Callback)
+        local Connection = Type:Connect(Callback)
+        --
+        Library.Connections[#Library.Connections + 1] = Connection
+        --
+        return Connection
+    end
+    --
+    Utility.Round = function(Num, Float)
+        local Bracket = 1 / Float;
+        return math.floor(Num * Bracket) / Bracket;
+    end
+    --
+    Utility.AddDrawing = function(Instance, Properties, Location)
+        local InstanceType = Instance
+        local Instance = Drawing.new(Instance)
+        --
+        for Index, Value in pairs(Properties) do
+            Instance[Index] = Value
+            if InstanceType == "Text" then
+                if Index == "Font" then
+                    Instance.Font = Library.Theme.Font
+                end
+                if Index == "Size" then
+                    Instance.Size = Library.Theme.TextSize
+                end
+            end
+        end
+        --
+        if Properties.ZIndex ~= nil then
+            Instance.ZIndex = Properties.ZIndex + 20
+        else
+            Instance.ZIndex = 20
+        end
+        --
+        Location = Location or Library.Drawings
+        if InstanceType == "Image" then
+            Location[#Location + 1] = {Instance, true}
+        else
+            Location[#Location + 1] = {Instance}
+        end
+        --
+        return Instance
+    end
+    --
+    Utility.OnMouse = function(Instance)
+        local Mouse = UserInput:GetMouseLocation()
+        if Instance.Visible and (Mouse.X > Instance.Position.X) and (Mouse.X < Instance.Position.X + Instance.Size.X) and (Mouse.Y > Instance.Position.Y) and (Mouse.Y < Instance.Position.Y + Instance.Size.Y) then
+            if Library.WindowVisible then
+                return true
+            end
+        end
+    end
+    --
+    Utility.Rounding = function(Num, DecimalPlaces)
+        return tonumber(string.format("%." .. (DecimalPlaces or 0) .. "f", Num))
+    end
+    --
+    Utility.AddDrag = function(Sensor, List)
+        local DragUtility = {
+            MouseStart = Vector2.new(), MouseEnd = Vector2.new(), Dragging = false
+        }
+        --
+        Utility.AddConnection(UserInput.InputBegan, function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if Utility.OnMouse(Sensor) then
+                    DragUtility.Dragging = true
+                end
+            end
+        end)
+        --
+        Utility.AddConnection(UserInput.InputEnded, function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                DragUtility.Dragging = false
+            end
+        end)
+        --
+        Utility.AddConnection(RunService.RenderStepped, function()
+            DragUtility.MouseStart = UserInput:GetMouseLocation()
+            --
+            for Index, Value in pairs(List) do
+                if Index ~= nil and Value ~= nil then
+                    if DragUtility.Dragging then
+                        Value[1].Position = Vector2.new(
+                            Value[1].Position.X + (DragUtility.MouseStart.X - DragUtility.MouseEnd.X), 
+                            Value[1].Position.Y + (DragUtility.MouseStart.Y - DragUtility.MouseEnd.Y)
+                        )
+                    end
+                end
+            end
+            --
+            DragUtility.MouseEnd = UserInput:GetMouseLocation()
+        end)
+    end
+    --
+    Utility.AddCursor = function(Instance)
+        local CursorOutline = Utility.AddDrawing("Triangle", {
+            Color = Library.Theme.Accent[1],
+            Thickness = 1,
+            Filled = false,
+            ZIndex = 5
+        }, Library.Ignores)
+        --
+        local Cursor = Utility.AddDrawing("Triangle", {
+            Color = Library.Theme.Accent[1],
+            Thickness = 3,
+            Filled = true,
+            Transparency = 1,
+            ZIndex = 5
+        }, Library.Ignores)
+        --
+        Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+            if Type == "Accent" then
+                Cursor.Color = Color
+                CursorOutline.Color = Color
+            end
+        end)
+        --
+        Utility.AddConnection(RunService.RenderStepped, function()
+            local Mouse = UserInput:GetMouseLocation()
+            --
+            if Library.WindowVisible then
+                CursorOutline.Visible = true
+                CursorOutline.PointA = Vector2.new(Mouse.X, Mouse.Y)
+                CursorOutline.PointB = Vector2.new(Mouse.X + 15, Mouse.Y + 5)
+                CursorOutline.PointC = Vector2.new(Mouse.X + 5, Mouse.Y + 15)
+
+                Cursor.Visible = true
+                Cursor.PointA = Vector2.new(Mouse.X, Mouse.Y)
+                Cursor.PointB = Vector2.new(Mouse.X + 15, Mouse.Y + 5)
+                Cursor.PointC = Vector2.new(Mouse.X + 5, Mouse.Y + 15)
+            else
+                CursorOutline.Visible = false
+                Cursor.Visible = false
+            end
+        end)
+    end
+    --
+    Utility.MiddlePos = function(Instance)
+        return Vector2.new(
+            (Camera.ViewportSize.X / 2) - (Instance.Size.X / 2), 
+            (Camera.ViewportSize.Y / 2) - (Instance.Size.Y / 2)
+        )
+    end
+    --
+    Utility.SaveConfig = function(Config)
+        writefile(
+            "Abyss/Configs/" .. tostring(game.PlaceId) .. "/" .. Config .. ".json", 
+            HttpService:JSONEncode(UISettings.Flags)
+        )
+    end
+    --
+    Utility.DeleteConfig = function(Config)
+        delfile(
+            "Abyss/Configs/" .. tostring(game.PlaceId) .. "/" .. Config .. ".json"
+        )
+    end
+    --
+    Utility.LoadConfig = function(Config)
+        local Config = HttpService:JSONDecode(readfile("Abyss/Configs/" .. tostring(game.PlaceId) .. "/" .. Config .. ".json"))
+        --
+        Library.Flags = LoadedConfig
+        --
+        for Index, Value in pairs(Library.Flags) do
+            if Library.Items[Index].TypeOf == "Keybind" then
+                Library.Items[Index]:Set(Value[1], Value[2], Value[3], true)
+            elseif Library.Items[Index].TypeOf == "Colorpicker" then
+                Library.Items[Index]:SetHue(Value[1])
+                Library.Items[Index]:SetSaturationX(Value[2])
+                Library.Items[Index]:SetSaturationY(Value[3])
+            else
+                Library.Items[Index]:Set(Value)
+            end
+        end
+        --
+        rconsoleinfo("Debug: Loaded a config! 0 error.")
+    end
+    --
+    Utility.AddFolder = function(GetFolder)
+        local Folder = isfolder(GetFolder)
+        --
+        if Folder then
+            return
+        else
+            makefolder(GetFolder)
+            return true
+        end
+    end
+    --
+    Utility.AddImage = function(Image, Url, UI)
+        local ImageFile = nil
+        --
+        if isfile(Image) then
+            ImageFile = readfile(Image)
+        else
+            ImageFile = game:HttpGet(Url)
+            writefile(Image, ImageFile)
+        end
+        --
+        return ImageFile
+    end
+end
+--
+do
+    function Library.CreateLoader(Title, WindowSize)
+        local Window = {
+            Max = 2, Current = 0
+        }
+        --
+        Library.Theme.Logo = Utility.AddImage("Abyss/Assets/UI/Logo2.png", "https://i.imgur.com/HI4UTmZ.png")
+        --
+        local WindowOutline = Utility.AddDrawing("Square", {
+            Size = WindowSize,
+            Thickness = 0,
+            Color = Library.Theme.Outline,
+            Visible = true,
+            Filled = true
+        })
+        --
+        WindowOutline.Position = Utility.MiddlePos(WindowOutline)
+        --
+        local WindowOutlineBorder = Utility.AddDrawing("Square", {
+            Size = Vector2.new(WindowOutline.Size.X - 2, WindowOutline.Size.Y - 2),
+            Position = Vector2.new(WindowOutline.Position.X + 1, WindowOutline.Position.Y + 1),
+            Thickness = 0,
+            Color = Library.Theme.Accent[1],
+            Visible = true,
+            Filled = true
+        })
+        --
+        local WindowFrame = Utility.AddDrawing("Square", {
+            Size = Vector2.new(WindowOutlineBorder.Size.X - 2, WindowOutlineBorder.Size.Y - 2),
+            Position = Vector2.new(WindowOutlineBorder.Position.X + 1, WindowOutlineBorder.Position.Y + 1),
+            Thickness = 0,
+            Transparency = 1,
+            Color = Library.Theme.DarkContrast,
+            Visible = true,
+            Filled = true
+        })
+        --
+        local WindowTopline = Utility.AddDrawing("Square", {
+            Size = Vector2.new(WindowOutline.Size.X - 2, 2),
+            Position = Vector2.new(WindowOutlineBorder.Position.X, WindowOutlineBorder.Position.Y),
+            Thickness = 0,
+            Color = Library.Theme.Accent[1],
+            Visible = false,
+            Filled = true
+        })
+        --
+        local WindowImage = Utility.AddDrawing("Image", {
+            Size = WindowFrame.Size,
+            Position = WindowFrame.Position,
+            Transparency = 1, 
+            Visible = true,
+            Data = Library.Theme.Gradient
+        })
+        --
+        local WindowTitle = Utility.AddDrawing("Text", {
+            Font = Library.Theme.Font,
+            Size = Library.Theme.TextSize,
+            Color = Library.Theme.Text,
+            Text = Title,
+            Position = Vector2.new(WindowFrame.Position.X + (WindowFrame.Size.X / 2), WindowOutlineBorder.Position.Y + 8),
+            Visible = true,
+            Center = true,
+            Outline = false
+        })
+        --
+        local WindowText = Utility.AddDrawing("Text", {
+            Font = Library.Theme.Font,
+            Size = Library.Theme.TextSize,
+            Color = Library.Theme.Text,
+            Visible = true,
+            Center = true,
+            Outline = false
+        })
+        --
+        local SliderInline = Utility.AddDrawing("Square", {
+            Size = Vector2.new(205, 15),
+            Color = Library.Theme.Inline,
+            Position = Vector2.new(WindowFrame.Position.X + (WindowFrame.Size.X / 2), WindowOutlineBorder.Position.Y + 8),
+            Transparency = 0.75,
+            Thickness = 0,
+            Visible = true,
+            Filled = true
+        })
+        --
+        local SliderOutline = Utility.AddDrawing("Square", {
+            Size = Vector2.new(SliderInline.Size.X - 2, SliderInline.Size.Y - 2),
+            Color = Library.Theme.Outline,
+            Transparency = 0.5,
+            Thickness = 0,
+            Visible = true,
+            Filled = true
+        })
+        --
+        local SliderFrame = Utility.AddDrawing("Square", {
+            Size = Vector2.new(((SliderInline.Size.X - 2) / (Window.Max / math.clamp(Window.Current, 0, Window.Max))), SliderInline.Size.Y - 2),
+            Color = Library.Theme.Accent[1],
+            Transparency = 0.75,
+            Thickness = 0,
+            Visible = true,
+            Filled = true
+        })
+        --
+        local SliderFrameShader = Utility.AddDrawing("Image", {
+            Size = Vector2.new(SliderInline.Size.X - 2, SliderInline.Size.Y - 2),
+            Transparency = 1, 
+            Visible = true,
+            Data = Library.Theme.Gradient
+        })
+        --
+        local MiddleIcon = Utility.AddDrawing("Image", {
+            Size = Vector2.new(175, 175),
+            Rounding = 5,
+            Transparency = 1, 
+            Visible = true,
+            Data = Library.Theme.Logo
+        })
+        --
+        MiddleIcon.Position = Vector2.new(WindowOutline.Position.X + (WindowOutline.Size.X / 2) - (MiddleIcon.Size.X / 2), WindowOutline.Position.Y + (WindowOutline.Size.Y / 2) - (MiddleIcon.Size.Y / 2) - 15)
+        --
+        Window.SetText = function(Val, Txt)
+            SliderFrame.Size = Vector2.new(((SliderInline.Size.X - 2) / (Window.Max / math.clamp(Val, 0, Window.Max))), SliderInline.Size.Y - 2)
+            WindowText.Text = Txt
+        end
+        --
+        SliderInline.Position = Vector2.new(WindowOutline.Position.X + (WindowOutline.Size.X / 2) - (SliderOutline.Size.X / 2), (WindowOutline.Position.Y + WindowOutline.Size.Y) - 30)
+        SliderOutline.Position = Vector2.new(SliderInline.Position.X + 1, SliderInline.Position.Y + 1)
+        SliderFrame.Position = Vector2.new(SliderInline.Position.X + 1, SliderInline.Position.Y + 1)
+        SliderFrameShader.Position = Vector2.new(SliderInline.Position.X + 1, SliderInline.Position.Y + 1)
+        WindowText.Position = Vector2.new(WindowFrame.Position.X + (WindowFrame.Size.X / 2), SliderInline.Position.Y - 16)
+        --
+        Window.SetText(0, "UI Initialization [ Downloading ]")
+        --
+        Utility.AddFolder("Abyss")
+        Utility.AddFolder("Abyss/Caches")
+        Utility.AddFolder("Abyss/Assets")
+        Utility.AddFolder("Abyss/Assets/UI")
+        Utility.AddFolder("Abyss/Configs")
+        Utility.AddFolder("Abyss/Scripts")
+        --
+        Library.Theme.Gradient = Utility.AddImage("Abyss/Assets/UI/Gradient.png", "https://raw.githubusercontent.com/mvonwalk/Exterium/main/Gradient.png")
+        -- Library.Theme.SecondIcon = Utility.AddImage("Abyss/Assets/UI/Gradient.png", "https://raw.githubusercontent.com/mvonwalk/Exterium/main/Gradient.png")
+        Library.Theme.Hue = Utility.AddImage("Abyss/Assets/UI/Hue.png", "https://raw.githubusercontent.com/mvonwalk/Exterium/main/HuePicker.png")
+        Library.Theme.Saturation = Utility.AddImage("Abyss/Assets/UI/Saturation.png", "https://raw.githubusercontent.com/mvonwalk/Exterium/main/SaturationPicker.png")
+        Library.Theme.SaturationCursor = Utility.AddImage("Abyss/Assets/UI/HueCursor.png", "https://raw.githubusercontent.com/mvonwalk/splix-assets/main/Images-cursor.png")
+        --
+        Library.Theme.Astolfo = Utility.AddImage("Abyss/Assets/UI/Astolfo.png", "https://i.imgur.com/T20cWY9.png")
+        Library.Theme.Aiko = Utility.AddImage("Abyss/Assets/UI/Aiko.png", "https://i.imgur.com/1gRIdko.png")
+        Library.Theme.Rem = Utility.AddImage("Abyss/Assets/UI/Rem.png", "https://i.imgur.com/ykbRkhJ.png")
+        Library.Theme.Violet = Utility.AddImage("Abyss/Assets/UI/Violet.png", "https://i.imgur.com/7B56w4a.png")
+        Library.Theme.Asuka = Utility.AddImage("Abyss/Assets/UI/Asuka.png", "https://i.imgur.com/3hwztNM.png")
+        --
+        Window.SetText(1, "Checking Assets")
+        --
+        Window.SetText(1, "Checking Input")
+        Utility.CLCheck(Window)
+        --
+        Window.SetText(2, "Finished")
+        --
+        Utility.RemoveDrawing(WindowOutline)
+        Utility.RemoveDrawing(WindowOutlineBorder)
+        Utility.RemoveDrawing(WindowTopline)
+        Utility.RemoveDrawing(WindowFrame)
+        Utility.RemoveDrawing(WindowTitle)
+        Utility.RemoveDrawing(WindowText)
+        Utility.RemoveDrawing(SliderOutline)
+        Utility.RemoveDrawing(SliderInline)
+        Utility.RemoveDrawing(SliderFrame)
+        Utility.RemoveDrawing(SliderFrameShader)
+        Utility.RemoveDrawing(MiddleIcon)
+        Utility.RemoveDrawing(WindowImage)
+        --
+        UserInput.MouseIconEnabled = false
+        --
+        return Window
+    end
+end
+--
+do
+    --
+    function Library:ChangeVisible(State)
+        Library.WindowVisible = State
+        UserInput.MouseIconEnabled = not Library.WindowVisible
+        for Idx, Val in pairs(Library.Drawings) do
+            if Val[2] then
+                Val[1].Transparency = Library.WindowVisible and 1 or 0
+            else
+                if Val[1].Color ~= Library.Theme.Hitbox then
+                    Val[1].Transparency = Library.WindowVisible and 1 or 0
+                end
+            end
+        end
+    end
+    --
+    function Library:UpdateTheme(Config)
+        if Config.Accent ~= nil then
+            Library.Theme.Accent[1] = Config.Accent
+            Library.Communication:Fire("Accent", Config.Accent)
+        end
+        if Config.Outline ~= nil then
+            Library.Theme.Outline = Config.Outline
+            Library.Communication:Fire("Outline", Config.Outline)
+        end
+        if Config.Inline ~= nil then
+            Library.Theme.Inline = Config.Inline
+            Library.Communication:Fire("Inline", Config.Inline)
+        end
+        if Config.LightContrast ~= nil then
+            Library.Theme.LightContrast = Config.LightContrast
+            Library.Communication:Fire("LightContrast", Config.LightContrast)
+        end
+        if Config.DarkContrast ~= nil then
+            Library.Theme.DarkContrast = Config.DarkContrast
+            Library.Communication:Fire("DarkContrast", Config.DarkContrast)
+        end
+    end
+    --
+    function Library.SelfDestruct()
+        --
+        UserInput.MouseIconEnabled = true
+        --
+        for Index, Value in pairs(Library.Connections) do
+            Value:Disconnect()
+        end
+        --
+        for Index, Value in pairs(Library.Drawings) do
+            if Value[1] then    
+                Value[1]:Remove()
+            end
+        end
+        --
+        for Index, Value in pairs(Library.Watermark) do
+            if Value[1] then
+                Value[1]:Remove()
+            end
+        end
+        --
+        for Index, Value in pairs(Library.Keybind) do
+            if Value[1] then
+                Value[1]:Remove()
+            end
+        end
+        --
+        for Index, Value in pairs(Library.Ignores) do
+            if Value[1] then
+                Value[1]:Remove()
+            end
+        end
+        --
+        Library.Drawings = {}
+        Library.Watermark = {}
+        Library.Keybind = {}
+        Library.Ignores = {}
+        --
+    end
+    --
+    function Library.Window(Title, Size)
+        local Window = {
+            Notification = 0,
+            Tabs = {},
+            LastTab = nil,
+            SelectedTab = nil,
+            BindList = ""
+        }
+        --
+        local Blur = Utility.AddDrawing("Image", {
+            Position = Vector2.new(0, 0),
+            Size = Vector2.new(1920, 1080),
+            Transparency = 0,
+            Visible = true,
+        }, Library.Ignores)
+        --
+        do
+            local WindowOutline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(120, 20),
+                Thickness = 0,  
+                Color = Library.Theme.Outline,
+                Visible = true,
+                Filled = true
+            }, Library.Keybind)
+            --
+            WindowOutline.Position = Vector2.new(10, (Camera.ViewportSize.Y / 2) - (WindowOutline.Size.Y / 2))
+            --
+            local WindowOutlineBorder = Utility.AddDrawing("Square", {
+                Size = Vector2.new(WindowOutline.Size.X - 2, WindowOutline.Size.Y - 2),
+                Position = Vector2.new(WindowOutline.Position.X + 1, WindowOutline.Position.Y + 1),
+                Thickness = 0,
+                Color = Library.Theme.Accent[1],
+                Visible = false,
+                Filled = true
+            }, Library.Keybind)
+            --
+            local WindowFrame = Utility.AddDrawing("Square", {
+                Size = Vector2.new(WindowOutlineBorder.Size.X - 2, WindowOutlineBorder.Size.Y - 2),
+                Position = Vector2.new(WindowOutlineBorder.Position.X + 1, WindowOutlineBorder.Position.Y + 1),
+                Thickness = 0,
+                Transparency = 1,
+                Color = Library.Theme.DarkContrast,
+                Visible = true,
+                Filled = true
+            }, Library.Keybind)
+            --
+            local WindowTopline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(WindowOutlineBorder.Size.X, 1),
+                Position = Vector2.new(WindowOutlineBorder.Position.X, WindowOutlineBorder.Position.Y),
+                Thickness = 0,
+                Color = Library.Theme.Accent[1],
+                Visible = true,
+                Filled = true
+            }, Library.Keybind)
+            --
+            local WindowImage = Utility.AddDrawing("Image", {
+                Size = WindowFrame.Size,
+                Position = WindowFrame.Position,
+                Transparency = 1, 
+                Visible = true,
+                Data = Library.Theme.Gradient
+            }, Library.Keybind)
+            --
+            local WindowText = Utility.AddDrawing("Text", {
+                Font = Library.Theme.Font,
+                Size = Library.Theme.TextSize,
+                Color = Library.Theme.Text,
+                Text = "Keybinds",
+                Position = Vector2.new(WindowOutlineBorder.Position.X + (WindowOutlineBorder.Size.X / 2), WindowOutlineBorder.Position.Y + 2),
+                Visible = true,
+                Center = true,
+                Outline = false
+            }, Library.Keybind)
+            --
+            local CurrentBinds = Utility.AddDrawing("Text", {
+                Font = Library.Theme.Font,
+                Size = Library.Theme.TextSize,
+                Color = Library.Theme.Text,
+                Text = "",
+                Position = Vector2.new(WindowOutlineBorder.Position.X + 3, WindowOutlineBorder.Position.Y + 8),
+                Visible = true,
+                Center = false,
+                Outline = false
+            }, Library.Keybind)
+            --
+            Utility.AddConnection(RunService.RenderStepped, function(Type, Color)
+                CurrentBinds.Text = Window.BindList
+
+                local CalcuationSize = CurrentBinds.Text ~= "" and Vector2.new(CurrentBinds.TextBounds.X >= 120 and CurrentBinds.TextBounds.X + 6 or 120, 20 + CurrentBinds.TextBounds.Y - 6) or Vector2.new(120, 20)
+                WindowOutline.Size = CalcuationSize
+                
+                WindowOutlineBorder.Size = Vector2.new(WindowOutline.Size.X - 2, WindowOutline.Size.Y - 2)
+                WindowOutlineBorder.Position = Vector2.new(WindowOutline.Position.X + 1, WindowOutline.Position.Y + 1)
+
+                WindowTopline.Size = Vector2.new(WindowOutlineBorder.Size.X, 1)
+                WindowTopline.Position = Vector2.new(WindowOutlineBorder.Position.X, WindowOutlineBorder.Position.Y)
+
+                WindowImage.Size = WindowFrame.Size
+                WindowImage.Position = WindowFrame.Position
+
+                WindowText.Position = Vector2.new(WindowOutlineBorder.Position.X + (WindowOutlineBorder.Size.X / 2), WindowOutlineBorder.Position.Y + 2)
+            end)
+            --
+            Utility.AddDrag(WindowOutline, Library.Keybind)
+            --
+            Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                if Type == "Accent" then
+                    WindowOutlineBorder.Color = Color
+                    WindowTopline.Color = Color
+                elseif Type == "Outline" then
+                    WindowOutline.Color = Color
+                elseif Type == "DarkContrast" then
+                    WindowFrame.Color = Color
+                elseif Type == "Text" then
+                    WindowText.Color = Color
+                end
+            end)
+        end
+        --
+        local Anime = Utility.AddDrawing("Image", {
+            Transparency = 0.5, 
+            Visible = false
+        }, Library.Ignores)
+        --
+        local WindowOutline = Utility.AddDrawing("Square", {
+            Size = Size,
+            Thickness = 0,
+            Color = Library.Theme.Outline,
+            Visible = true,
+            Filled = true
+        })
+        --
+        WindowOutline.Position = Utility.MiddlePos(WindowOutline)
+        --
+        local WindowOutlineBorder = Utility.AddDrawing("Square", {
+            Size = Vector2.new(WindowOutline.Size.X - 2, WindowOutline.Size.Y - 2),
+            Position = Vector2.new(WindowOutline.Position.X + 1, WindowOutline.Position.Y + 1),
+            Thickness = 0,
+            Color = Library.Theme.Accent[1],
+            Visible = true,
+            Filled = true
+        })
+        --
+        local WindowFrame = Utility.AddDrawing("Square", {
+            Size = Vector2.new(WindowOutlineBorder.Size.X - 2, WindowOutlineBorder.Size.Y - 2),
+            Position = Vector2.new(WindowOutlineBorder.Position.X + 1, WindowOutlineBorder.Position.Y + 1),
+            Thickness = 0,
+            Transparency = 1,
+            Color = Library.Theme.DarkContrast,
+            Visible = true,
+            Filled = true
+        })
+        --
+        local WatermarkIcon = Utility.AddDrawing("Image", {
+            Size = Vector2.new(70, 70),
+            Position = Vector2.new(WindowFrame.Position.X + (WindowFrame.Size.X / 2) - 35, WindowFrame.Position.Y - 4),
+            Transparency = 1,
+            ZIndex = 3,
+            Visible = false,
+            Data = Library.Theme.Logo
+        })
+        --
+        Utility.AddCursor(WindowFrame)
+        --
+        local WindowHeader = Utility.AddDrawing("Square", {
+            Size = Vector2.new(WindowOutlineBorder.Size.X - 2, 70),
+            Position = Vector2.new(WindowOutlineBorder.Position.X + 1, WindowOutlineBorder.Position.Y + 1),
+            Thickness = 0,
+            Transparency = 0,
+            Color = Library.Theme.Hitbox,
+            Visible = true,
+            Filled = true
+        })
+        --
+        Utility.AddDrag(WindowHeader, Library.Drawings)
+        --
+        local WindowTopline = Utility.AddDrawing("Square", {
+            Size = Vector2.new(WindowOutlineBorder.Size.X, 1),
+            Position = Vector2.new(WindowOutlineBorder.Position.X, WindowOutlineBorder.Position.Y),
+            Thickness = 0,
+            Color = Library.Theme.Accent[1],
+            Visible = false,
+            Filled = true
+        })
+        --
+        local WindowImage = Utility.AddDrawing("Image", {
+            Size = WindowFrame.Size,
+            Position = WindowFrame.Position,
+            Transparency = 1, 
+            Visible = true,
+            Data = Library.Theme.Gradient
+        })
+        --
+        local WindowTitle = Utility.AddDrawing("Text", {
+            Font = Library.Theme.Font,
+            Size = Library.Theme.TextSize,
+            Color = Library.Theme.Text,
+            Text = Title,
+            Position = Vector2.new(WindowOutlineBorder.Position.X + 8, WindowOutlineBorder.Position.Y + 6),
+            Visible = true,
+            Center = false,
+            Outline = false
+        })
+        --
+        local SecondBorderInline = Utility.AddDrawing("Square", {
+            Size = Vector2.new(Size.X - 17, Size.Y - 50),
+            Position = Vector2.new(WindowOutlineBorder.Position.X + 8, WindowOutlineBorder.Position.Y + 42),
+            Thickness = 0,
+            Color = Library.Theme.Inline,
+            Visible = true,
+            Filled = true
+        })
+        --
+        local SecondBorderOutline = Utility.AddDrawing("Square", {
+            Size = Vector2.new(SecondBorderInline.Size.X - 2, SecondBorderInline.Size.Y - 2),
+            Position = Vector2.new(SecondBorderInline.Position.X + 1, SecondBorderInline.Position.Y + 1),
+            Thickness = 0,
+            Color = Library.Theme.LightContrast,
+            Visible = true,
+            Filled = true
+        })
+        --
+        local TabLine = Utility.AddDrawing("Square", {
+            Thickness = 0,
+            Color = Library.Theme.Accent[1], --Library.Theme.Outline,
+            Visible = true,
+            Filled = true,
+            ZIndex = 2
+        })
+        --
+        local DisableLine = Utility.AddDrawing("Square", {
+            Thickness = 0,
+            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+            Visible = true,
+            Filled = true,
+            ZIndex = 3
+        })
+        --
+        Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+            if Type == "Accent" then
+                WindowOutlineBorder.Color = Color
+                WindowTopline.Color = Color
+                TabLine.Color = Color
+            elseif Type == "Outline" then
+                WindowOutline.Color = Color
+            elseif Type == "LightContrast" then
+                DisableLine.Color = Color
+                SecondBorderOutline.Color = Color
+            elseif Type == "DarkContrast" then
+                WindowFrame.Color = Color
+            elseif Type == "Text" then
+                WindowTitle.Color = Color
+            elseif Type == "Inline" then
+                SecondBorderInline.Color = Color
+            end
+        end)
+        --
+        Window["PageCover"] = SecondBorderInline
+        --
+        function Window.ChangeAnime(Name)
+            Anime.Data = (
+                Name == "Astolfo" and Library.Theme.Astolfo or
+                Name == "Aiko" and Library.Theme.Aiko or
+                Name == "Rem" and Library.Theme.Rem or
+                Name == "Violet" and Library.Theme.Violet or
+                Name == "Asuka" and Library.Theme.Asuka
+            )
+
+            Anime.Size = (
+                Name == "Astolfo" and Vector2.new(412, 605) or
+                Name == "Aiko" and Vector2.new(390, 630) or
+                Name == "Rem" and Vector2.new(390, 639) or
+                Name == "Violet" and Vector2.new(1029 / 3, 1497 / 3) or
+                Name == "Asuka" and Vector2.new(415, 601)
+            )
+
+            Anime.Position = Vector2.new(Camera.ViewportSize.X - 400, Camera.ViewportSize.Y - Anime.Size.Y)
+        end
+        --
+        function Window.ToggleAnime(State)
+            Anime.Visible = State
+        end
+        --
+        function Window.SendNotification(Type, Title, Duration)
+            local Notification, Removed = Window.Notification, false
+            --
+            local NotificationInline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(0, 21),
+                Position = Vector2.new(0, (Window.Notification * 25) + 100),
+                Thickness = 0,
+                Color = Library.Theme.Inline,
+                Visible = true,
+                Filled = true
+            }, Library.Ignores)
+            --
+            local NotificationOutline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(0, NotificationInline.Size.Y - 1),
+                Position = Vector2.new(NotificationInline.Position.X + 2, NotificationInline.Position.Y + 2),
+                Thickness = 0,
+                Color = Library.Theme.DarkContrast,
+                Visible = true,
+                Filled = true
+            }, Library.Ignores)
+            --
+            local NotificationOutlineBorder = Utility.AddDrawing("Square", {
+                Size = Vector2.new(NotificationOutline.Size.X - 2, NotificationOutline.Size.Y + 5),
+                Position = Vector2.new(NotificationOutline.Position.X + 1, NotificationOutline.Position.Y + 1),
+                Thickness = 0,
+                Color = Library.Theme.Accent[1],
+                Visible = false,
+                Filled = true
+            }, Library.Ignores)
+            --
+            local NotificationTopline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(NotificationOutline.Size.X, 1),
+                Position = Vector2.new(NotificationOutline.Position.X, NotificationOutline.Position.Y),
+                Thickness = 0,
+                Color = Type == "Warning" and Library.Theme.Notification.Warning or Type == "Error" and Library.Theme.Notification.Error or Library.Theme.DarkContrast,
+                Visible = Type == "Warning" or Type == "Error",
+                Filled = true
+            }, Library.Ignores)
+            --
+            local NotificationLeftline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(1, NotificationOutline.Size.Y),
+                Position = Vector2.new(NotificationOutline.Position.X, NotificationOutline.Position.Y),
+                Thickness = 0,
+                Color = Type == "Normal" and Library.Theme.Accent[1] or Library.Theme.DarkContrast,
+                Visible = Type == "Normal",
+                Filled = true
+            }, Library.Ignores)
+            --
+            local NotificationImage = Utility.AddDrawing("Image", {
+                Size = NotificationOutlineBorder.Size,
+                Position = NotificationOutlineBorder.Position,
+                Transparency = 1, 
+                Visible = true,
+                Data = Library.Theme.Gradient
+            }, Library.Ignores)
+            --
+            local NotificationText = Utility.AddDrawing("Text", {
+                Font = Library.Theme.Font,
+                Size = Library.Theme.TextSize,
+                Color = Library.Theme.Text,
+                Text = Title,
+                Position = Vector2.new(NotificationOutlineBorder.Position.X + 6, NotificationOutlineBorder.Position.Y + 3),
+                Visible = true,
+                Center = false,
+                Outline = false
+            }, Library.Ignores)
+            --
+            NotificationInline.Size = Vector2.new(NotificationText.TextBounds.X + 15, 21)
+            --
+            NotificationOutline.Size = Vector2.new(NotificationInline.Size.X - 1, NotificationInline.Size.Y - 1)
+            NotificationOutline.Position = Vector2.new(NotificationInline.Position.X + 2, NotificationInline.Position.Y + 2)
+            --
+            NotificationOutlineBorder.Size = Vector2.new(NotificationOutline.Size.X - 2, NotificationOutline.Size.Y - 2)
+            NotificationOutlineBorder.Position = Vector2.new(NotificationOutline.Position.X + 1, NotificationOutline.Position.Y + 1)
+            --
+            NotificationLeftline.Size = Vector2.new(2, NotificationOutline.Size.Y)
+            --
+            NotificationTopline.Size = Vector2.new(NotificationOutline.Size.X, 1)
+            --
+            NotificationImage.Size = NotificationOutline.Size
+            NotificationImage.Position = NotificationOutline.Position
+            --
+            task.spawn(function()
+                for Index = -100, 0, 2 do
+                    pcall(function()
+                        NotificationInline.Position = Vector2.new(Index, (Notification * 25) + 100)
+                        NotificationOutline.Position = Vector2.new(NotificationInline.Position.X + 2, NotificationInline.Position.Y + 2)
+                        NotificationOutlineBorder.Position = Vector2.new(NotificationOutline.Position.X + 2, NotificationOutline.Position.Y + 2)
+                        NotificationText.Position = Vector2.new(NotificationOutline.Position.X + 6, NotificationOutline.Position.Y + 3)
+                        NotificationTopline.Position = Vector2.new(NotificationOutline.Position.X, NotificationOutline.Position.Y)
+                        NotificationImage.Position = NotificationOutline.Position
+                        NotificationLeftline.Position = Vector2.new(NotificationOutline.Position.X, NotificationOutline.Position.Y)
+                    end)
+                    task.wait()
+                end
+            end)
+            --
+            Utility.AddConnection(Library.Communication.Event, function(Type)
+                if Type == "UpdateNotification" then
+                    Notification -= 1
+                    pcall(function()
+                        NotificationInline.Size = Vector2.new(Index, (Notification * 25) + 100)
+                        NotificationOutline.Position = Vector2.new(NotificationInline.Position.X + 2, NotificationInline.Position.Y + 2)
+                        NotificationText.Position = Vector2.new(NotificationOutline.Position.X + 6, NotificationOutline.Position.Y + 3)
+                        NotificationTopline.Position = Vector2.new(NotificationOutline.Position.X, NotificationOutline.Position.Y)
+                        NotificationImage.Position = NotificationOutline.Position
+                        NotificationLeftline.Position = Vector2.new(NotificationOutline.Position.X, NotificationOutline.Position.Y)
+                    end)
+                end
+            end)
+            --
+            Window.Notification += 1
+            --
+            task.spawn(function()
+                task.wait(Duration)
+                --
+                pcall(function()
+                    Utility.RemoveDrawing(NotificationInline, Library.Ignores)
+                    Utility.RemoveDrawing(NotificationLeftline, Library.Ignores)
+                    Utility.RemoveDrawing(NotificationOutline, Library.Ignores)
+                    Utility.RemoveDrawing(NotificationOutlineBorder, Library.Ignores)
+                    Utility.RemoveDrawing(NotificationText, Library.Ignores)
+                    Utility.RemoveDrawing(NotificationTopline, Library.Ignores)
+                    Utility.RemoveDrawing(NotificationImage, Library.Ignores)
+                end)
+                --
+                Library.Communication:Fire("UpdateNotification")
+                --
+                Window.Notification -= 1
+            end)
+        end
+        --
+        function Window:RefreshPages()
+            for Index, Value in pairs(Window.Tabs) do
+                Value:Resize(Index)
+            end
+        end
+        --
+        function Window:SwitchTab(Tab)
+            for Index, Value in pairs(self.Tabs) do
+                Value["TabTitle"].Color = Library.Theme.TextInactive
+                Value["TabOutline"].Color = Library.Theme.DarkContrast
+
+                for _, Render in pairs(Value["Render"]) do
+                    Render.Visible = false
+                end
+            end
+
+            Tab["TabOutline"].Color = Library.Theme.LightContrast
+            Tab["TabTitle"].Color = Library.Theme.Text
+
+            TabLine.Size = Vector2.new(Tab["TabOutline"].Size.X, 1)
+            TabLine.Position = Vector2.new(Tab["TabOutline"].Position.X, Tab["TabOutline"].Position.Y)
+            DisableLine.Size = Vector2.new(Tab["TabOutline"].Size.X, 1)
+            DisableLine.Position = Vector2.new(Tab["TabOutline"].Position.X, Tab["TabOutline"].Position.Y + Tab["TabOutline"].Size.Y)
+            Window.SelectedTab = Tab.CurrentTab
+
+            for _, Render in pairs(Tab["Render"]) do
+                Render.Visible = true
+            end
+        end
+        --
+        function Window:Tab(Title)
+            local Tab = {
+                Visible = {},
+                SectionAxis = {0, 0},
+                Sections = {},
+                Dropdowns = {
+                    ["Left"] = {}, 
+                    ["Right"] = {}
+                },
+                CurrentTab = #self.Tabs
+            }
+            --
+            local TabInline = Utility.AddDrawing("Square", {
+                Position = Vector2.new(SecondBorderInline.Position.X, SecondBorderOutline.Position.Y - 20),
+                Size = Vector2.new(0, 20),
+                Thickness = 0,
+                Color = Library.Theme.Inline,
+                Visible = true,
+                Filled = true
+            })
+            --
+            local TabOutline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(TabInline.Size.X - 2, TabInline.Size.Y - 2),
+                Position = Vector2.new(TabInline.Position.X + 1, TabInline.Position.Y + 1),
+                Thickness = 0,
+                Color = Library.Theme.DarkContrast, --Library.Theme.Outline,
+                Visible = true,
+                Filled = true
+            })
+            --
+            local TabTitle = Utility.AddDrawing("Text", {
+                Text = Title,
+                Center = true,
+                Outline = false,
+                Font = Library.Theme.Font,
+                Size = Library.Theme.TextSize,
+                Color = Library.Theme.Text,
+                Visible = true,
+                ZIndex = 2
+            })
+            --
+            Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                if Type == "DarkContrast" and Window.SelectedTab == Tab then
+                    TabOutline.Color = Color
+                elseif Type == "LightContrast" and Window.SelectedTab ~= Tab then
+                    TabOutline.Color = Color
+                elseif Type == "Text" then
+                    TabTitle.Color = Color
+                elseif Type == "Inline" then
+                    TabInline.Color = Color
+                end
+            end)
+            --
+            function Tab:Install()
+                TabInline.Size = Vector2.new(TabTitle.TextBounds.X + 50, 20)
+                TabInline.Position = Vector2.new((Window.LastTab ~= nil and Window.LastTab.Position.X + Window.LastTab.Size.X + 5 or SecondBorderInline.Position.X), SecondBorderOutline.Position.Y - 20)
+
+                TabOutline.Size = Vector2.new(TabInline.Size.X - 2, TabInline.Size.Y - 2)
+                TabOutline.Position = Vector2.new(TabInline.Position.X + 1, TabInline.Position.Y + 1)
+
+                if Window.LastTab == nil then
+                    TabLine.Size = Vector2.new(TabOutline.Size.X, 1)
+                    TabLine.Position = Vector2.new(TabOutline.Position.X + 1, TabOutline.Position.Y)
+
+                    DisableLine.Size = Vector2.new(TabOutline.Size.X, 1)
+                    DisableLine.Position = Vector2.new(TabOutline.Position.X, TabOutline.Position.Y + TabOutline.Size.Y)
+
+                    Window.SelectedTab = Tab.CurrentTab
+                end
+
+                TabTitle.Position = Vector2.new(TabOutline.Position.X + (TabOutline.Size.X / 2), TabOutline.Position.Y + (TabOutline.Size.Y / 2) - 7)
+            end
+            --
+            function Tab:RemoveDrawing(Instance)
+                local SpecificDrawing = 0
+                for Index, Value in pairs(Tab["Render"]) do 
+                    if Value == Instance then
+                        SpecificDrawing = Index
+                    end
+                end
+                table.remove(Tab["Render"], table.find(Tab["Render"], Tab["Render"][SpecificDrawing]))
+                --
+                local SpecificDrawing2 = 0
+                for Index, Value in pairs(Library.Drawings) do 
+                    if Value[1] == Instance then
+                        if Value[1] then
+                            Value[1]:Remove()
+                        end
+                        if Value[2] then
+                            Value[2] = nil
+                        end
+                        SpecificDrawing2 = Index
+                    end
+                end
+                table.remove(Library.Drawings, table.find(Library.Drawings, Library.Drawings[SpecificDrawing2]))
+            end
+            --
+            function Tab:Section(Title, Side)
+                local Section = {
+                    ContentAxis = 0
+                }
+                --
+                local AxisX = Side == "Left" and SecondBorderOutline.Position.X + 6 or SecondBorderOutline.Position.X + ((SecondBorderOutline.Size.X / 2) - 10) + 12
+                local SectionInline = Utility.AddDrawing("Square", {
+                    Position = Vector2.new(AxisX, (Tab.SectionAxis[Side == "Left" and 1 or 2] == 0 and TabOutline.Position.Y + TabOutline.Size.Y + 6 or 6 + Tab.SectionAxis[Side == "Left" and 1 or 2])),
+                    Size = Vector2.new((SecondBorderOutline.Size.X / 2) - 8, 24),
+                    Thickness = 0,
+                    Color = Library.Theme.Inline,
+                    Visible = true,
+                    Filled = true
+                })
+                --
+                local SectionOutline = Utility.AddDrawing("Square", {
+                    Size = Vector2.new(SectionInline.Size.X - 2, SectionInline.Size.Y - 2),
+                    Position = Vector2.new(SectionInline.Position.X + 1, SectionInline.Position.Y + 1),
+                    Thickness = 0,
+                    Color = Library.Theme.DarkContrast, --Library.Theme.Outline,
+                    Visible = true,
+                    Filled = true
+                })
+                --
+                local SectionTopline = Utility.AddDrawing("Square", {
+                    Size = Vector2.new(SectionOutline.Size.X, 1),
+                    Position = Vector2.new(SectionOutline.Position.X, SectionOutline.Position.Y),
+                    Thickness = 0,
+                    Color = Library.Theme.Accent[1],
+                    Visible = true,
+                    Filled = true
+                })
+                --
+                local SectionTitle = Utility.AddDrawing("Text", {
+                    Text = Title,
+                    Position = Vector2.new(SectionOutline.Position.X + 4, SectionOutline.Position.Y + 4),
+                    Center = false,
+                    Outline = false,
+                    Font = Library.Theme.Font,
+                    Size = Library.Theme.TextSize,
+                    Color = Library.Theme.Text,
+                    Visible = true,
+                    ZIndex = 2
+                })
+                --
+                Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                    if Type == "Accent" then
+                        SectionTopline.Color = Color
+                    elseif Type == "DarkContrast" then
+                        SectionOutline.Color = Color
+                    elseif Type == "Text" then
+                        SectionTitle.Color = Color
+                    elseif Type == "Inline" then
+                        SectionInline.Color = Color
+                    end
+                end)
+                --
+                function Section:UpdateSizeY(SizeY)
+                    SectionInline.Size = Vector2.new(SectionInline.Size.X, SizeY + 10)
+
+                    SectionOutline.Size = Vector2.new(SectionInline.Size.X - 2, SectionInline.Size.Y - 2)
+                    SectionOutline.Position = Vector2.new(SectionInline.Position.X + 1, SectionInline.Position.Y + 1)
+                end
+                --
+                Tab.SectionAxis = {
+                    Side == "Left" and SectionInline.Position.Y + SectionInline.Size.Y or Tab.SectionAxis[1], 
+                    Side == "Right" and SectionInline.Position.Y + SectionInline.Size.Y or Tab.SectionAxis[2]
+                }
+                --
+                Tab["Render"][#Tab["Render"] + 1] = SectionInline
+                Tab["Render"][#Tab["Render"] + 1] = SectionOutline
+                Tab["Render"][#Tab["Render"] + 1] = SectionTopline
+                Tab["Render"][#Tab["Render"] + 1] = SectionTitle
+                --
+                function Section:Toggle(Options)
+                    local Toggle = {
+                        Axis = Section.ContentAxis,
+                        Toggled = Options.State,
+                        Drop = false,
+                        Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end
+                    }
+                    --
+                    Options.Flag = Options.Flag or "AWGWJIjgAWJIGIJAWG"
+                    Library.Flags[Options.Flag] = false
+                    --
+                    local ToggleInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + 8, SectionInline.Position.Y + 23 + Toggle.Axis),
+                        Size = Vector2.new(13, 13),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ToggleOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(ToggleInline.Size.X - 2, ToggleInline.Size.Y - 2),
+                        Position = Vector2.new(ToggleInline.Position.X + 1, ToggleInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ToggleHitbox = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(SectionOutline.Size.X - 60, ToggleInline.Size.Y - 2),
+                        Position = Vector2.new(ToggleInline.Position.X + 1, ToggleInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.Hitbox, --Library.Theme.Outline,
+                        Transparency = 0,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ToggleGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(ToggleInline.Size.X - 2, ToggleInline.Size.Y - 2),
+                        Position = Vector2.new(ToggleInline.Position.X + 1, ToggleInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 0.5,
+                        Visible = true
+                    })
+                    --
+                    local ToggleTitle = Utility.AddDrawing("Text", {
+                        Text = Options.Title,
+                        Position = Vector2.new(ToggleInline.Position.X + ToggleInline.Size.X + 8, ToggleInline.Position.Y),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Options.Type ~= nil and Options.Type == "Dangerous" and Library.Theme.Accent[1] or Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    function Toggle:Set(State)
+                        Toggle.Toggled = State
+                        ToggleOutline.Color = Toggle.Toggled and Library.Theme.Accent[1] or Library.Theme.DarkContrast
+                        Library.Flags[Options.Flag] = Toggle.Toggled
+                        Toggle.Callback(Toggle.Toggled)
+                    end
+                    --
+                    Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                        
+                        for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                            if Value then
+                                return
+                            end
+                        end
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 and Utility.OnMouse(ToggleHitbox) then
+                            Toggle.Toggled = not Toggle.Toggled
+                            Toggle:Set(Toggle.Toggled)
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(UserInput.InputChanged, function(Input, Useless)
+                        if Input.UserInputType == Enum.UserInputType.MouseMovement then
+                            if Utility.OnMouse(ToggleHitbox) then
+                                ToggleInline.Color = Library.Theme.Accent[1]
+                            else
+                                ToggleInline.Color = Library.Theme.Inline
+                            end
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                        if Type == "Accent" and Toggle.Toggled then
+                            ToggleOutline.Color = Color
+                            if Options.Type == "Dangerous" then
+                                ToggleTitle.Color = Color
+                            end
+                        elseif Type == "LightContrast" and not Toggle.Toggled then
+                            ToggleOutline.Color = Color
+                        elseif Type == "Text" then
+                            ToggleTitle.Color = Color
+                        elseif Type == "Inline" then
+                            ToggleInline.Color = Color
+                        end
+                    end)
+                    --
+                    Section.ContentAxis = Section.ContentAxis + ToggleOutline.Size.Y + 8
+                    Tab.SectionAxis = {
+                        Side == "Left" and Tab.SectionAxis[1] + ToggleOutline.Size.Y + 8 or Tab.SectionAxis[1], 
+                        Side == "Right" and Tab.SectionAxis[2] + ToggleOutline.Size.Y + 8 or Tab.SectionAxis[2]
+                    }
+                    --
+                    self:UpdateSizeY(Section.ContentAxis + ToggleOutline.Size.Y)
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = ToggleInline
+                    Tab["Render"][#Tab["Render"] + 1] = ToggleOutline
+                    Tab["Render"][#Tab["Render"] + 1] = ToggleTitle
+                    Tab["Render"][#Tab["Render"] + 1] = ToggleGradient
+                    Tab["Render"][#Tab["Render"] + 1] = ToggleHitbox
+                    --
+                    function Toggle:Colorpicker(Options)
+                        local Colorpicker = {
+                            Axis = Section.ContentAxis,
+                            Color = Options.Color,
+                            HexColor = Options.Color:ToHex(),
+                            Dropped = false,
+                            Offsets = {
+                                X = 0,
+                                Y = 0
+                            },
+                            Colors = {
+                                HSV = {1, 1, 1}
+                            },
+                            SaturationDragging = false,
+                            HueDragging = false,
+                            Decimals = 50,
+                            Rainbow = false,
+                            Flag = Options.Flag,
+                            Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end
+                        }
+                        --
+                        Colorpicker.Flag = Colorpicker.Flag or "AWIJGHUIWGHuAW"
+                        Library.Flags[Colorpicker.Flag] = Colorpicker.HexColor
+                        --
+                        local H, S, V = Colorpicker.Color:ToHSV()
+                        Colorpicker.Colors.HSV[1] = H
+                        Colorpicker.Colors.HSV[2] = S
+                        Colorpicker.Colors.HSV[3] = V
+                        --
+                        local ColorpickerInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new((SectionInline.Position.X + SectionInline.Size.X) - 38, ToggleInline.Position.Y + 1),
+                            Size = Vector2.new(30, 12),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true
+                        })
+                        --
+                        local ColorpickerOutline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(ColorpickerInline.Size.X - 2, ColorpickerInline.Size.Y - 2),
+                            Position = Vector2.new(ColorpickerInline.Position.X + 1, ColorpickerInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true
+                        })
+                        --
+                        local ColorpickerBase = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(ColorpickerInline.Size.X - 2, ColorpickerInline.Size.Y - 2),
+                            Position = Vector2.new(ColorpickerInline.Position.X + 1, ColorpickerInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Colorpicker.Color, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true
+                        })
+                        --
+                        local ColorpickerGradient = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(ColorpickerInline.Size.X - 2, ColorpickerInline.Size.Y - 2),
+                            Position = Vector2.new(ColorpickerInline.Position.X + 1, ColorpickerInline.Position.Y + 1),
+                            Data = Library.Theme.Gradient,
+                            Transparency = 0.5,
+                            Visible = true
+                        })
+                        --
+                        local InternalInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new((ColorpickerInline.Position.X - 225) + ColorpickerInline.Size.X, ToggleInline.Position.Y + 18),
+                            Size = Vector2.new(225, 250),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalOutline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(InternalInline.Size.X - 2, InternalInline.Size.Y - 2),
+                            Position = Vector2.new(InternalInline.Position.X + 1, InternalInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalTopline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(InternalOutline.Size.X, 1),
+                            Position = Vector2.new(InternalOutline.Position.X, InternalOutline.Position.Y),
+                            Thickness = 0,
+                            Color = Library.Theme.Accent[1],
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                            if Type == "Accent" then
+                                InternalTopline.Color = Color
+                            end
+                        end)
+                        --
+                        local InternalTitle = Utility.AddDrawing("Text", {
+                            Text = ToggleTitle.Text,
+                            Position = Vector2.new(InternalOutline.Position.X + 8, InternalOutline.Position.Y + 6),
+                            Center = false,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalBaseInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(InternalOutline.Position.X + 8, InternalOutline.Position.Y + 25),
+                            Size = Vector2.new(192, 192),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalBase = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(192 - 4, 192 - 4),
+                            Position = Vector2.new(InternalBaseInline.Position.X + 2, InternalBaseInline.Position.Y + 2),
+                            Thickness = 0,
+                            Color = Options.Color, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalSaturation = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(196 - 2, 196 - 2),
+                            Position = Vector2.new(InternalOutline.Position.X + 8 + 1, InternalOutline.Position.Y + 25 + 1),
+                            Data = Library.Theme.Saturation,
+                            Transparency = 1,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalHueInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(InternalOutline.Position.X + InternalBase.Size.X + 14, InternalOutline.Position.Y + 26),
+                            Size = Vector2.new(16, 196),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalHue = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(InternalHueInline.Size.X - 2, InternalHueInline.Size.Y - 2),
+                            Position = Vector2.new(InternalHueInline.Position.X + 1, InternalHueInline.Position.Y + 1),
+                            Data = Library.Theme.Hue,
+                            Transparency = 1,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalOutlineHuePicker = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(InternalOutline.Position.X + InternalBase.Size.X + 12, InternalOutline.Position.Y + 26),
+                            Size = Vector2.new(InternalHueInline.Size.X + 2, 6),
+                            Thickness = 2,
+                            Color = Library.Theme.Outline,
+                            Visible = true,
+                            Filled = false,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalHuePicker = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(InternalOutlineHuePicker.Position.X + 1, InternalOutlineHuePicker.Position.Y + 1),
+                            Size = Vector2.new(InternalOutlineHuePicker.Size.X - 2, InternalOutlineHuePicker.Size.Y - 2),
+                            Thickness = 2,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            Filled = false,
+                            ZIndex = 3
+                        })
+                        --
+                        local Cursor = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(6, 6),
+                            Data = Library.Theme.SaturationCursor,
+                            Transparency = 1,
+                            Visible = true,
+                            ZIndex = 6
+                        })
+                        --
+                        local InternalInlineHex = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(80 - 2, 18 - 2),
+                            Position = Vector2.new(InternalOutline.Position.X + 8 + 1, InternalOutline.Position.Y + InternalSaturation.Size.Y + 30 + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalOutlineHex = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(InternalInlineHex.Size.X - 2, InternalInlineHex.Size.Y - 2),
+                            Position = Vector2.new(InternalInlineHex.Position.X + 1, InternalInlineHex.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalHex = Utility.AddDrawing("Text", {
+                            Text = ("#%s"):format(tostring(Colorpicker.HexColor)),
+                            Position = Vector2.new(InternalOutlineHex.Position.X + (InternalOutlineHex.Size.X / 2), InternalOutlineHex.Position.Y),
+                            Center = true,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalInlineRGB = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(130 - 2, 18 - 2),
+                            Position = Vector2.new(InternalOutline.Position.X + 90 + 1, InternalOutline.Position.Y + InternalSaturation.Size.Y + 30 + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalOutlineRGB = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(InternalInlineRGB.Size.X - 2, InternalInlineRGB.Size.Y - 2),
+                            Position = Vector2.new(InternalInlineRGB.Position.X + 1, InternalInlineRGB.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalRGB = Utility.AddDrawing("Text", {
+                            Text = ("%s, %s, %s"):format(math.floor(Colorpicker.Color.R * 255), math.floor(Colorpicker.Color.G * 255), math.floor(Colorpicker.Color.B * 255)),
+                            Position = Vector2.new(InternalOutlineRGB.Position.X + (InternalOutlineRGB.Size.X / 2), InternalOutlineRGB.Position.Y),
+                            Center = true,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalInlineRainbow = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(100 - 2, 18 - 2),
+                            Position = Vector2.new((InternalOutline.Position.X + InternalOutline.Size.X) - 100 - 2 + 1, InternalOutline.Position.Y + 4 + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalOutlineRainbow = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(InternalInlineRainbow.Size.X - 2, InternalInlineRainbow.Size.Y - 2),
+                            Position = Vector2.new(InternalInlineRainbow.Position.X + 1, InternalInlineRainbow.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local InternalRainbow = Utility.AddDrawing("Text", {
+                            Text = "Rainbow",
+                            Position = Vector2.new(InternalOutlineRainbow.Position.X + (InternalOutlineRainbow.Size.X / 2), InternalOutlineRainbow.Position.Y),
+                            Center = true,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        function Colorpicker:Drop(State)
+                            InternalInline.Visible = State
+                            InternalOutline.Visible = State
+                            InternalTitle.Visible = State
+                            InternalBaseInline.Visible = State
+                            InternalBase.Visible = State
+                            InternalSaturation.Visible = State
+                            InternalHueInline.Visible = State
+                            InternalHue.Visible = State
+                            InternalOutlineHex.Visible = State
+                            InternalInlineHex.Visible = State
+                            InternalHex.Visible = State
+                            InternalInlineRGB.Visible = State
+                            InternalOutlineRGB.Visible = State
+                            InternalRGB.Visible = State
+                            InternalInlineRainbow.Visible = State
+                            InternalOutlineRainbow.Visible = State
+                            InternalRainbow.Visible = State
+                            InternalTopline.Visible = State
+                            Cursor.Visible = State
+                            InternalOutlineHuePicker.Visible = State
+                            InternalHuePicker.Visible = State
+                            Tab.Dropdowns[Side][ToggleTitle.Text] = State
+                        end
+                        --
+                        Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                            if Type == "Accent" then
+                                
+                            elseif Type == "LightContrast" then
+                                
+                            elseif Type == "Text" then
+                                InternalTitle.Color = Color
+                            elseif Type == "Inline" then
+                                InternalInline.Color = Color
+                                InternalBaseInline.Color = Color
+                                InternalHueInline.Color = Color
+                                InternalInlineHex.Color = Color
+                            elseif Type == "Outline" then
+                                InternalOutline.Color = Color
+                                InternalOutlineHex.Color = Color
+                                InternalInline.Color = Color
+                            end
+                        end)
+                        --
+                        Colorpicker.Offsets.X = InternalBase.Position.X
+                        Colorpicker.Offsets.Y = InternalBase.Position.Y
+                        --
+                        function Colorpicker:SetHue(Options)
+                            local Percent = Options.Percent or Options.Value
+        
+                            Colorpicker.Colors.HSV[1] = Options.Value
+
+                            local HSVColor = Color3.fromHSV(Colorpicker.Colors.HSV[1], Colorpicker.Colors.HSV[2], Colorpicker.Colors.HSV[3])
+                            
+                            InternalOutlineHuePicker.Position = Vector2.new(InternalOutline.Position.X + InternalBase.Size.X + 12, InternalHue.Position.Y + (InternalHue.Size.Y * Percent) - 4)
+                            InternalHuePicker.Position = Vector2.new(InternalOutlineHuePicker.Position.X + 1, InternalOutlineHuePicker.Position.Y + 1)
+
+                            InternalBase.Color = Color3.fromHSV(Colorpicker.Colors.HSV[1], 1, 1)
+
+                            InternalHex.Text = ("#%s"):format(tostring(HSVColor:ToHex()))
+                            
+                            local CalculateRGB = Color3.fromRGB(math.floor((HSVColor.R * 255)), math.floor((HSVColor.G * 255)), math.floor((HSVColor.B * 255)))
+                            InternalRGB.Text = ("%s, %s, %s"):format(math.floor(CalculateRGB.R * 255), math.floor(CalculateRGB.G * 255), math.floor(CalculateRGB.B * 255))
+
+                            ColorpickerBase.Color = HSVColor
+
+                            if not Options.Visual then
+                                Library.Flags[Colorpicker.Flag] = HSVColor
+                                Colorpicker.Callback(HSVColor)
+                            end
+                        end
+                        --
+                        function Colorpicker:RefreshHue()
+                            local PercentHue = math.clamp(((Mouse.Y + 36) - InternalHue.Position.Y) / (InternalHue.Size.Y), 0, 1)
+                            local ValueHue = math.floor((0 + (1 - 0) * PercentHue) * Colorpicker.Decimals) / Colorpicker.Decimals
+                            ValueHue = math.clamp(ValueHue, 0, 1)
+                            self:SetHue({
+                                Value = ValueHue, 
+                                Percent = PercentHue
+                            })
+                        end
+                        --
+                        function Colorpicker:SetSaturationX(Options)
+                            local PercentX = Options.Percent or Options.Value
+
+                            local HSVColor = Color3.fromHSV(Colorpicker.Colors.HSV[1], Colorpicker.Colors.HSV[2], Colorpicker.Colors.HSV[3])
+                            Colorpicker.Colors.HSV[2] = Options.Value
+
+                            Cursor.Position = Vector2.new(InternalBase.Position.X + (InternalBase.Size.X * PercentX) - 4, Colorpicker.Offsets.Y)
+                            Colorpicker.Offsets.X = Cursor.Position.X
+
+                            InternalHex.Text = ("#%s"):format(tostring(HSVColor:ToHex()))
+
+                            local CalculateRGB = Color3.fromRGB(math.floor((HSVColor.R * 255)), math.floor((HSVColor.G * 255)), math.floor((HSVColor.B * 255)))
+                            InternalRGB.Text = ("%s, %s, %s"):format(math.floor(CalculateRGB.R * 255), math.floor(CalculateRGB.G * 255), math.floor(CalculateRGB.B * 255))
+
+                            ColorpickerBase.Color = HSVColor
+
+                            if not Options.Visual then
+                                Library.Flags[Colorpicker.Flag] = HSVColor
+                                Colorpicker.Callback(HSVColor)
+                            end
+                        end
+                        --
+                        function Colorpicker:SetSaturationY(Options)
+                            local PercentY = Options.Percent or 1 - Options.Value
+
+                            local HSVColor = Color3.fromHSV(Colorpicker.Colors.HSV[1], Colorpicker.Colors.HSV[2], Colorpicker.Colors.HSV[3])
+                            Colorpicker.Colors.HSV[3] = Options.Value
+        
+                            Cursor.Position = Vector2.new(Colorpicker.Offsets.X, InternalBase.Position.Y + (InternalBase.Size.Y * PercentY) - 4)
+                            Colorpicker.Offsets.Y = Cursor.Position.Y
+
+                            InternalHex.Text = ("#%s"):format(tostring(HSVColor:ToHex()))
+
+                            local CalculateRGB = Color3.fromRGB(math.floor((HSVColor.R * 255)), math.floor((HSVColor.G * 255)), math.floor((HSVColor.B * 255)))
+                            InternalRGB.Text = ("%s, %s, %s"):format(math.floor(CalculateRGB.R * 255), math.floor(CalculateRGB.G * 255), math.floor(CalculateRGB.B * 255))
+
+                            ColorpickerBase.Color = HSVColor
+
+                            if not Options.Visual then
+                                Library.Flags[Colorpicker.Flag] = HSVColor
+                                Colorpicker.Callback(HSVColor)
+                            end
+                        end
+                        --
+                        function Colorpicker:RefreshSaturation()
+                            local PercentX = math.clamp((Mouse.X - InternalSaturation.Position.X) / (InternalSaturation.Size.X), 0, 1)
+                            local ValueX = math.floor((1 * PercentX) * Colorpicker.Decimals) / Colorpicker.Decimals
+                            ValueX = math.clamp(ValueX, 0, 1)
+                            self:SetSaturationX({
+                                Value = ValueX, 
+                                Percent = PercentX
+                            })
+                            --
+                            local PercentY = math.clamp(((Mouse.Y + 36) - InternalSaturation.Position.Y) / (InternalSaturation.Size.Y), 0, 1)
+                            local ValueY = 1 - math.floor((1 * PercentY) * Colorpicker.Decimals) / Colorpicker.Decimals
+                            ValueY = math.clamp(ValueY, 0, 1)
+                            self:SetSaturationY({
+                                Value = ValueY, 
+                                Percent = PercentY
+                            })
+                        end
+                        --
+                        Utility.AddConnection(UserInput.InputEnded, function(Input, Useless)
+                            if Useless then
+                                return
+                            end
+                            for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                if Index ~= ToggleTitle.Text and Value then
+                                    return
+                                end
+                            end
+                            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                Colorpicker.HueDragging = false
+                                Colorpicker.SaturationDragging = false
+                            end
+                        end)
+        
+                        Utility.AddConnection(UserInput.InputChanged, function(Input, Useless)
+                            if Useless then
+                                return
+                            end
+                            if Input.UserInputType == Enum.UserInputType.MouseMovement then
+                                for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                    if Index ~= ToggleTitle.Text and Value then
+                                        return
+                                    end
+                                end
+                                if Colorpicker.HueDragging then
+                                    Colorpicker:RefreshHue()
+                                elseif Colorpicker.SaturationDragging then
+                                    Colorpicker:RefreshSaturation()
+                                end
+                            end
+                        end)
+                        --
+                        Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                            if Useless then
+                                return
+                            end
+                            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                    if Index ~= ToggleTitle.Text and Value then
+                                        return
+                                    end
+                                end
+                                if Utility.OnMouse(ColorpickerInline) then
+                                    Colorpicker.Dropped = not Colorpicker.Dropped
+                                    Tab.Dropdowns[Side][ToggleTitle.Text] = Colorpicker.Dropped
+                                    Colorpicker:Drop(Colorpicker.Dropped)
+                                elseif Utility.OnMouse(InternalSaturation) then
+                                    Colorpicker:RefreshSaturation()
+                                    Colorpicker.SaturationDragging = true
+                                elseif Utility.OnMouse(InternalHue) then
+                                    Colorpicker:RefreshHue()
+                                    Colorpicker.HueDragging = true
+                                elseif Utility.OnMouse(InternalInlineRainbow) then
+                                    Colorpicker.Rainbow = not Colorpicker.Rainbow
+                                    InternalRainbow.Color = Colorpicker.Rainbow and Library.Theme.Accent[1] or Library.Theme.Text
+                                    if not Colorpicker.Rainbow then
+                                        Colorpicker:SetHue({Value = Colorpicker.Colors.HSV[1]})
+                                        Colorpicker:SetSaturationX({Value = Colorpicker.Colors.HSV[2]})
+                                        Colorpicker:SetSaturationY({Value = Colorpicker.Colors.HSV[3]})
+                                    end
+                                else
+                                    Colorpicker.Dropped = false
+                                    Tab.Dropdowns[Side][ToggleTitle.Text] = Colorpicker.Dropped
+                                    Colorpicker:Drop(Colorpicker.Dropped)
+                                end
+                            end
+                        end)
+                        --
+                        Utility.AddConnection(RunService.RenderStepped, function(Input, Useless)
+                            if Colorpicker.Rainbow then
+                                -- Colorpicker:SetHue({Value = tick() % 2 / 2, Visual = true})
+                                -- Colorpicker:SetSaturationX({Value = 0.5, Visual = true})
+                                -- Colorpicker:SetSaturationY({Value = 1, Visual = true})
+                                Library.Flags[Colorpicker.Flag] = Color3.fromHSV(tick() % 2 / 2, 0.5, 1)
+                                Colorpicker.Callback(Color3.fromHSV(tick() % 2 / 2, 0.5, 1))
+                            end
+                        end)
+                        --
+                        Colorpicker:SetHue({Value = Colorpicker.Colors.HSV[1]})
+                        Colorpicker:SetSaturationX({Value = Colorpicker.Colors.HSV[2]})
+                        Colorpicker:SetSaturationY({Value = Colorpicker.Colors.HSV[3]})
+                        --
+                        Tab["Render"][#Tab["Render"] + 1] = ColorpickerInline
+                        Tab["Render"][#Tab["Render"] + 1] = ColorpickerOutline
+                        Tab["Render"][#Tab["Render"] + 1] = ColorpickerBase
+                        Tab["Render"][#Tab["Render"] + 1] = ColorpickerGradient
+                        --
+                        Colorpicker:Drop(false)
+                        --
+                        return Colorpicker
+                    end
+                    --
+                    function Toggle:Keybind(Options)
+                        local Keybind = {
+                            Axis = Section.ContentAxis,
+                            Title = Options.Title or "LOL",
+                            EnumType = Options.Key.EnumType == Enum.KeyCode and "KeyCode" or "UserInputType",
+                            Key = Options.Key or Enum.UserInputType.MouseButton2,
+                            StateType = Options.StateType or "Hold",
+                            State = false,
+                            Shorten = "",
+                            Binding = false,
+                            Dropped = false,
+                            Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end,
+                            ShowRender = "",
+                            AddN = false
+                        }
+                        --
+                        Options.Flag = Options.Flag or "AWGWJIjgAWJIGIJAWG"
+                        Library.Flags[Options.Flag] = Keybind.State
+                        --
+                        if Keybind.StateType == "Always" then
+                            Keybind.Callback(Keybind.State, Keybind.Key)
+                            Library.Flags[Options.Flag] = true
+                        end
+                        --
+                        Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                        --
+                        Keybind.ShowRender = ("[%s] %s"):format(Keybind.Shorten, Options.Title)
+                        --
+                        local KeybindInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X - 40 - 6, SectionInline.Position.Y + Keybind.Axis + 2),
+                            Size = Vector2.new(40, 14),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true
+                        })
+                        --
+                        local KeybindOutline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(KeybindInline.Size.X - 2, KeybindInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindInline.Position.X + 1, KeybindInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true
+                        })
+                        --
+                        local KeybindGradient = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(KeybindInline.Size.X - 2, KeybindInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindInline.Position.X + 1, KeybindInline.Position.Y + 1),
+                            Data = Library.Theme.Gradient,
+                            Transparency = 1,
+                            Visible = true
+                        })
+                        --
+                        local KeybindValue = Utility.AddDrawing("Text", {
+                            Text = Keybind.Shorten,
+                            Position = Vector2.new(KeybindInline.Position.X + (KeybindInline.Size.X / 2), KeybindInline.Position.Y),
+                            Center = true,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 2
+                        })
+                        --
+                        local KeybindHoldInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X + 2 - 6, SectionInline.Position.Y + Keybind.Axis + 2),
+                            Size = Vector2.new(60, 16),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindHoldOutline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(KeybindHoldInline.Size.X - 2, KeybindHoldInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindHoldInline.Position.X + 1, KeybindHoldInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindHoldGradient = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(KeybindHoldInline.Size.X - 2, KeybindHoldInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindHoldInline.Position.X + 1, KeybindHoldInline.Position.Y + 1),
+                            Data = Library.Theme.Gradient,
+                            Transparency = 1,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindHoldValue = Utility.AddDrawing("Text", {
+                            Text = "Hold",
+                            Position = Vector2.new(KeybindHoldInline.Position.X + (KeybindHoldInline.Size.X / 2), KeybindHoldInline.Position.Y),
+                            Center = true,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindToggleInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X + 2 - 6, SectionInline.Position.Y + Keybind.Axis + 18),
+                            Size = Vector2.new(60, 16),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true
+                        })
+                        --
+                        local KeybindToggleOutline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(KeybindToggleInline.Size.X - 2, KeybindToggleInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindToggleInline.Position.X + 1, KeybindToggleInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindToggleGradient = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(KeybindToggleInline.Size.X - 2, KeybindToggleInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindToggleInline.Position.X + 1, KeybindToggleInline.Position.Y + 1),
+                            Data = Library.Theme.Gradient,
+                            Transparency = 1,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindToggleValue = Utility.AddDrawing("Text", {
+                            Text = "Toggle",
+                            Position = Vector2.new(KeybindToggleInline.Position.X + (KeybindToggleInline.Size.X / 2), KeybindToggleInline.Position.Y),
+                            Center = true,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindAlwaysInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X + 2 - 6, SectionInline.Position.Y + Keybind.Axis + 34),
+                            Size = Vector2.new(60, 16),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindAlwaysOutline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(KeybindAlwaysInline.Size.X - 2, KeybindAlwaysInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindAlwaysInline.Position.X + 1, KeybindAlwaysInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindAlwaysGradient = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(KeybindAlwaysInline.Size.X - 2, KeybindAlwaysInline.Size.Y - 2),
+                            Position = Vector2.new(KeybindAlwaysInline.Position.X + 1, KeybindAlwaysInline.Position.Y + 1),
+                            Data = Library.Theme.Gradient,
+                            Transparency = 1,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local KeybindAlwaysValue = Utility.AddDrawing("Text", {
+                            Text = "Always",
+                            Position = Vector2.new(KeybindAlwaysInline.Position.X + (KeybindAlwaysInline.Size.X / 2), KeybindAlwaysInline.Position.Y),
+                            Center = true,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        function Keybind:Drop(State)
+                            KeybindHoldInline.Visible = State
+                            KeybindHoldOutline.Visible = State
+                            KeybindHoldGradient.Visible = State
+                            KeybindHoldValue.Visible = State
+    
+                            KeybindToggleInline.Visible = State
+                            KeybindToggleOutline.Visible = State
+                            KeybindToggleGradient.Visible = State
+                            KeybindToggleValue.Visible = State
+    
+                            KeybindAlwaysInline.Visible = State
+                            KeybindAlwaysOutline.Visible = State
+                            KeybindAlwaysGradient.Visible = State
+                            KeybindAlwaysValue.Visible = State
+                        end
+                        --
+                        function Keybind:SetStateType(State)
+                            if State == "Hold" then
+                                Keybind.StateType = "Hold"
+    
+                                KeybindAlwaysValue.Color = Library.Theme.Text
+                                KeybindToggleValue.Color = Library.Theme.Text
+                                KeybindHoldValue.Color = Library.Theme.Accent[1]
+                            elseif State == "Toggle" then
+                                Keybind.StateType = "Toggle"
+    
+                                KeybindAlwaysValue.Color = Library.Theme.Text
+                                KeybindToggleValue.Color = Library.Theme.Accent[1]
+                                KeybindHoldValue.Color = Library.Theme.Text
+                            else
+                                Keybind.StateType = "Always"
+    
+                                KeybindAlwaysValue.Color = Library.Theme.Accent[1]
+                                KeybindToggleValue.Color = Library.Theme.Text
+                                KeybindHoldValue.Color = Library.Theme.Text
+                            end
+                        end
+                        --
+                        Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                if Keybind.Binding then
+                                    Keybind.Binding = false
+                                    Keybind.Key = Enum.UserInputType.MouseButton1
+                                    Keybind.EnumType = "UserInputType"
+                                    local Old = Keybind.Shorten
+                                    Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                                    Window.BindList = string.gsub(Window.BindList, "\n%[" .. Old .. "%] " .. Options.Title, ("\n[%s] %s"):format(Keybind.Shorten, Options.Title))
+                                    KeybindValue.Text = Keybind.Binding and "[...]" or Keybind.Shorten
+                                end
+                                if Utility.OnMouse(KeybindHoldInline) then
+                                    Keybind:SetStateType("Hold")
+                                end
+                                if Utility.OnMouse(KeybindToggleInline) then
+                                    Keybind:SetStateType("Toggle")
+                                end
+                                if Utility.OnMouse(KeybindAlwaysInline) then
+                                    Keybind:SetStateType("Always")
+                                end
+                                if Utility.OnMouse(KeybindInline) then
+                                    for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                        if Value then
+                                            return
+                                        end
+                                    end
+                                    if Keybind.Binding then
+                                        Keybind.Binding = false
+                                        KeybindValue.Text = Keybind.Shorten
+                                        Keybind.ShowRender = ("[%s] %s"):format(Keybind.Shorten, Options.Title)
+                                    else
+                                        Keybind.Binding = true
+                                        KeybindValue.Text = Keybind.Binding and "[...]" or Keybind.Shorten
+                                    end
+                                else
+                                    if Utility.OnMouse(KeybindHoldInline) or Utility.OnMouse(KeybindToggleInline) or Utility.OnMouse(KeybindAlwaysInline) then
+                                        return
+                                    end
+                                    Keybind.Dropped = false
+                                    Keybind:Drop(Keybind.Dropped)
+                                    Tab.Dropdowns["Left"][ToggleTitle.Text] = Keybind.Dropped
+                                    Tab.Dropdowns["Right"][ToggleTitle.Text] = Keybind.Dropped
+                                end
+                            elseif Input.UserInputType == Enum.UserInputType.Keyboard then
+                                if Keybind.Binding then
+                                    Keybind.Binding = false
+                                    Keybind.Key = Input.KeyCode
+                                    Keybind.EnumType = "KeyCode"
+                                    local Old = Keybind.Shorten
+                                    Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                                    KeybindValue.Text = Keybind.Shorten
+                                    Window.BindList = string.gsub(Window.BindList, "\n%[" .. Old .. "%] " .. Options.Title, ("\n[%s] %s"):format(Keybind.Shorten, Options.Title))
+                                    Keybind.ShowRender = ("[%s] %s"):format(Keybind.Shorten, Options.Title)
+                                end
+                            elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
+                                if Keybind.Binding then
+                                    Keybind.Binding = false
+                                    Keybind.Key = Enum.UserInputType.MouseButton2
+                                    Keybind.EnumType = "UserInputType"
+                                    local Old = Keybind.Shorten
+                                    Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                                    KeybindValue.Text = Keybind.Shorten
+                                    Window.BindList = string.gsub(Window.BindList, "\n%[" .. Old .. "%] " .. Options.Title, ("\n[%s] %s"):format(Keybind.Shorten, Options.Title))
+                                    Keybind.ShowRender = ("[%s] %s"):format(Keybind.Shorten, Options.Title)
+                                end
+                                if Utility.OnMouse(KeybindInline) then
+                                    Keybind.Dropped = not Keybind.Dropped
+                                    Keybind:Drop(Keybind.Dropped)
+                                    Tab.Dropdowns["Left"][ToggleTitle.Text] = Keybind.Dropped
+                                    Tab.Dropdowns["Right"][ToggleTitle.Text] = Keybind.Dropped
+                                end
+                            end
+                        end)
+                        --
+                        Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                            if (Keybind.EnumType == "KeyCode" and Input.KeyCode == Keybind.Key) or (Keybind.EnumType == "UserInputType" and Input.UserInputType == Keybind.Key) then
+                                if Keybind.StateType ~= "Always" then
+                                    if Keybind.StateType == "Toggle" then
+                                        Keybind.State = not Keybind.State
+                                    elseif Keybind.StateType == "Hold" then
+                                        Keybind.State = true
+                                    end
+                                    if Keybind.State then
+                                        if not string.find(Window.BindList, "\n%[" .. Keybind.Shorten .. "%] " .. Options.Title) then
+                                            Window.BindList = Window.BindList .. "\n" .. Keybind.ShowRender
+                                        end
+                                    else
+                                        Keybind:RemoveFromKeyBindGui()
+                                    end
+                                    Keybind.Callback(Keybind.State, Keybind.Key)
+                                    Library.Flags[Options.Flag] = Keybind.State
+                                end
+                            end
+                        end)
+                        --
+                        Utility.AddConnection(RunService.Stepped, function(Input, Useless)
+                            if Keybind.StateType == "Always" then
+                                Keybind.State = true
+                                Keybind.Callback(Keybind.State, Keybind.Key)
+                                Library.Flags[Options.Flag] = Keybind.State
+                                if not string.find(Window.BindList, "\n%[" .. Keybind.Shorten .. "%] " .. Options.Title) then
+                                    Window.BindList = Window.BindList .. "\n" .. Keybind.ShowRender
+                                end
+                            end
+                        end)
+                        --
+                        Keybind:SetStateType(Keybind.StateType)
+                        --
+                        function Keybind:RemoveFromKeyBindGui()
+                            Window.BindList = string.gsub(Window.BindList, "\n%[" .. Keybind.Shorten .. "%] " .. Options.Title, "")
+                        end
+                        --
+                        Utility.AddConnection(UserInput.InputEnded, function(Input, Useless)
+                            if (Keybind.EnumType == "KeyCode" and Input.KeyCode == Keybind.Key) or (Keybind.EnumType == "UserInputType" and Input.UserInputType == Keybind.Key) then
+                                if Keybind.StateType ~= "Always" then
+                                    if Keybind.StateType == "Hold" then
+                                        Keybind.State = false
+                                        Keybind:RemoveFromKeyBindGui()
+                                        Keybind.Callback(Keybind.State, Keybind.Key)
+                                        Library.Flags[Options.Flag] = Keybind.State
+                                    end
+                                end
+                            end
+                        end)
+                        --
+                        Keybind:Drop(false)
+                        --
+                        Tab["Render"][#Tab["Render"] + 1] = KeybindTitle
+                        Tab["Render"][#Tab["Render"] + 1] = KeybindGradient
+                        Tab["Render"][#Tab["Render"] + 1] = KeybindInline
+                        Tab["Render"][#Tab["Render"] + 1] = KeybindOutline
+                        Tab["Render"][#Tab["Render"] + 1] = KeybindValue
+                        --
+                        return Keybind
+                    end
+                    --
+                    return Toggle
+                end
+                --
+                function Section:Slider(Options)
+                    local Slider = {
+                        TypeOf = "Slider",
+                        Default = Options.Default or 100,
+                        Decimals = Options.Decimals or 1,
+                        Axis = Section.ContentAxis,
+                        Max = Options.Max or 200,
+                        Min = Options.Min or 0,
+                        Dragging = false,
+                        Symbol = Options.Symbol or "",
+                        Current = Options.Default,
+                        Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end
+                    }
+                    --
+                    Options.Flag = Options.Flag or "AWGWJIjgAWJIGIJAWG"
+                    Library.Flags[Options.Flag] = Slider.Default
+                    --
+                    if Slider.Min > Slider.Max then 
+                        Slider.Min = Slider.Max - 1 
+                    end
+                    if Slider.Default < Slider.Min then 
+                        Slider.Default = Slider.Min 
+                    end
+                    if Slider.Default > Slider.Max then 
+                        Slider.Default = Slider.Max 
+                    end
+                    --
+                    local SliderInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + 8, SectionInline.Position.Y + 23 + Slider.Axis + 15),
+                        Size = Vector2.new(SectionOutline.Size.X - 12, 13),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local SliderOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(SliderInline.Size.X - 2, SliderInline.Size.Y - 2),
+                        Position = Vector2.new(SliderInline.Position.X + 1, SliderInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local SliderBar = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(SliderOutline.Size.X / 2, SliderOutline.Size.Y),
+                        Position = Vector2.new(SliderOutline.Position.X, SliderOutline.Position.Y),
+                        Thickness = 0,
+                        Transparency = 0.75,
+                        Color = Library.Theme.Accent[1], --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local SliderGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(SliderInline.Size.X - 2, SliderInline.Size.Y - 2),
+                        Position = Vector2.new(SliderInline.Position.X + 1, SliderInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 0.5,
+                        Visible = false
+                    })
+                    --
+                    local SliderTitle = Utility.AddDrawing("Text", {
+                        Text = Options.Title,
+                        Position = Vector2.new(SliderInline.Position.X, SliderInline.Position.Y - 17),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local SliderValue = Utility.AddDrawing("Text", {
+                        Position = Vector2.new(SliderInline.Position.X + (SliderInline.Size.X / 2), SliderInline.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    SliderValue.Outline = true
+                    --
+                    Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                        if Type == "Accent" then
+                            SliderBar.Color = Color
+                        elseif Type == "LightContrast" then
+                            SliderOutline.Color = Color
+                        elseif Type == "Text" then
+                            SliderTitle.Color = Color
+                            SliderValue.Color = Color
+                        elseif Type == "Inline" then
+                            SliderInline.Color = Color
+                        end
+                    end)
+                    --
+                    function Slider:SetText(Text)
+                        SliderText.Text = Text
+                    end
+    
+                    function Slider:Set(GetValue, ConvertToMin)
+                        if GetValue > Slider.Max then return end
+                        if GetValue < Slider.Min then return end
+                        
+                        local Bracket = 1 / Slider.Decimals
+                        local DecimalsCon = math.clamp(math.round(GetValue * Bracket) / Bracket, Slider.Min, Slider.Max)
+                        local Percent = 1 - ((Slider.Max - DecimalsCon) / (Slider.Max - Slider.Min))
+                        SliderBar.Size = Vector2.new(SliderOutline.Size.X * Percent, SliderOutline.Size.Y)
+                        SliderValue.Text = ("%s%s/%s%s"):format(DecimalsCon, Slider.Symbol, Slider.Max, Slider.Symbol)
+                        Library.Flags[Options.Flag] = GetValue
+                        Slider.Callback(GetValue)
+                    end
+    
+                    function Slider:SetMax(NewMax)
+                        if NewMax < Slider.Current then Slider.Current = NewMax end
+                        if Slider.Current < Slider.Min then return end
+    
+                        Slider.Max = NewMax
+                        local DecimalsCon = math.clamp(math.round(Slider.Current * Slider.Decimals) / Slider.Decimals, Slider.Min, Slider.Max)
+                        local Percent = 1 - ((Slider.Max - DecimalsCon) / (Slider.Max - Slider.Min))
+                        SliderBar.Size = Vector2.new(SliderOutline.Size.X * Percent, SliderOutline.Size.Y)
+                        SliderValue.Text = ("%s%s/%s%s"):format(DecimalsCon, Slider.Symbol, Slider.Max, Slider.Symbol)
+                        Library.Flags[Options.Flag] = Slider.Current
+                        Slider.Callback(Slider.Current)
+                    end
+    
+                    function Slider:SetMin(NewMin)
+                        Slider.Min = NewMin
+                        if Slider.Current > Slider.Max then return end
+                        if Slider.Current < Slider.Min then return end
+    
+                        local DecimalsCon = math.clamp(math.round(Slider.Current * Slider.Decimals) / Slider.Decimals, Slider.Min, Slider.Max)
+                        local Percent = 1 - ((Slider.Max - DecimalsCon) / (Slider.Max - Slider.Min))
+                        SliderBar.Size = Vector2.new(SliderOutline.Size.X * Percent, SliderOutline.Size.Y)
+                        SliderValue.Text = ("%s%s/%s%s"):format(DecimalsCon, Slider.Symbol, Slider.Max, Slider.Symbol)
+                        Library.Flags[Options.Flag] = Slider.Current
+                        Slider.Callback(Slider.Current)
+                    end
+    
+                    function Slider:Refresh()
+                        local Percent = math.clamp((Mouse.X - SliderOutline.Position.X) / (SliderOutline.Size.X), 0, 1)
+                        local Bracket = 1 / Slider.Decimals
+                        local Value = math.floor((Slider.Min + (Slider.Max - Slider.Min) * Percent) * Bracket) / Bracket
+                        Value = math.clamp(Value, Slider.Min, Slider.Max)
+                        Slider:Set(Value)
+                    end
+    
+                    Slider:Set(Slider.Default)
+                
+                    --
+                    Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                        
+                        for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                            if Value then
+                                return
+                            end
+                        end
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 and Utility.OnMouse(SliderOutline) then
+                            Slider:Refresh()
+                            Slider.Dragging = true
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(UserInput.InputEnded, function(Input, Useless)
+                        
+                        for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                            if Value then
+                                return
+                            end
+                        end
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            Slider.Dragging = false
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(UserInput.InputChanged, function(Input, Useless)
+                        if Utility.OnMouse(SliderInline) then
+                            SliderInline.Color = Library.Theme.Accent[1]
+                        else
+                            SliderInline.Color = Library.Theme.Inline
+                        end
+                        
+                        for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                            if Value then
+                                return
+                            end
+                        end
+                        if Input.UserInputType == Enum.UserInputType.MouseMovement and Slider.Dragging then
+                            Slider:Refresh()
+                        end
+                    end)
+                    --
+                    Section.ContentAxis = Section.ContentAxis + SliderOutline.Size.Y + 24
+                    Tab.SectionAxis = {
+                        Side == "Left" and Tab.SectionAxis[1] + SliderOutline.Size.Y + 24 or Tab.SectionAxis[1], 
+                        Side == "Right" and Tab.SectionAxis[2] + SliderOutline.Size.Y + 24 or Tab.SectionAxis[2]
+                    }
+                    --
+                    self:UpdateSizeY(Section.ContentAxis + SliderOutline.Size.Y)
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = SliderInline
+                    Tab["Render"][#Tab["Render"] + 1] = SliderOutline
+                    Tab["Render"][#Tab["Render"] + 1] = SliderTitle
+                    Tab["Render"][#Tab["Render"] + 1] = SliderGradient
+                    Tab["Render"][#Tab["Render"] + 1] = SliderBar
+                    Tab["Render"][#Tab["Render"] + 1] = SliderValue
+                    --
+                    return Slider
+                end
+                --
+                function Section:Button(Options)
+                    local Button = {
+                        Title = Options.Title or "LMAO",
+                        Axis = Section.ContentAxis,
+                        Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end
+                    }
+                    --
+                    local ButtonInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + 8, SectionInline.Position.Y + 24 + Button.Axis),
+                        Size = Vector2.new(SectionOutline.Size.X - 12, 18),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ButtonOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(ButtonInline.Size.X - 2, ButtonInline.Size.Y - 2),
+                        Position = Vector2.new(ButtonInline.Position.X + 1, ButtonInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ButtonGradient = Utility.AddDrawing("Image", {
+                        Size = ButtonOutline.Size,
+                        Position = ButtonOutline.Position,
+                        Data = Library.Theme.Gradient,
+                        Transparency = 0.5,
+                        Visible = true
+                    })
+                    --
+                    local ButtonTitle = Utility.AddDrawing("Text", {
+                        Text = Options.Title,
+                        Position = Vector2.new(ButtonInline.Position.X + (ButtonInline.Size.X / 2), ButtonInline.Position.Y + 2),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                        if Type == "LightContrast" then
+                            ButtonOutline.Color = Color
+                        elseif Type == "Text" then
+                            ButtonTitle.Color = Color
+                        elseif Type == "Inline" then
+                            ButtonInline.Color = Color
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(UserInput.InputChanged, function(Input, Useless)
+                        if Utility.OnMouse(ButtonInline) then
+                            ButtonInline.Color = Library.Theme.Accent[1]
+                        else
+                            ButtonInline.Color = Library.Theme.Inline
+                        end
+                    end)
+                    --
+                    function Button:EmitEffect()
+                        ButtonOutline.Color = Library.Theme.LightContrast
+                        delay(0.1, function()
+                            pcall(function()
+                                ButtonOutline.Color = Library.Theme.DarkContrast
+                            end)
+                        end)
+                    end
+                    --
+                    Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                        
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 and Utility.OnMouse(ButtonOutline) then
+                            for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                if Value then
+                                    return
+                                end
+                            end
+                            Button:EmitEffect()
+                            Button.Callback()
+                        end
+                    end)
+                    --
+                    Section.ContentAxis = Section.ContentAxis + ButtonOutline.Size.Y + 6
+                    Tab.SectionAxis = {
+                        Side == "Left" and Tab.SectionAxis[1] + ButtonOutline.Size.Y + 6 or Tab.SectionAxis[1], 
+                        Side == "Right" and Tab.SectionAxis[2] + ButtonOutline.Size.Y + 6 or Tab.SectionAxis[2]
+                    }
+                    --
+                    self:UpdateSizeY(Section.ContentAxis + ButtonOutline.Size.Y)
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = ButtonInline
+                    Tab["Render"][#Tab["Render"] + 1] = ButtonGradient
+                    Tab["Render"][#Tab["Render"] + 1] = ButtonOutline
+                    Tab["Render"][#Tab["Render"] + 1] = ButtonTitle
+                    --
+                    return Button
+                end
+                --
+                function Section:Colorpicker(Options)
+                    local Colorpicker = {
+                        Axis = Section.ContentAxis,
+                        Color = Options.Color,
+                        HexColor = Options.Color:ToHex(),
+                        Dropped = false,
+                        Offsets = {
+                            X = 0,
+                            Y = 0
+                        },
+                        Colors = {
+                            HSV = {1, 1, 1}
+                        },
+                        SaturationDragging = false,
+                        HueDragging = false,
+                        Decimals = 50,
+                        Rainbow = false,
+                        Flag = Options.Flag,
+                        Title = Options.Title or "Color Picker",
+                        Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end
+                    }
+                    --
+                    Library.Flags[Colorpicker.Flag] = Colorpicker.HexColor
+                    --
+                    local H, S, V = Colorpicker.Color:ToHSV()
+                    Colorpicker.Colors.HSV[1] = H
+                    Colorpicker.Colors.HSV[2] = S
+                    Colorpicker.Colors.HSV[3] = V
+                    --
+                    local ColorpickerTitle = Utility.AddDrawing("Text", {
+                        Text = Options.Title,
+                        Position = Vector2.new(SectionInline.Position.X + 8, SectionInline.Position.Y + 23 + Colorpicker.Axis),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local ColorpickerInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new((SectionInline.Position.X + SectionInline.Size.X) - 38, SectionInline.Position.Y + 23 + Colorpicker.Axis),
+                        Size = Vector2.new(30, 12),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ColorpickerOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(ColorpickerInline.Size.X - 2, ColorpickerInline.Size.Y - 2),
+                        Position = Vector2.new(ColorpickerInline.Position.X + 1, ColorpickerInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ColorpickerBase = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(ColorpickerInline.Size.X - 2, ColorpickerInline.Size.Y - 2),
+                        Position = Vector2.new(ColorpickerInline.Position.X + 1, ColorpickerInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Colorpicker.Color, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local ColorpickerGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(ColorpickerInline.Size.X - 2, ColorpickerInline.Size.Y - 2),
+                        Position = Vector2.new(ColorpickerInline.Position.X + 1, ColorpickerInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 0.5,
+                        Visible = true
+                    })
+                    --
+                    local InternalInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new((ColorpickerInline.Position.X - 225) + ColorpickerInline.Size.X, ColorpickerInline.Position.Y + 18),
+                        Size = Vector2.new(225, 250),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(InternalInline.Size.X - 2, InternalInline.Size.Y - 2),
+                        Position = Vector2.new(InternalInline.Position.X + 1, InternalInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalTopline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(InternalOutline.Size.X, 1),
+                        Position = Vector2.new(InternalOutline.Position.X, InternalOutline.Position.Y),
+                        Thickness = 0,
+                        Color = Library.Theme.Accent[1],
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                        if Type == "Accent" then
+                            InternalTopline.Color = Color
+                        end
+                    end)
+                    --
+                    local InternalTitle = Utility.AddDrawing("Text", {
+                        Text = Options.Title,
+                        Position = Vector2.new(InternalOutline.Position.X + 8, InternalOutline.Position.Y + 6),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalBaseInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(InternalOutline.Position.X + 8, InternalOutline.Position.Y + 25),
+                        Size = Vector2.new(192, 192),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalBase = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(192 - 4, 192 - 4),
+                        Position = Vector2.new(InternalBaseInline.Position.X + 2, InternalBaseInline.Position.Y + 2),
+                        Thickness = 0,
+                        Color = Options.Color, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalSaturation = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(196 - 2, 196 - 2),
+                        Position = Vector2.new(InternalOutline.Position.X + 8 + 1, InternalOutline.Position.Y + 25 + 1),
+                        Data = Library.Theme.Saturation,
+                        Transparency = 1,
+                        Visible = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalHueInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(InternalOutline.Position.X + InternalBase.Size.X + 14, InternalOutline.Position.Y + 26),
+                        Size = Vector2.new(16, 196),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalHue = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(InternalHueInline.Size.X - 2, InternalHueInline.Size.Y - 2),
+                        Position = Vector2.new(InternalHueInline.Position.X + 1, InternalHueInline.Position.Y + 1),
+                        Data = Library.Theme.Hue,
+                        Transparency = 1,
+                        Visible = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalOutlineHuePicker = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(InternalOutline.Position.X + InternalBase.Size.X + 12, InternalOutline.Position.Y + 26),
+                        Size = Vector2.new(InternalHueInline.Size.X + 2, 6),
+                        Thickness = 2,
+                        Color = Library.Theme.Outline,
+                        Visible = true,
+                        Filled = false,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalHuePicker = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(InternalOutlineHuePicker.Position.X + 1, InternalOutlineHuePicker.Position.Y + 1),
+                        Size = Vector2.new(InternalOutlineHuePicker.Size.X - 2, InternalOutlineHuePicker.Size.Y - 2),
+                        Thickness = 2,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        Filled = false,
+                        ZIndex = 3
+                    })
+                    --
+                    
+                    --
+                    local Cursor = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(6, 6),
+                        Data = Library.Theme.SaturationCursor,
+                        Transparency = 1,
+                        Visible = true,
+                        ZIndex = 6
+                    })
+                    --
+                    local InternalInlineHex = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(80 - 2, 18 - 2),
+                        Position = Vector2.new(InternalOutline.Position.X + 8 + 1, InternalOutline.Position.Y + InternalSaturation.Size.Y + 30 + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalOutlineHex = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(InternalInlineHex.Size.X - 2, InternalInlineHex.Size.Y - 2),
+                        Position = Vector2.new(InternalInlineHex.Position.X + 1, InternalInlineHex.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalHex = Utility.AddDrawing("Text", {
+                        Text = ("#%s"):format(tostring(Colorpicker.HexColor)),
+                        Position = Vector2.new(InternalOutlineHex.Position.X + (InternalOutlineHex.Size.X / 2), InternalOutlineHex.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalInlineRGB = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(130 - 2, 18 - 2),
+                        Position = Vector2.new(InternalOutline.Position.X + 90 + 1, InternalOutline.Position.Y + InternalSaturation.Size.Y + 30 + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalOutlineRGB = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(InternalInlineRGB.Size.X - 2, InternalInlineRGB.Size.Y - 2),
+                        Position = Vector2.new(InternalInlineRGB.Position.X + 1, InternalInlineRGB.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalRGB = Utility.AddDrawing("Text", {
+                        Text = ("%s, %s, %s"):format(math.floor(Colorpicker.Color.R * 255), math.floor(Colorpicker.Color.G * 255), math.floor(Colorpicker.Color.B * 255)),
+                        Position = Vector2.new(InternalOutlineRGB.Position.X + (InternalOutlineRGB.Size.X / 2), InternalOutlineRGB.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 3
+                    })
+                    --
+                    
+                    --
+                    local InternalInlineRainbow = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(100 - 2, 18 - 2),
+                        Position = Vector2.new((InternalOutline.Position.X + InternalOutline.Size.X) - 100 - 2 + 1, InternalOutline.Position.Y + 4 + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalOutlineRainbow = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(InternalInlineRainbow.Size.X - 2, InternalInlineRainbow.Size.Y - 2),
+                        Position = Vector2.new(InternalInlineRainbow.Position.X + 1, InternalInlineRainbow.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true,
+                        ZIndex = 3
+                    })
+                    --
+                    local InternalRainbow = Utility.AddDrawing("Text", {
+                        Text = "Rainbow",
+                        Position = Vector2.new(InternalOutlineRainbow.Position.X + (InternalOutlineRainbow.Size.X / 2), InternalOutlineRainbow.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 3
+                    })
+                    --
+                    function Colorpicker:Drop(State)
+                        InternalInline.Visible = State
+                        InternalOutline.Visible = State
+                        InternalTitle.Visible = State
+                        InternalBaseInline.Visible = State
+                        InternalBase.Visible = State
+                        InternalSaturation.Visible = State
+                        InternalHueInline.Visible = State
+                        InternalHue.Visible = State
+                        InternalOutlineHex.Visible = State
+                        InternalInlineHex.Visible = State
+                        InternalHex.Visible = State
+                        InternalInlineRGB.Visible = State
+                        InternalOutlineRGB.Visible = State
+                        InternalRGB.Visible = State
+                        InternalInlineRainbow.Visible = State
+                        InternalOutlineRainbow.Visible = State
+                        InternalRainbow.Visible = State
+                        InternalTopline.Visible = State
+                        Cursor.Visible = State
+                        InternalOutlineHuePicker.Visible = State
+                        InternalHuePicker.Visible = State
+                        Tab.Dropdowns[Side][ColorpickerTitle.Text] = State
+                    end
+                    --
+                    Colorpicker.Offsets.X = InternalBase.Position.X
+                    Colorpicker.Offsets.Y = InternalBase.Position.Y
+                    --
+                    function Colorpicker:SetHue(Options)
+                        local Percent = Options.Percent or Options.Value
+    
+                        Colorpicker.Colors.HSV[1] = Options.Value
+
+                        local HSVColor = Color3.fromHSV(Colorpicker.Colors.HSV[1], Colorpicker.Colors.HSV[2], Colorpicker.Colors.HSV[3])
+                        
+                        InternalOutlineHuePicker.Position = Vector2.new(InternalOutline.Position.X + InternalBase.Size.X + 12, InternalHue.Position.Y + (InternalHue.Size.Y * Percent) - 4)
+                        InternalHuePicker.Position = Vector2.new(InternalOutlineHuePicker.Position.X + 1, InternalOutlineHuePicker.Position.Y + 1)
+
+                        InternalBase.Color = Color3.fromHSV(Colorpicker.Colors.HSV[1], 1, 1)
+
+                        InternalHex.Text = ("#%s"):format(tostring(HSVColor:ToHex()))
+                        
+                        local CalculateRGB = Color3.fromRGB(math.floor((HSVColor.R * 255)), math.floor((HSVColor.G * 255)), math.floor((HSVColor.B * 255)))
+                        InternalRGB.Text = ("%s, %s, %s"):format(math.floor(CalculateRGB.R * 255), math.floor(CalculateRGB.G * 255), math.floor(CalculateRGB.B * 255))
+
+                        ColorpickerBase.Color = HSVColor
+
+                        if not Options.Visual then
+                            Library.Flags[Colorpicker.Flag] = HSVColor
+                            Colorpicker.Callback(HSVColor)
+                        end
+                    end
+                    --
+                    function Colorpicker:RefreshHue()
+                        local PercentHue = math.clamp(((Mouse.Y + 36) - InternalHue.Position.Y) / (InternalHue.Size.Y), 0, 1)
+                        local ValueHue = math.floor((0 + (1 - 0) * PercentHue) * Colorpicker.Decimals) / Colorpicker.Decimals
+                        ValueHue = math.clamp(ValueHue, 0, 1)
+                        self:SetHue({
+                            Value = ValueHue, 
+                            Percent = PercentHue
+                        })
+                    end
+                    --
+                    function Colorpicker:SetSaturationX(Options)
+                        local PercentX = Options.Percent or Options.Value
+
+                        local HSVColor = Color3.fromHSV(Colorpicker.Colors.HSV[1], Colorpicker.Colors.HSV[2], Colorpicker.Colors.HSV[3])
+                        Colorpicker.Colors.HSV[2] = Options.Value
+
+                        Cursor.Position = Vector2.new(InternalBase.Position.X + (InternalBase.Size.X * PercentX) - 4, Colorpicker.Offsets.Y)
+                        Colorpicker.Offsets.X = Cursor.Position.X
+
+                        InternalHex.Text = ("#%s"):format(tostring(HSVColor:ToHex()))
+
+                        local CalculateRGB = Color3.fromRGB(math.floor((HSVColor.R * 255)), math.floor((HSVColor.G * 255)), math.floor((HSVColor.B * 255)))
+                        InternalRGB.Text = ("%s, %s, %s"):format(math.floor(CalculateRGB.R * 255), math.floor(CalculateRGB.G * 255), math.floor(CalculateRGB.B * 255))
+
+                        ColorpickerBase.Color = HSVColor
+
+                        if not Options.Visual then
+                            Library.Flags[Colorpicker.Flag] = HSVColor
+                            Colorpicker.Callback(HSVColor)
+                        end
+                    end
+                    --
+                    function Colorpicker:SetSaturationY(Options)
+                        local PercentY = Options.Percent or 1 - Options.Value
+
+                        local HSVColor = Color3.fromHSV(Colorpicker.Colors.HSV[1], Colorpicker.Colors.HSV[2], Colorpicker.Colors.HSV[3])
+                        Colorpicker.Colors.HSV[3] = Options.Value
+    
+                        Cursor.Position = Vector2.new(Colorpicker.Offsets.X, InternalBase.Position.Y + (InternalBase.Size.Y * PercentY) - 4)
+                        Colorpicker.Offsets.Y = Cursor.Position.Y
+
+                        InternalHex.Text = ("#%s"):format(tostring(HSVColor:ToHex()))
+
+                        local CalculateRGB = Color3.fromRGB(math.floor((HSVColor.R * 255)), math.floor((HSVColor.G * 255)), math.floor((HSVColor.B * 255)))
+                        InternalRGB.Text = ("%s, %s, %s"):format(math.floor(CalculateRGB.R * 255), math.floor(CalculateRGB.G * 255), math.floor(CalculateRGB.B * 255))
+
+                        ColorpickerBase.Color = HSVColor
+
+                        if not Options.Visual then
+                            Library.Flags[Colorpicker.Flag] = HSVColor
+                            Colorpicker.Callback(HSVColor)
+                        end
+                    end
+                    --
+                    function Colorpicker:RefreshSaturation()
+                        local PercentX = math.clamp((Mouse.X - InternalSaturation.Position.X) / (InternalSaturation.Size.X), 0, 1)
+                        local ValueX = math.floor((1 * PercentX) * Colorpicker.Decimals) / Colorpicker.Decimals
+                        ValueX = math.clamp(ValueX, 0, 1)
+                        self:SetSaturationX({
+                            Value = ValueX, 
+                            Percent = PercentX
+                        })
+                        --
+                        local PercentY = math.clamp(((Mouse.Y + 36) - InternalSaturation.Position.Y) / (InternalSaturation.Size.Y), 0, 1)
+                        local ValueY = 1 - math.floor((1 * PercentY) * Colorpicker.Decimals) / Colorpicker.Decimals
+                        ValueY = math.clamp(ValueY, 0, 1)
+                        self:SetSaturationY({
+                            Value = ValueY, 
+                            Percent = PercentY
+                        })
+                    end
+                    --
+                    Utility.AddConnection(UserInput.InputEnded, function(Input, Useless)
+                        
+                        for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                            if Index ~= ColorpickerTitle.Text and Value then
+                                return
+                            end
+                        end
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            Colorpicker.HueDragging = false
+                            Colorpicker.SaturationDragging = false
+                        end
+                    end)
+    
+                    Utility.AddConnection(UserInput.InputChanged, function(Input, Useless)
+                        if Utility.OnMouse(ColorpickerInline) then
+                            ColorpickerInline.Color = Library.Theme.Accent[1]
+                        else
+                            ColorpickerInline.Color = Library.Theme.Inline
+                        end
+                        if Utility.OnMouse(ColorpickerInline) then
+                            ColorpickerInline.Color = Library.Theme.Accent[1]
+                        else
+                            ColorpickerInline.Color = Library.Theme.Inline
+                        end
+                        
+                        if Input.UserInputType == Enum.UserInputType.MouseMovement then
+                            for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                if Index ~= ColorpickerTitle.Text and Value then
+                                    return
+                                end
+                            end
+                            if Colorpicker.HueDragging then
+                                Colorpicker:RefreshHue()
+                            elseif Colorpicker.SaturationDragging then
+                                Colorpicker:RefreshSaturation()
+                            end
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                        
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                if Index ~= ColorpickerTitle.Text and Value then
+                                    return
+                                end
+                            end
+                            if Utility.OnMouse(ColorpickerInline) then
+                                Colorpicker.Dropped = not Colorpicker.Dropped
+                                Tab.Dropdowns[Side][ColorpickerTitle.Text] = Colorpicker.Dropped
+                                Colorpicker:Drop(Colorpicker.Dropped)
+                            elseif Utility.OnMouse(InternalSaturation) then
+                                Colorpicker:RefreshSaturation()
+                                Colorpicker.SaturationDragging = true
+                            elseif Utility.OnMouse(InternalHue) then
+                                Colorpicker:RefreshHue()
+                                Colorpicker.HueDragging = true
+                            elseif Utility.OnMouse(InternalInlineRainbow) then
+                                Colorpicker.Rainbow = not Colorpicker.Rainbow
+                                InternalRainbow.Color = Colorpicker.Rainbow and Library.Theme.Accent[1] or Library.Theme.Text
+                                if not Colorpicker.Rainbow then
+                                    Colorpicker:SetHue({Value = Colorpicker.Colors.HSV[1]})
+                                    Colorpicker:SetSaturationX({Value = Colorpicker.Colors.HSV[2]})
+                                    Colorpicker:SetSaturationY({Value = Colorpicker.Colors.HSV[3]})
+                                end
+                            else
+                                Colorpicker.Dropped = false
+                                Tab.Dropdowns[Side][ColorpickerTitle.Text] = Colorpicker.Dropped
+                                Colorpicker:Drop(Colorpicker.Dropped)
+                            end
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(RunService.RenderStepped, function(Input, Useless)
+                        if Colorpicker.Rainbow then
+                            -- Colorpicker:SetHue({Value = tick() % 2 / 2, Visual = true})
+                            -- Colorpicker:SetSaturationX({Value = 0.5, Visual = true})
+                            -- Colorpicker:SetSaturationY({Value = 1, Visual = true})
+                            Library.Flags[Colorpicker.Flag] = Color3.fromHSV(tick() % 2 / 2, 0.5, 1)
+                            Colorpicker.Callback(Color3.fromHSV(tick() % 2 / 2, 0.5, 1))
+                        end
+                    end)
+                    --
+                    Colorpicker:SetHue({Value = Colorpicker.Colors.HSV[1]})
+                    Colorpicker:SetSaturationX({Value = Colorpicker.Colors.HSV[2]})
+                    Colorpicker:SetSaturationY({Value = Colorpicker.Colors.HSV[3]})
+                    --
+                    Section.ContentAxis = Section.ContentAxis + ColorpickerBase.Size.Y + 10
+                    Tab.SectionAxis = {
+                        Side == "Left" and Tab.SectionAxis[1] +  ColorpickerBase.Size.Y + 10 or Tab.SectionAxis[1], 
+                        Side == "Right" and Tab.SectionAxis[2] +  ColorpickerBase.Size.Y + 10 or Tab.SectionAxis[2]
+                    }
+                    --
+                    self:UpdateSizeY(Section.ContentAxis + ColorpickerBase.Size.Y)
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = ColorpickerTitle
+                    Tab["Render"][#Tab["Render"] + 1] = ColorpickerInline
+                    Tab["Render"][#Tab["Render"] + 1] = ColorpickerOutline
+                    Tab["Render"][#Tab["Render"] + 1] = ColorpickerBase
+                    Tab["Render"][#Tab["Render"] + 1] = ColorpickerGradient
+                    --
+                    Colorpicker:Drop(false)
+                    --
+                    return Colorpicker
+                end
+                --
+                function Section:Dropdown(Options)
+                    local Dropdown = {
+                        TypeOf = "Dropdown",
+                        Axis = Section.ContentAxis,
+                        List = List or {""},
+                        ListRender = {
+                            Texts = {},
+                            Objects = {}
+                        }, 
+                        Show = true,
+                        Selected = Options.Default or Options.List[1],
+                        BaseSize = 16,
+                        Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end
+                    }
+                    --
+                    Options.Flag = Options.Flag or "AWGWJIjgAWJIGIJAWG"
+                    Library.Flags[Options.Flag] = Dropdown.Selected
+                    --
+                    local DropdownInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + 8, SectionInline.Position.Y + 23 + Dropdown.Axis + 16),
+                        Size = Vector2.new(SectionOutline.Size.X - 12, Dropdown.BaseSize),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local DropdownOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(DropdownInline.Size.X - 2, DropdownInline.Size.Y - 2),
+                        Position = Vector2.new(DropdownInline.Position.X + 1, DropdownInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local DropdownGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(DropdownInline.Size.X - 2, DropdownInline.Size.Y - 2),
+                        Position = Vector2.new(DropdownInline.Position.X + 1, DropdownInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 1,
+                        Visible = true
+                    })
+                    --
+                    local DropdownTitle = Utility.AddDrawing("Text", {
+                        Text = Options.Title,
+                        Position = Vector2.new(DropdownInline.Position.X + 2, DropdownInline.Position.Y - 16),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local DropdownValue = Utility.AddDrawing("Text", {
+                        Text = Options.Default,
+                        Position = Vector2.new(DropdownOutline.Position.X + 4, DropdownOutline.Position.Y),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local DropdownSymbol = Utility.AddDrawing("Text", {
+                        Text = "+",
+                        Position = Vector2.new(DropdownOutline.Position.X + DropdownOutline.Size.X - 12, DropdownOutline.Position.Y),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local DropdownDetect = Utility.AddDrawing("Square", {
+                        Thickness = 0,
+                        Transparency = 0,
+                        Color = Library.Theme.Hitbox, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    function Dropdown:Set(Selected)
+                        for Index, Value in pairs(Dropdown.ListRender.Texts) do
+                            Value.Color = Library.Theme.Text
+                        end
+                        Dropdown.ListRender.Texts[Selected].Color = Library.Theme.Accent[1]
+                        Dropdown.Selected = Selected
+                        DropdownValue.Text = Selected
+                        Dropdown.Callback(Dropdown.Selected)
+                        Library.Flags[Options.Flag] = Dropdown.Selected
+                    end
+                    --
+                    function Dropdown:ShowList(State)
+                        for Index, Value in pairs(Dropdown.ListRender.Objects) do
+                            Value.Visible = State
+                        end
+                        --
+                        for Index, Value in pairs(Dropdown.ListRender.Texts) do
+                            Value.Visible = State
+                        end
+                        --
+                        Tab.Dropdowns[Side][DropdownTitle.Text] = State
+                    end
+                    --
+                    Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                        if Type == "Accent" then
+                            Dropdown.ListRender.Texts[Dropdown.Selected].Color = Color
+                        elseif Type == "LightContrast" then
+                            DropdownOutline.Color = Color
+                        elseif Type == "Text" then
+                            DropdownTitle.Color = Color
+                            DropdownSymbol.Color = Color
+                            DropdownValue.Color = Color
+                        elseif Type == "Inline" then
+                            DropdownInline.Color = Color
+                        end
+                    end)
+                    --
+                    for Index, Value in pairs(Options.List) do
+                        local SelectionInline = Utility.AddDrawing("Square", {
+                            Position = Vector2.new(DropdownInline.Position.X, (DropdownInline.Position.Y + (Index * (18)))),
+                            Size = Vector2.new(SectionOutline.Size.X - 12, 18),
+                            Thickness = 0,
+                            Color = Library.Theme.Inline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local SelectionOutline = Utility.AddDrawing("Square", {
+                            Size = Vector2.new(SelectionInline.Size.X - 2, SelectionInline.Size.Y - 2),
+                            Position = Vector2.new(SelectionInline.Position.X + 1, SelectionInline.Position.Y + 1),
+                            Thickness = 0,
+                            Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                            Visible = true,
+                            Filled = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local SelectionGradient = Utility.AddDrawing("Image", {
+                            Size = Vector2.new(SelectionInline.Size.X - 2, SelectionInline.Size.Y - 2),
+                            Position = Vector2.new(SelectionInline.Position.X + 1, SelectionInline.Position.Y + 1),
+                            Data = Library.Theme.Gradient,
+                            Transparency = 1,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        local SelectionTitle = Utility.AddDrawing("Text", {
+                            Text = Value,
+                            Position = Vector2.new(SelectionInline.Position.X + 6, SelectionInline.Position.Y + 3),
+                            Center = false,
+                            Outline = false,
+                            Font = Library.Theme.Font,
+                            Size = Library.Theme.TextSize,
+                            Color = Library.Theme.Text,
+                            Visible = true,
+                            ZIndex = 3
+                        })
+                        --
+                        Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                            if Type == "LightContrast" then
+                                SelectionOutline.Color = Color
+                            elseif Type == "Text" then
+                                SelectionTitle.Color = Color
+                            elseif Type == "Inline" then
+                                SelectionInline.Color = Color
+                            end
+                        end)
+                        --
+                        Utility.AddConnection(UserInput.InputChanged, function(Input, Useless)
+                            if Input.UserInputType == Enum.UserInputType.MouseMovement then
+                                if Utility.OnMouse(SelectionInline) then
+                                    SelectionInline.Color = Library.Theme.Accent[1]
+                                else
+                                    SelectionInline.Color = Library.Theme.Inline
+                                end
+                            end
+                        end)
+                        --
+                        Dropdown.ListRender.Objects[#Dropdown.ListRender.Objects + 1] = SelectionInline
+                        Dropdown.ListRender.Objects[#Dropdown.ListRender.Objects + 1] = SelectionOutline
+                        Dropdown.ListRender.Objects[#Dropdown.ListRender.Objects + 1] = SelectionGradient
+                        Dropdown.ListRender.Texts[Value] = SelectionTitle
+                        --
+                        Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                            if Useless then
+                                return
+                            end
+                            for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                if Index ~= DropdownTitle.Text and Value then
+                                    return
+                                end
+                            end
+                            if Input.UserInputType == Enum.UserInputType.MouseButton1 and Utility.OnMouse(SelectionInline) then
+                                Dropdown:Set(Value)
+                            end
+                        end)
+                        --
+                    end
+                    --
+                    DropdownDetect.Position = Vector2.new(DropdownInline.Position.X, DropdownInline.Position.Y + DropdownInline.Size.Y)
+                    DropdownDetect.Size = Vector2.new(SectionOutline.Size.X - 12, (#Options.List * Dropdown.BaseSize) + Dropdown.BaseSize)
+                    --
+                    Dropdown:Set(Dropdown.Selected)
+                    Dropdown:ShowList(false)
+                    --
+                    Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                        
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            if Utility.OnMouse(DropdownInline) then
+                                for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                    if Index ~= DropdownTitle.Text and Value then
+                                        return
+                                    end
+                                end
+                                Dropdown.Show = not Dropdown.Show
+                                Tab.Dropdowns[Side][DropdownTitle.Text] = Dropdown.Show
+                                DropdownSymbol.Text = Dropdown.Show and "-" or "+"
+                                Dropdown:ShowList(Dropdown.Show)
+                            elseif not Utility.OnMouse(DropdownDetect) then
+                                Dropdown.Show = false
+                                Tab.Dropdowns[Side][DropdownTitle.Text] = Dropdown.Show
+                                DropdownSymbol.Text = "+"
+                                Dropdown:ShowList(false)
+                            end
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(UserInput.InputChanged, function(Input, Useless)
+                        if Input.UserInputType == Enum.UserInputType.MouseMovement then
+                            if Utility.OnMouse(DropdownInline) then
+                                DropdownInline.Color = Library.Theme.Accent[1]
+                            else
+                                DropdownInline.Color = Library.Theme.Inline
+                            end
+                        end
+                    end)
+                    --
+                    Section.ContentAxis = Section.ContentAxis + DropdownOutline.Size.Y + 20
+                    Tab.SectionAxis = {
+                        Side == "Left" and Tab.SectionAxis[1] + DropdownOutline.Size.Y + 20 or Tab.SectionAxis[1], 
+                        Side == "Right" and Tab.SectionAxis[2] + DropdownOutline.Size.Y + 20 or Tab.SectionAxis[2]
+                    }
+                    --
+                    self:UpdateSizeY(Section.ContentAxis + DropdownOutline.Size.Y)
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = DropdownInline
+                    Tab["Render"][#Tab["Render"] + 1] = DropdownOutline
+                    Tab["Render"][#Tab["Render"] + 1] = DropdownTitle
+                    Tab["Render"][#Tab["Render"] + 1] = DropdownGradient
+                    Tab["Render"][#Tab["Render"] + 1] = DropdownSymbol
+                    Tab["Render"][#Tab["Render"] + 1] = DropdownValue
+                    --
+                    return Dropdown
+                end
+                --
+                function Section:Label(Title)
+                    local Label = {
+                        Axis = Section.ContentAxis
+                    }
+                    --
+                    local LabelTitle = Utility.AddDrawing("Text", {
+                        Text = Title,
+                        Position = Vector2.new(SectionInline.Position.X + 6, SectionInline.Position.Y + 23 + Label.Axis),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    function Label:Set(Txt)
+                        LabelTitle.Text = Txt
+                    end
+                    --
+                    Section.ContentAxis = Section.ContentAxis + LabelTitle.Size + 8
+                    Tab.SectionAxis = {
+                        Side == "Left" and Tab.SectionAxis[1] +  LabelTitle.Size + 8 or Tab.SectionAxis[1], 
+                        Side == "Right" and Tab.SectionAxis[2] +  LabelTitle.Size + 8 or Tab.SectionAxis[2]
+                    }
+                    --
+                    self:UpdateSizeY(Section.ContentAxis + LabelTitle.Size)
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = LabelTitle
+                    --
+                    return Label
+                end
+                --
+                function Section:Keybind(Options)
+                    local Keybind = {
+                        Axis = Section.ContentAxis,
+                        Title = Options.Title and Options.Title or "LOL",
+                        EnumType = Options.Key.EnumType == Enum.KeyCode and "KeyCode" or "UserInputType",
+                        Key = Options.Key or Enum.UserInputType.MouseButton2,
+                        StateType = Options.StateType or "Hold",
+                        State = false,
+                        Shorten = "",
+                        Binding = false,
+                        Dropped = false,
+                        Callback = typeof(Options.Callback) == "function" and Options.Callback or function() end
+                    }
+                    --
+                    if Keybind.StateType == "Always" then
+                        Keybind.Callback(Keybind.State, Keybind.Key)
+                    end
+                    --
+                    Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                    --
+                    local KeybindTitle = Utility.AddDrawing("Text", {
+                        Text = Options.Title,
+                        Position = Vector2.new(SectionInline.Position.X + 6, SectionInline.Position.Y + 26 + Keybind.Axis),
+                        Center = false,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local KeybindInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X - 40 - 6, SectionInline.Position.Y + 23 + Keybind.Axis + 2),
+                        Size = Vector2.new(40, 14),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(KeybindInline.Size.X - 2, KeybindInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindInline.Position.X + 1, KeybindInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(KeybindInline.Size.X - 2, KeybindInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindInline.Position.X + 1, KeybindInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 1,
+                        Visible = true
+                    })
+                    --
+                    local KeybindValue = Utility.AddDrawing("Text", {
+                        Text = Keybind.Shorten,
+                        Position = Vector2.new(KeybindInline.Position.X + (KeybindInline.Size.X / 2), KeybindInline.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local KeybindHoldInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X + 2 - 6, SectionInline.Position.Y + 23 + Keybind.Axis + 2),
+                        Size = Vector2.new(60, 16),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindHoldOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(KeybindHoldInline.Size.X - 2, KeybindHoldInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindHoldInline.Position.X + 1, KeybindHoldInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindHoldGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(KeybindHoldInline.Size.X - 2, KeybindHoldInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindHoldInline.Position.X + 1, KeybindHoldInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 1,
+                        Visible = true
+                    })
+                    --
+                    local KeybindHoldValue = Utility.AddDrawing("Text", {
+                        Text = "Hold",
+                        Position = Vector2.new(KeybindHoldInline.Position.X + (KeybindHoldInline.Size.X / 2), KeybindHoldInline.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local KeybindToggleInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X + 2 - 6, SectionInline.Position.Y + 23 + Keybind.Axis + 2 + 18),
+                        Size = Vector2.new(60, 16),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindToggleOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(KeybindToggleInline.Size.X - 2, KeybindToggleInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindToggleInline.Position.X + 1, KeybindToggleInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindToggleGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(KeybindToggleInline.Size.X - 2, KeybindToggleInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindToggleInline.Position.X + 1, KeybindToggleInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 1,
+                        Visible = true
+                    })
+                    --
+                    local KeybindToggleValue = Utility.AddDrawing("Text", {
+                        Text = "Toggle",
+                        Position = Vector2.new(KeybindToggleInline.Position.X + (KeybindToggleInline.Size.X / 2), KeybindToggleInline.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    local KeybindAlwaysInline = Utility.AddDrawing("Square", {
+                        Position = Vector2.new(SectionInline.Position.X + SectionInline.Size.X + 2 - 6, SectionInline.Position.Y + 23 + Keybind.Axis + 2 + 34),
+                        Size = Vector2.new(60, 16),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindAlwaysOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(KeybindAlwaysInline.Size.X - 2, KeybindAlwaysInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindAlwaysInline.Position.X + 1, KeybindAlwaysInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.LightContrast, --Library.Theme.Outline,
+                        Visible = true,
+                        Filled = true
+                    })
+                    --
+                    local KeybindAlwaysGradient = Utility.AddDrawing("Image", {
+                        Size = Vector2.new(KeybindAlwaysInline.Size.X - 2, KeybindAlwaysInline.Size.Y - 2),
+                        Position = Vector2.new(KeybindAlwaysInline.Position.X + 1, KeybindAlwaysInline.Position.Y + 1),
+                        Data = Library.Theme.Gradient,
+                        Transparency = 1,
+                        Visible = true
+                    })
+                    --
+                    local KeybindAlwaysValue = Utility.AddDrawing("Text", {
+                        Text = "Always",
+                        Position = Vector2.new(KeybindAlwaysInline.Position.X + (KeybindAlwaysInline.Size.X / 2), KeybindAlwaysInline.Position.Y),
+                        Center = true,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Color = Library.Theme.Text,
+                        Visible = true,
+                        ZIndex = 2
+                    })
+                    --
+                    function Keybind:Drop(State)
+                        KeybindHoldInline.Visible = State
+                        KeybindHoldOutline.Visible = State
+                        KeybindHoldGradient.Visible = State
+                        KeybindHoldValue.Visible = State
+
+                        KeybindToggleInline.Visible = State
+                        KeybindToggleOutline.Visible = State
+                        KeybindToggleGradient.Visible = State
+                        KeybindToggleValue.Visible = State
+
+                        KeybindAlwaysInline.Visible = State
+                        KeybindAlwaysOutline.Visible = State
+                        KeybindAlwaysGradient.Visible = State
+                        KeybindAlwaysValue.Visible = State
+                    end
+                    --
+                    function Keybind:SetStateType(State)
+                        if State == "Hold" then
+                            Keybind.StateType = "Hold"
+
+                            KeybindAlwaysValue.Color = Library.Theme.Text
+                            KeybindToggleValue.Color = Library.Theme.Text
+                            KeybindHoldValue.Color = Library.Theme.Accent[1]
+                        elseif State == "Toggle" then
+                            Keybind.StateType = "Toggle"
+
+                            KeybindAlwaysValue.Color = Library.Theme.Text
+                            KeybindToggleValue.Color = Library.Theme.Accent[1]
+                            KeybindHoldValue.Color = Library.Theme.Text
+                        else
+                            Keybind.StateType = "Always"
+
+                            KeybindAlwaysValue.Color = Library.Theme.Accent[1]
+                            KeybindToggleValue.Color = Library.Theme.Text
+                            KeybindHoldValue.Color = Library.Theme.Text
+
+                            Keybind.State = true
+                            Keybind.Callback(Keybind.State, Keybind.Key)
+                        end
+                    end
+                    --
+                    Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                        
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            if Keybind.Binding then
+                                Keybind.Binding = false
+                                Keybind.Key = Enum.UserInputType.MouseButton1
+                                Keybind.EnumType = "UserInputType"
+                                Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                                KeybindValue.Text = Keybind.Binding and "[...]" or Keybind.Shorten
+                            end
+                            if Utility.OnMouse(KeybindInline) then
+                                for Index, Value in pairs(Tab.Dropdowns[Side]) do
+                                    if Index ~= KeybindTitle.Text and Value then
+                                        return
+                                    end
+                                end
+                                if Keybind.Binding then
+                                    Keybind.Binding = false
+                                    KeybindValue.Text = Keybind.Shorten
+                                else
+                                    Keybind.Binding = true
+                                    KeybindValue.Text = Keybind.Binding and "[...]" or Keybind.Shorten
+                                end
+                            end
+                            if Utility.OnMouse(KeybindHoldInline) then
+                                Keybind:SetStateType("Hold")
+                            end
+                            if Utility.OnMouse(KeybindToggleInline) then
+                                Keybind:SetStateType("Toggle")
+                            end
+                            if Utility.OnMouse(KeybindAlwaysInline) then
+                                Keybind:SetStateType("Always")
+                            end
+                        elseif Input.UserInputType == Enum.UserInputType.Keyboard then
+                            if Keybind.Binding then
+                                Keybind.Binding = false
+                                Keybind.Key = Input.KeyCode
+                                Keybind.EnumType = "KeyCode"
+                                Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                                KeybindValue.Text = Keybind.Binding and "[...]" or Keybind.Shorten
+                            end
+                        elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
+                            if Keybind.Binding then
+                                Keybind.Binding = false
+                                Keybind.Key = Enum.UserInputType.MouseButton2
+                                Keybind.EnumType = "UserInputType"
+                                Keybind.Shorten = Library.Keys.Shortened[Keybind.Key.Name] or Keybind.Key.Name
+                                KeybindValue.Text = Keybind.Binding and "[...]" or Keybind.Shorten
+                            end
+                            if Utility.OnMouse(KeybindInline) then
+                                Keybind.Dropped = not Keybind.Dropped
+                                Keybind:Drop(Keybind.Dropped)
+                            end
+                        end
+                    end)
+                    --
+                    Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                        
+                        if (Keybind.EnumType == "KeyCode" and Input.KeyCode == Keybind.Key) or (Keybind.EnumType == "UserInputType" and Input.UserInputType == Keybind.Key) then
+                            if Keybind.StateType == "Toggle" then
+                                Keybind.State = not Keybind.State
+                            elseif Keybind.StateType == "Hold" then
+                                Keybind.State = true
+                            end
+                            Keybind.Callback(Keybind.State, Keybind.Key)
+                        end
+                    end)
+                    --
+                    Keybind:SetStateType(Keybind.StateType)
+                    --
+                    Utility.AddConnection(UserInput.InputEnded, function(Input, Useless)
+                        
+                        if (Keybind.EnumType == "KeyCode" and Input.KeyCode == Keybind.Key) or (Keybind.EnumType == "UserInputType" and Input.UserInputType == Keybind.Key) then
+                            if Keybind.StateType == "Hold" then
+                                Keybind.State = false
+                                Keybind.Callback(Keybind.State, Keybind.Key)
+                            end
+                        end
+                    end)
+                    --
+                    Keybind:Drop(false)
+                    --
+                    Section.ContentAxis = Section.ContentAxis + KeybindInline.Size.Y + 8
+                    Tab.SectionAxis = {
+                        Side == "Left" and Tab.SectionAxis[1] +  KeybindInline.Size.Y + 8 or Tab.SectionAxis[1], 
+                        Side == "Right" and Tab.SectionAxis[2] +  KeybindInline.Size.Y + 8 or Tab.SectionAxis[2]
+                    }
+                    --
+                    self:UpdateSizeY(Section.ContentAxis + KeybindInline.Size.Y)
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = KeybindTitle
+                    Tab["Render"][#Tab["Render"] + 1] = KeybindInline
+                    Tab["Render"][#Tab["Render"] + 1] = KeybindOutline
+                    Tab["Render"][#Tab["Render"] + 1] = KeybindValue
+                    Tab["Render"][#Tab["Render"] + 1] = KeybindGradient
+                    --
+                    return Keybind
+                end
+                --
+                return Section
+            end
+            --
+            Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+                if Useless then
+                    return
+                end
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 and Utility.OnMouse(TabInline) then
+                    task.spawn(function()
+                        --[[
+                            local Speed = 4
+                            local Distance = (TabLine.Position.X - TabOutline.Position.X < 0) and 1 + (Tab.CurrentTab + (#self.Tabs - self.SelectedTab)) * Speed or 1 + ((#self.Tabs - Tab.CurrentTab) + self.SelectedTab) * Speed
+                            local Calculation = (TabLine.Position.X - TabOutline.Position.X < 0) and Distance or -Distance
+                            for Index = TabLine.Position.X, TabOutline.Position.X, Calculation do
+                                TabLine.Position = Vector2.new(Index, TabLine.Position.Y)
+                                task.wait()
+                            end
+                            TabLine.Size = Vector2.new(TabOutline.Size.X, 1)
+                            TabLine.Position = Vector2.new(TabOutline.Position.X, TabLine.Position.Y)
+                        ]]
+                        
+                        self:SwitchTab(Tab)
+                    end)
+                end
+            end)
+            --
+            function Tab:AddPlayerlist()
+                local PlayerList = {
+                    PlayersInList = 0
+                }
+                --
+                local PlayerListTabInline = Utility.AddDrawing("Square", {
+                    Size = Vector2.new(SecondBorderOutline.Size.X - 16, 40),
+                    Position = Vector2.new(SecondBorderOutline.Position.X + 8, SecondBorderOutline.Position.Y + 6),
+                    Thickness = 0,
+                    Color = Library.Theme.Inline,
+                    Visible = true,
+                    Filled = true
+                })
+                --
+                local PlayerListTabOutline = Utility.AddDrawing("Square", {
+                    Size = Vector2.new(PlayerListTabInline.Size.X - 2, PlayerListTabInline.Size.Y - 2),
+                    Position = Vector2.new(PlayerListTabInline.Position.X + 1, PlayerListTabInline.Position.Y + 1),
+                    Thickness = 0,
+                    Color = Library.Theme.Outline,
+                    Visible = true,
+                    Filled = true
+                })
+                --
+                local PlayerListPage = Utility.AddDrawing("Square", {
+                    Size = Vector2.new(PlayerListTabOutline.Size.X - 4, PlayerListTabOutline.Size.Y - 4),
+                    Position = Vector2.new(PlayerListTabOutline.Position.X + 2, PlayerListTabOutline.Position.Y + 2),
+                    Thickness = 0,
+                    Color = Library.Theme.DarkContrast,
+                    Visible = true,
+                    Filled = true
+                })
+                --
+                local PlayerListTopline = Utility.AddDrawing("Square", {
+                    Size = Vector2.new(PlayerListTabOutline.Size.X, 1),
+                    Position = Vector2.new(PlayerListTabOutline.Position.X, PlayerListTabOutline.Position.Y),
+                    Thickness = 0,
+                    Color = Library.Theme.Accent[1],
+                    Visible = true,
+                    Filled = true
+                })
+                --
+                local PlayerListTitle = Utility.AddDrawing("Text", {
+                    Text = "Player List",
+                    Outline = false,
+                    Font = Library.Theme.Font,
+                    Size = Library.Theme.TextSize,
+                    Position = Vector2.new(PlayerListTabInline.Position.X + 4, PlayerListTabInline.Position.Y + 4),
+                    Color = Library.Theme.Text,
+                    Visible = true
+                })
+                --
+                local PlayerListName = Utility.AddDrawing("Text", {
+                    Text = "Name",
+                    Outline = false,
+                    Font = Library.Theme.Font,
+                    Size = Library.Theme.TextSize,
+                    Position = Vector2.new(PlayerListTabInline.Position.X + 6, PlayerListTabInline.Position.Y + 20),
+                    Color = Library.Theme.Text,
+                    Visible = true
+                })
+                --
+                local PlayerListTeam = Utility.AddDrawing("Text", {
+                    Text = "Team",
+                    Outline = false,
+                    Font = Library.Theme.Font,
+                    Size = Library.Theme.TextSize,
+                    Position = Vector2.new(PlayerListTabInline.Position.X + 182, PlayerListTabInline.Position.Y + 20),
+                    Color = Library.Theme.Text,
+                    Visible = true
+                })
+                --
+                local PlayerListStatus = Utility.AddDrawing("Text", {
+                    Text = "Status",
+                    Outline = false,
+                    Font = Library.Theme.Font,
+                    Size = Library.Theme.TextSize,
+                    Position = Vector2.new(PlayerListTabInline.Position.X + 334, PlayerListTabInline.Position.Y + 20),
+                    Color = Library.Theme.Text,
+                    Visible = true
+                })
+                --
+                function PlayerList:RefreshList(Int)
+                    PlayerListTabInline.Size = Vector2.new(SecondBorderOutline.Size.X - 16, (22 * Int) + 37)
+                    --
+                    PlayerListTabOutline.Size = Vector2.new(PlayerListTabInline.Size.X - 2, PlayerListTabInline.Size.Y - 2)
+                    PlayerListTabOutline.Position = Vector2.new(PlayerListTabInline.Position.X + 1, PlayerListTabInline.Position.Y + 1)
+                    --
+                    PlayerListPage.Size = Vector2.new(PlayerListTabOutline.Size.X - 4, PlayerListTabOutline.Size.Y - 4)
+                    PlayerListPage.Position = Vector2.new(PlayerListTabOutline.Position.X + 2, PlayerListTabOutline.Position.Y + 2)
+                end
+                --
+                function PlayerList:AddPlayer(Player)
+                    PlayerList.PlayersInList += 1
+                    local CurrentList, Removed = PlayerList.PlayersInList, false
+                    --
+                    local PlayerTabInline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(PlayerListTabInline.Size.X - 2, 22),
+                        Position = Vector2.new(PlayerListTabInline.Position.X + 1, (PlayerListTabInline.Position.Y + 15) + (PlayerList.PlayersInList * 22)),
+                        Thickness = 0,
+                        Color = Library.Theme.Inline,
+                        Visible = Window.SelectedTab == "Settings",
+                        Filled = true
+                    })
+                    --
+                    local PlayerTabOutline = Utility.AddDrawing("Square", {
+                        Size = Vector2.new(PlayerTabInline.Size.X - 2, PlayerTabInline.Size.Y - 2),
+                        Position = Vector2.new(PlayerTabInline.Position.X + 1, PlayerTabInline.Position.Y + 1),
+                        Thickness = 0,
+                        Color = Library.Theme.Outline,
+                        Visible = Window.SelectedTab == "Settings",
+                        Filled = true
+                    })
+                    --
+                    local PlayerName = Utility.AddDrawing("Text", {
+                        Text = Player.Name,
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Position = Vector2.new(PlayerTabInline.Position.X + 4, PlayerTabInline.Position.Y + 4),
+                        Color = Library.Theme.Text,
+                        Visible = Window.SelectedTab == "Settings"
+                    })
+                    --
+                    local PlayerTeam = Utility.AddDrawing("Text", {
+                        Text = Player.Team ~= nil and Player.Team.Name or "Neutral",
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Position = Vector2.new(PlayerTabInline.Position.X + 180, PlayerTabInline.Position.Y + 4),
+                        Color = Player.Team ~= nil and Player.TeamColor.Color or Library.Theme.TextInactive,
+                        Visible = Window.SelectedTab == "Settings"
+                    })
+                    --
+                    local PlayerStatus = Utility.AddDrawing("Text", {
+                        Text = Player == LocalPlayer and "Client" or "None",
+                        Outline = false,
+                        Font = Library.Theme.Font,
+                        Size = Library.Theme.TextSize,
+                        Position = Vector2.new(PlayerTabInline.Position.X + 330, PlayerTabInline.Position.Y + 4),
+                        Color = Player == LocalPlayer and Library.Theme.Accent[1] or Library.Theme.Text,
+                        Visible = Window.SelectedTab == "Settings"
+                    })
+                    --
+                    Tab["Render"][#Tab["Render"] + 1] = PlayerTabInline
+                    Tab["Render"][#Tab["Render"] + 1] = PlayerTabOutline
+                    Tab["Render"][#Tab["Render"] + 1] = PlayerName
+                    Tab["Render"][#Tab["Render"] + 1] = PlayerTeam
+                    Tab["Render"][#Tab["Render"] + 1] = PlayerStatus
+                    --
+                    self:RefreshList(CurrentList)
+                    --
+                    Utility.AddConnection(Library.Communication.Event, function(Type, User)
+                        if Type == "RemovePlayer" then
+                            if User == Player.Name then
+                                Tab:RemoveDrawing(PlayerTabInline)
+                                Tab:RemoveDrawing(PlayerTabOutline)
+                                Tab:RemoveDrawing(PlayerName)
+                                Tab:RemoveDrawing(PlayerTeam)
+                                Tab:RemoveDrawing(PlayerStatus)
+                                --
+                                --[[
+                                    Utility.RemoveDrawing(PlayerTabInline)
+                                    Utility.RemoveDrawing(PlayerTabOutline)
+                                    Utility.RemoveDrawing(PlayerName)
+                                    Utility.RemoveDrawing(PlayerTeam)
+                                    Utility.RemoveDrawing(PlayerStatus)
+                                ]]
+                            end
+                            CurrentList -= 1
+                            self:RefreshList(CurrentList)
+                        end
+                    end)
+                end
+                --
+                function PlayerList:RemovePlayer(Player)
+                    PlayerList[Player.Name] = {}
+                    --
+                    Library.Communication:Fire("RemovePlayer", Player.Name)
+                    --
+                    PlayerList.PlayersInList -= 1
+                    self:RefreshList(PlayerList.PlayersInList)
+                end
+                --
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListTabInline
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListTabOutline
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListTopline
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListName
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListTeam
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListStatus
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListPage
+                Tab["Render"][#Tab["Render"] + 1] = PlayerListTitle
+                --
+                return PlayerList
+            end
+            --
+            Tab["TabInline"] = TabInline
+            Tab["TabOutline"] = TabOutline
+            Tab["TabTitle"] = TabTitle
+            --
+            Tab:Install()
+            --
+            Window.LastTab = TabInline
+            self.Tabs[#self.Tabs + 1] = Tab
+            -- self:RefreshPages()
+            Tab["Render"] = {}
+            return Tab
+        end
+        --
+        function Window:AddSettingsTab(Additional)
+            Additional = typeof(Additional) == "function" and Additional or function() end
+
+            local LocalTheme = {
+                Accent = Library.Theme.Accent[1],
+                Outline = Color3.fromHex("#000005"),
+                Inline = Color3.fromHex("#323232"),
+                LightContrast = Color3.fromHex("#202020"),
+                DarkContrast = Color3.fromHex("#191919"),
+                Text = Color3.fromHex("#e8e8e8"),
+                TextInactive = Color3.fromHex("#aaaaaa")
+            }
+
+            local Settings = Window:Tab("Settings")
+
+            local Theme = Settings:Section("Theme", "Left")
+            
+            Theme:Colorpicker({Title = "Accent", Color = LocalTheme.Accent, Flag = "UIAccent", Callback = function(Color)
+                Library:UpdateTheme({
+                    Accent = Color
+                })
+                LocalTheme.Accent = Color
+            end})
+            
+            Theme:Colorpicker({Title = "Outline", Color = LocalTheme.Outline, Flag = "UIOutline", Callback = function(Color)
+                Library:UpdateTheme({
+                    Outline = Color
+                })
+                LocalTheme.Outline = Color
+            end})
+            
+            Theme:Colorpicker({Title = "Inline", Color = LocalTheme.Inline, Flag = "UIInline", Callback = function(Color)
+                Library:UpdateTheme({
+                    Inline = Color
+                })
+                LocalTheme.Inline = Color
+            end})
+            
+            Theme:Colorpicker({Title = "Inline Contrast", Color = LocalTheme.LightContrast, Flag = "UILightContrast", Callback = function(Color)
+                Library:UpdateTheme({
+                    LightContrast = Color
+                })
+                LocalTheme.LightContrast = Color
+            end})
+            
+            Theme:Colorpicker({Title = "Dark Contrast", Color = LocalTheme.DarkContrast, Flag = "UIDarkContrast", Callback = function(Color)
+                Library:UpdateTheme({
+                    DarkContrast = Color
+                })
+                LocalTheme.DarkContrast = Color
+            end})
+            
+            Theme:Colorpicker({Title = "Text", Color = LocalTheme.Text, Flag = "UIText", Callback = function(Color)
+                Library:UpdateTheme({
+                    Text = Color
+                })
+                LocalTheme.Text = Color
+            end})
+            
+            Theme:Colorpicker({Title = "Text Inactive", Color = LocalTheme.TextInactive, Flag = "UITextInactive", Callback = function(Color)
+                Library:UpdateTheme({
+                    TextInactive = Color
+                })
+                LocalTheme.TextInactive = Color
+            end})
+            
+            Theme:Dropdown({
+                Title = "Theme",
+                List = {"Default", "Neverlose", "Fatality", "Aimware", "Onetap", "Vape", "Gamesesne", "OldAbyss"},
+                Default = "Default",
+                Callback = function(Choosen)
+                    if Choosen == "Default" then
+                        Library:UpdateTheme({
+                            Accent = Color3.fromHex("#7583fa"),
+                            Outline = Color3.fromHex("#000005"),
+                            Inline = Color3.fromHex("#323232"),
+                            LightContrast = Color3.fromHex("#202020"),
+                            DarkContrast = Color3.fromHex("#191919"),
+                            Text = Color3.fromHex("#e8e8e8"),
+                            TextInactive = Color3.fromHex("#aaaaaa")
+                        })
+                    elseif Choosen == "Neverlose" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#000005"),
+                            Inline = Color3.fromHex("#0a1e28"),
+                            Accent = Color3.fromHex("#00b4f0"),
+                            Text = Color3.fromHex("#ffffff"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#000f1e"),
+                            DarkContrast = Color3.fromHex("#050514"),
+                        })
+                    elseif Choosen == "Octohook" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#000000"),
+                            Inline = Color3.fromHex("#3c3c3c"),
+                            Accent = Color3.fromHex("#8f4b67"),
+                            Text = Color3.fromHex("#ffffff"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#171717"),
+                            DarkContrast = Color3.fromHex("#121112"),
+                        })
+                    elseif Choosen == "Fatality" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#322850"),
+                            Inline = Color3.fromHex("#3c3c3c"),
+                            Accent = Color3.fromHex("#f00f50"),
+                            Text = Color3.fromHex("#c8c8ff"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#231946"),
+                            DarkContrast = Color3.fromHex("#191432"),
+                        })
+                    elseif Choosen == "Aimware" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#000005"),
+                            Inline = Color3.fromHex("#373737"),
+                            Accent = Color3.fromHex("#c82828"),
+                            Text = Color3.fromHex("#e8e8e8"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#2b2b2b"),
+                            DarkContrast = Color3.fromHex("#191919"),
+                        })
+                    elseif Choosen == "Onetap" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#000000"),
+                            Inline = Color3.fromHex("#4e5158"),
+                            Accent = Color3.fromHex("#dda85d"),
+                            Text = Color3.fromHex("#d6d9e0"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#2c3037"),
+                            DarkContrast = Color3.fromHex("#1f2125"),
+                        })
+                    elseif Choosen == "Vape" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#0a0a0a"),
+                            Inline = Color3.fromHex("#363636"),
+                            Accent = Color3.fromHex("#26866a"),
+                            Text = Color3.fromHex("#d6d9e0"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#1f1f1f"),
+                            DarkContrast = Color3.fromHex("#1a1a1a"),
+                        })
+                    elseif Choosen == "Gamesesne" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#000000"),
+                            Inline = Color3.fromHex("#4e5158"),
+                            Accent = Color3.fromHex("#a7d94d"),
+                            Text = Color3.fromHex("#ffffff"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#171717"),
+                            DarkContrast = Color3.fromHex("#0c0c0c"),
+                        })
+                    elseif Choosen == "OldAbyss" then
+                        Library:UpdateTheme({
+                            Outline = Color3.fromHex("#0a0a0a"),
+                            Inline = Color3.fromHex("#322850"),
+                            Accent = Color3.fromHex("#8c87b4"),
+                            Text = Color3.fromHex("#ffffff"),
+                            TextInactive = Color3.fromHex("#afafaf"),
+                            LightContrast = Color3.fromHex("#1e1e1e"),
+                            DarkContrast = Color3.fromHex("#141414"),
+                        })
+                    end
+                end
+            })
+            
+            local ClickGUI = Settings:Section("Click GUI", "Right")
+            
+            ClickGUI:Toggle({
+                Title = "Enable Anime",
+                Callback = function(State)
+                    Window.ToggleAnime(State)
+                end
+            })
+            
+            ClickGUI:Dropdown({
+                Title = "Anime",
+                List = {"Astolfo", "Violet", "Rem", "Aiko", "Asuka"},
+                Default = "Astolfo",
+                Callback = function(Name)
+                    Window.ChangeAnime(Name)
+                end
+            })
+
+            ClickGUI:Button({
+                Title = "Self Destruct",
+                Callback = function()
+                    Library.SelfDestruct()
+                    Additional()
+                end
+            })
+
+            return Settings
+        end
+        --
+        function Window.Watermark(Title)
+            local Watermark = {
+                Title = Title,
+                FPS = 60,
+                Visible = true
+            }
+            --
+            local WindowOutline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(475, 24),
+                Position = Vector2.new(150, 8),
+                Thickness = 0,
+                Color = Library.Theme.Outline,
+                Visible = true,
+                Filled = true
+            }, Library.Watermark)
+            --
+            local WatermarkIcon = Utility.AddDrawing("Image", {
+                Size = Vector2.new(18, 20),
+                Position = Vector2.new(WindowOutline.Position.X + 2, WindowOutline.Position.Y + 2),
+                Transparency = 1,
+                ZIndex = 3,
+                Visible = true,
+                Data = Library.Theme.Logo
+            }, Library.Watermark)
+            --
+            local WindowOutlineBorder = Utility.AddDrawing("Square", {
+                Size = Vector2.new(WindowOutline.Size.X - 2, WindowOutline.Size.Y - 2),
+                Position = Vector2.new(WindowOutline.Position.X + 1, WindowOutline.Position.Y + 1),
+                Thickness = 0,
+                Color = Library.Theme.Accent[1],
+                Visible = false,
+                Filled = true
+            }, Library.Watermark)
+            --
+            local WindowFrame = Utility.AddDrawing("Square", {
+                Size = Vector2.new(WindowOutlineBorder.Size.X - 2, WindowOutlineBorder.Size.Y - 2),
+                Position = Vector2.new(WindowOutlineBorder.Position.X + 1, WindowOutlineBorder.Position.Y + 1),
+                Thickness = 0,
+                Transparency = 1,
+                Color = Library.Theme.DarkContrast,
+                Visible = true,
+                Filled = true
+            }, Library.Watermark)
+            --
+            local WindowTopline = Utility.AddDrawing("Square", {
+                Size = Vector2.new(WindowOutlineBorder.Size.X, 1),
+                Position = Vector2.new(WindowOutlineBorder.Position.X, WindowOutlineBorder.Position.Y),
+                Thickness = 0,
+                Color = Library.Theme.Accent[1],
+                Visible = true,
+                Filled = true
+            }, Library.Watermark)
+            --
+            Utility.AddConnection(Library.Communication.Event, function(Type, Color)
+                if Type == "Accent" then
+                    WindowOutlineBorder.Color = Color
+                    WindowTopline.Color = Color
+                end
+            end)
+            --
+            local WindowImage = Utility.AddDrawing("Image", {
+                Size = WindowFrame.Size,
+                Position = WindowFrame.Position,
+                Transparency = 1, 
+                Visible = true,
+                Data = Library.Theme.Gradient
+            }, Library.Watermark)
+            --
+            local WindowTitle = Utility.AddDrawing("Text", {
+                Font = Library.Theme.Font,
+                Size = Library.Theme.TextSize,
+                Color = Library.Theme.Text,
+                Text = Watermark.Title .. " | " .. ("%s, %s, %s"):format(os.date("%B"), os.date("%d"), os.date("%Y")),
+                Position = Vector2.new(WindowFrame.Position.X + (WindowFrame.Size.X / 2), WindowOutlineBorder.Position.Y + 4),
+                Visible = true,
+                Center = false,
+                Outline = false
+            }, Library.Watermark)
+            --
+            WindowOutline.Size = Vector2.new(WindowTitle.TextBounds.X + 19, 20)
+            WindowTopline.Size = Vector2.new(WindowOutline.Size.X - 2, 2)
+            WindowFrame.Size = Vector2.new(WindowOutline.Size.X - 2, WindowOutline.Size.Y - 2)
+            --
+            --[[
+                Utility.Loop(1, function()
+                    WindowTitle.Text = ("%s | Ping: %s ms | FPS: %s fps"):format(Watermark.Title, tostring(math.floor(Stats:GetValue())), Watermark.FPS)
+                    Watermark.FPS = 0
+                end)
+            ]]
+            Utility.AddDrag(WindowOutline, Library.Watermark)
+            --
+            Utility.AddConnection(RunService.RenderStepped, function()
+                Watermark.FPS += 1
+                if Watermark.Visible then
+                    local Hours, Minutes, Secs = os.date("*t")["hour"], os.date("*t")["min"], os.date("*t")["sec"]
+                    local Format = Hours > 12 and Hours - 12 or Hours
+                    local AMORPM = Hours > 12 and "PM" or "AM"
+                    local FixZero = string.len(tostring(Secs)) == 1 and "0" .. Secs or Secs
+                    WindowTitle.Text =  ("%s | %s:%s:%s %s | %s, %s, %s, %s"):format(Watermark.Title, Format, Minutes, FixZero, AMORPM, os.date("%A"), os.date("%B"), os.date("%d"), os.date("%Y"))
+
+                    WindowOutline.Visible = true
+                    WindowImage.Visible = true
+                    --
+                    WindowOutline.Size = Vector2.new(WindowTitle.TextBounds.X + 28, 22)
+                    WindowOutlineBorder.Size = WindowOutline.Size
+                    WindowTopline.Size = Vector2.new(WindowOutline.Size.X - 2, 1)
+                    WindowFrame.Size = Vector2.new(WindowOutline.Size.X - 2, WindowOutline.Size.Y - 2)
+                    WindowImage.Size = WindowFrame.Size
+                    WindowTitle.Position = Vector2.new(WindowTopline.Position.X + 22, WindowTopline.Position.Y + 4)
+                    --
+                    WindowFrame.Visible = true
+                    WindowTitle.Visible = true
+                    WatermarkIcon.Visible = true
+                    WindowTopline.Visible = true
+                else
+                    WatermarkIcon.Visible = false
+                    WindowOutline.Visible = false
+                    WindowFrame.Visible = false
+                    WindowTitle.Visible = false
+                    WindowTopline.Visible = false
+                end
+            end)
+            --
+            return Watermark
+        end
+
+        return Window
+    end
+end
+
+--
+Utility.AddConnection(UserInput.InputBegan, function(Input, Useless)
+    if Useless then
+        return
+    end
+    if Input.KeyCode == Enum.KeyCode.RightShift then
+        Library:ChangeVisible(not Library.WindowVisible)
+    end
+end)
+--
+local Maid = {
+    Connections = {}
 }
 
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local stats = game:GetService("Stats")
+Maid.AddConnection = function(Specific, Type, Callback)
+    local Connection = Type:Connect(Callback)
 
-function Library:Dragify(ins,touse)
-	local dragging
-	local dragInput
-	local dragStart
-	local startPos
-	--
-	local function update(input)
-		local delta = input.Position - dragStart
-		touse:TweenPosition(UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.1,true)
-	end
-	--
-	ins.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = touse.Position
-
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-	--
-	ins.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-	--
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			update(input)
-		end
-	end)
+    Specific = Specific or #Maid.Connections + 1
+    Maid.Connections[Specific] = Connection
+    
+    return Connection
 end
 
-local function tweenObject(object, properties, duration, easingStyle, easingDirection)
-	local tweenInfo = TweenInfo.new(
-		duration,
-		easingStyle or Enum.EasingStyle.Linear,
-		easingDirection or Enum.EasingDirection.Out
-	)
-	local tween = TweenService:Create(object, tweenInfo, properties)
-	tween:Play()
-	return tween
+Maid.DelConnection = function(Specific)
+    Maid.Connections[Specific]:Disconnect()
 end
 
-local function printTable(tbl, indent)
-	indent = indent or 0
-	local prefix = string.rep("  ", indent) -- Indentation for nested tables
-	for key, value in pairs(tbl) do
-		if type(value) == "table" then
-			print(prefix .. tostring(key) .. ":")
-			printTable(value, indent + 1) -- Recursively print nested tables
-		else
-			print(prefix .. tostring(key) .. " = " .. tostring(value))
-		end
-	end
+Maid.DisconnectAll = function()
+    for Idx, Val in pairs(Maid.Connections) do
+        Val:Disconnect()
+    end
 end
 
-function Library:NewWindow(option)
-	option = typeof(option) == "table" and option or {}
-	option.text = option.text or "pyps.cc"
-
-	local Window = {}
-
-	do -- window
-		-- StarterGui.UILIBMAIN
-		Window["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
-		Window["1"]["Name"] = [[UILIBMAIN]];
-		Window["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
-
-		Window["SGD"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
-		Window["SGD"]["Name"] = [[KEYBINDLIST]];
-		Window["SGD"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
-
-		-- StarterGui.UILIBMAIN.UIHolder
-		Window["2"] = Instance.new("Frame", Window["1"]);
-		Window["2"]["BorderSizePixel"] = 0;
-		Window["2"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["2"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["2"]["Size"] = UDim2.new(0, 650, 0, 500);
-		Window["2"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["2"]["Name"] = [[UIHolder]];
-		Window["2"]["BackgroundTransparency"] = 1;
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline
-		Window["3"] = Instance.new("Frame", Window["2"]);
-		Window["3"]["BorderSizePixel"] = 0;
-		Window["3"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-		Window["3"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["3"]["Size"] = UDim2.new(1, 0, 1, 0);
-		Window["3"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["3"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["3"]["Name"] = [[Outline]];
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent
-		Window["4"] = Instance.new("Frame", Window["3"]);
-		Window["4"]["BorderSizePixel"] = 0;
-		Window["4"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["4"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["4"]["Size"] = UDim2.new(1, -2, 1, -2);
-		Window["4"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["4"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["4"]["Name"] = [[Accent]];
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline
-		Window["5"] = Instance.new("Frame", Window["4"]);
-		Window["5"]["BorderSizePixel"] = 0;
-		Window["5"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36);
-		Window["5"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["5"]["Size"] = UDim2.new(1, -2, 1, -2);
-		Window["5"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["5"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["5"]["Name"] = [[Innerline]];
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main
-		Window["6"] = Instance.new("Frame", Window["5"]);
-		Window["6"]["BorderSizePixel"] = 0;
-		Window["6"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-		Window["6"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["6"]["Size"] = UDim2.new(1, -2, 1, -2);
-		Window["6"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["6"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["6"]["Name"] = [[Main]];
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline
-		Window["7"] = Instance.new("Frame", Window["6"]);
-		Window["7"]["BorderSizePixel"] = 0;
-		Window["7"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36);
-		Window["7"]["AnchorPoint"] = Vector2.new(0.5, 1);
-		Window["7"]["Size"] = UDim2.new(1, -10, 1, -30);
-		Window["7"]["Position"] = UDim2.new(0.5, 0, 1, -5);
-		Window["7"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["7"]["Name"] = [[Innerline]];
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline
-		Window["8"] = Instance.new("Frame", Window["7"]);
-		Window["8"]["BorderSizePixel"] = 0;
-		Window["8"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-		Window["8"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["8"]["Size"] = UDim2.new(1, -2, 1, -2);
-		Window["8"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["8"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["8"]["Name"] = [[Outline]];
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain
-		Window["9"] = Instance.new("Frame", Window["8"]);
-		Window["9"]["BorderSizePixel"] = 0;
-		Window["9"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 26);
-		Window["9"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["9"]["Size"] = UDim2.new(1, -2, 1, -2);
-		Window["9"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["9"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["9"]["Name"] = [[insideMain]];
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.CheatNameLabel
-		Window["12e"] = Instance.new("TextLabel", Window["6"]);
-		Window["12e"]["LineHeight"] = 3;
-		Window["12e"]["TextStrokeTransparency"] = 0;
-		Window["12e"]["BorderSizePixel"] = 0;
-		Window["12e"]["TextSize"] = 15;
-		Window["12e"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-		Window["12e"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["12e"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-		Window["12e"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["12e"]["BackgroundTransparency"] = 1;
-		Window["12e"]["AnchorPoint"] = Vector2.new(0.5, 0);
-		Window["12e"]["Size"] = UDim2.new(1, 0, 0, 25);
-		Window["12e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["12e"]["Text"] = option.text;
-		Window["12e"]["Name"] = [[CheatNameLabel]];
-		Window["12e"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.CheatNameLabel.CheatNamePadding
-		Window["12f"] = Instance.new("UIPadding", Window["12e"]);
-		Window["12f"]["PaddingRight"] = UDim.new(0, 5);
-		Window["12f"]["Name"] = [[CheatNamePadding]];
-		Window["12f"]["PaddingLeft"] = UDim.new(0, 5);
-		Window["12f"]["PaddingBottom"] = UDim.new(0, 4);
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder
-		Window["a"] = Instance.new("Frame", Window["9"]);
-		Window["a"]["BorderSizePixel"] = 0;
-		Window["a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["a"]["Size"] = UDim2.new(1, -10, 1, -10);
-		Window["a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["a"]["Name"] = [[insideHolder]];
-		Window["a"]["BackgroundTransparency"] = 1;
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder
-		Window["b"] = Instance.new("ScrollingFrame", Window["a"]);
-		Window["b"]["ScrollingDirection"] = Enum.ScrollingDirection.X;
-		Window["b"]["ZIndex"] = 2;
-		Window["b"]["BorderSizePixel"] = 0;
-		Window["b"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
-		Window["b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["b"]["Name"] = [[TabHolder]];
-		Window["b"]["Selectable"] = false;
-		Window["b"]["AutomaticCanvasSize"] = Enum.AutomaticSize.X;
-		Window["b"]["Size"] = UDim2.new(1, 0, 0, 30);
-		Window["b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["b"]["ScrollBarThickness"] = 0;
-		Window["b"]["BackgroundTransparency"] = 1;
-
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder.UIListLayout
-		Window["c"] = Instance.new("UIListLayout", Window["b"]);
-		Window["c"]["Padding"] = UDim.new(0, 3);
-		Window["c"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-		Window["c"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-		-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"]
-		Window["19"] = Instance.new("Frame", Window["a"]);
-		Window["19"]["BorderSizePixel"] = 0;
-		Window["19"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["19"]["AnchorPoint"] = Vector2.new(0.5, 1);
-		Window["19"]["Size"] = UDim2.new(1, 0, 1, -28);
-		Window["19"]["Position"] = UDim2.new(0.5, 0, 1, 0);
-		Window["19"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["19"]["Name"] = [[TabTabA]];
-		Window["19"]["BackgroundTransparency"] = 1;
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder
-		Window["131"] = Instance.new("Frame", Window["SGD"]);
-		Window["131"]["BorderSizePixel"] = 0;
-		Window["131"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["131"]["AnchorPoint"] = Vector2.new(0, 0.5);
-		Window["131"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-		Window["131"]["Size"] = UDim2.new(0, 125, 0, 50);
-		Window["131"]["Position"] = UDim2.new(0, 5, 0.5, 0);
-		Window["131"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["131"]["Name"] = [[KeybindsHolder]];
-		Window["131"]["BackgroundTransparency"] = 1;
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline
-		Window["132"] = Instance.new("Frame", Window["131"]);
-		Window["132"]["BorderSizePixel"] = 0;
-		Window["132"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-		Window["132"]["AnchorPoint"] = Vector2.new(0.5, 0);
-		Window["132"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-		Window["132"]["Size"] = UDim2.new(1, -2, 0, 48);
-		Window["132"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-		Window["132"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["132"]["Name"] = [[Outline]];
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent
-		Window["133"] = Instance.new("Frame", Window["132"]);
-		Window["133"]["BorderSizePixel"] = 0;
-		Window["133"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["133"]["AnchorPoint"] = Vector2.new(0.5, 0);
-		Window["133"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-		Window["133"]["Size"] = UDim2.new(1, -2, 0, 46);
-		Window["133"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-		Window["133"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["133"]["Name"] = [[Accent]];
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline
-		Window["134"] = Instance.new("Frame", Window["133"]);
-		Window["134"]["BorderSizePixel"] = 0;
-		Window["134"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36);
-		Window["134"]["AnchorPoint"] = Vector2.new(0.5, 0);
-		Window["134"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-		Window["134"]["Size"] = UDim2.new(1, -2, 0, 44);
-		Window["134"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-		Window["134"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["134"]["Name"] = [[Innerline]];
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main
-		Window["135"] = Instance.new("Frame", Window["134"]);
-		Window["135"]["BorderSizePixel"] = 0;
-		Window["135"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-		Window["135"]["AnchorPoint"] = Vector2.new(0.5, 0);
-		Window["135"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-		Window["135"]["Size"] = UDim2.new(1, -2, 0, 42);
-		Window["135"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-		Window["135"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["135"]["Name"] = [[Main]];
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main.TextLabel
-		Window["136"] = Instance.new("TextLabel", Window["135"]);
-		Window["136"]["TextStrokeTransparency"] = 0;
-		Window["136"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-		Window["136"]["BorderSizePixel"] = 0;
-		Window["136"]["TextSize"] = 14;
-		Window["136"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-		Window["136"]["TextYAlignment"] = Enum.TextYAlignment.Top;
-		Window["136"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["136"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-		Window["136"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["136"]["BackgroundTransparency"] = 1;
-		Window["136"]["Size"] = UDim2.new(1, 0, 0, 20);
-		Window["136"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["136"]["Text"] = [[Keybinds]];
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main.UIPadding
-		Window["137"] = Instance.new("UIPadding", Window["135"]);
-		Window["137"]["PaddingTop"] = UDim.new(0, 3);
-		Window["137"]["PaddingRight"] = UDim.new(0, 5);
-		Window["137"]["PaddingLeft"] = UDim.new(0, 5);
-		Window["137"]["PaddingBottom"] = UDim.new(0, 5);
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main.Keybinds
-		Window["138"] = Instance.new("Frame", Window["135"]);
-		Window["138"]["BorderSizePixel"] = 0;
-		Window["138"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["138"]["AnchorPoint"] = Vector2.new(0.5, 0);
-		Window["138"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-		Window["138"]["Size"] = UDim2.new(1, 0, 0, 20);
-		Window["138"]["Position"] = UDim2.new(0.5, 0, 0, 17);
-		Window["138"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["138"]["Name"] = [[Keybinds]];
-		Window["138"]["BackgroundTransparency"] = 1;
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main.Keybinds.UIPadding
-		Window["13e"] = Instance.new("UIPadding", Window["138"]);
-		Window["13e"]["PaddingTop"] = UDim.new(0, 6);
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main.Keybinds.UIListLayout
-		Window["13f"] = Instance.new("UIListLayout", Window["138"]);
-		Window["13f"]["Padding"] = UDim.new(0, 2);
-		Window["13f"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main.AccentOutline
-		Window["140"] = Instance.new("Frame", Window["135"]);
-		Window["140"]["BorderSizePixel"] = 0;
-		Window["140"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-		Window["140"]["Size"] = UDim2.new(1, 0, 0, 3);
-		Window["140"]["Position"] = UDim2.new(0, 0, 0, 16);
-		Window["140"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["140"]["Name"] = [[AccentOutline]];
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.Main.AccentOutline.Accent
-		Window["141"] = Instance.new("Frame", Window["140"]);
-		Window["141"]["BorderSizePixel"] = 0;
-		Window["141"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-		Window["141"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-		Window["141"]["Size"] = UDim2.new(1, -2, 1, -2);
-		Window["141"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-		Window["141"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-		Window["141"]["Name"] = [[Accent]];
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.Innerline.UIPadding
-		Window["142"] = Instance.new("UIPadding", Window["134"]);
-		Window["142"]["PaddingTop"] = UDim.new(0, 1);
-		Window["142"]["PaddingBottom"] = UDim.new(0, 1);
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.AccentGradient
-		Window["143"] = Instance.new("UIGradient", Window["133"]);
-		Window["143"]["Rotation"] = 90;
-		Window["143"]["Name"] = [[AccentGradient]];
-		Window["143"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(209, 209, 209))};
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.Accent.UIPadding
-		Window["144"] = Instance.new("UIPadding", Window["133"]);
-		Window["144"]["PaddingTop"] = UDim.new(0, 1);
-		Window["144"]["PaddingBottom"] = UDim.new(0, 1);
-
-
-		-- StarterGui.UILIBMAIN.KeybindsHolder.Outline.UIPadding
-		Window["145"] = Instance.new("UIPadding", Window["132"]);
-		Window["145"]["PaddingTop"] = UDim.new(0, 1);
-		Window["145"]["PaddingBottom"] = UDim.new(0, 1);
-	end
-
-	do -- logic
-		game:GetService("UserInputService").InputBegan:Connect(function(input)
-			if input.KeyCode == Enum.KeyCode.Insert then
-				Window["1"].Enabled = not Window["1"].Enabled
-			end
-		end)
-
-		Library:Dragify(Window["12e"], Window["2"])
-		Library:Dragify(Window["136"], Window["131"])
-	end
-
-	local firsttab = true
-	local activetab = nil
-
-	function Window:NewTab(option)
-		option = typeof(option) == "table" and option or {}
-		option.text = option.text or "NewTab"
-
-		local Tab = {}
-
-		do -- tab
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder.CombatTabHolder
-			Tab["d"] = Instance.new("Frame", Window["b"]);
-			Tab["d"]["Active"] = true;
-			Tab["d"]["ZIndex"] = 2;
-			Tab["d"]["BorderSizePixel"] = 0;
-			Tab["d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-			Tab["d"]["Size"] = UDim2.new(0, 125, 0, 30);
-			Tab["d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["d"]["Name"] = [[CombatTabHolder]];
-			Tab["d"]["BackgroundTransparency"] = 1;
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder.CombatTabHolder.Outline
-			Tab["e"] = Instance.new("Frame", Tab["d"]);
-			Tab["e"]["ZIndex"] = 2;
-			Tab["e"]["BorderSizePixel"] = 0;
-			Tab["e"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-			Tab["e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-			Tab["e"]["Size"] = UDim2.new(1, 0, 1, -2);
-			Tab["e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-			Tab["e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["e"]["Name"] = [[Outline]];
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder.CombatTabHolder.Outline.Innerline
-			Tab["f"] = Instance.new("Frame", Tab["e"]);
-			Tab["f"]["ZIndex"] = 2;
-			Tab["f"]["BorderSizePixel"] = 0;
-			Tab["f"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36);
-			Tab["f"]["AnchorPoint"] = Vector2.new(0.5, 1);
-			Tab["f"]["Size"] = UDim2.new(1, -2, 1, 0);
-			Tab["f"]["Position"] = UDim2.new(0.5, 0, 1, 0);
-			Tab["f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["f"]["Name"] = [[Innerline]];
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder.CombatTabHolder.Outline.Innerline.Main
-			Tab["10"] = Instance.new("Frame", Tab["f"]);
-			Tab["10"]["ZIndex"] = 2;
-			Tab["10"]["BorderSizePixel"] = 0;
-			Tab["10"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-			Tab["10"]["AnchorPoint"] = Vector2.new(0.5, 0);
-			Tab["10"]["Size"] = UDim2.new(1, -2, 1, -1);
-			Tab["10"]["Position"] = UDim2.new(0.5, 0, 0, 1);
-			Tab["10"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["10"]["Name"] = [[Main]];
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder.CombatTabHolder.Outline.Innerline.Main.TabGradient
-			Tab["11"] = Instance.new("UIGradient", Tab["10"]);
-			Tab["11"]["Rotation"] = 90;
-			Tab["11"]["Name"] = [[TabGradient]];
-			Tab["11"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(187, 187, 187))};
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabHolder.CombatTabHolder.Outline.Innerline.Main.TabText
-			Tab["12"] = Instance.new("TextLabel", Tab["10"]);
-			Tab["12"]["TextStrokeTransparency"] = 0;
-			Tab["12"]["BorderSizePixel"] = 0;
-			Tab["12"]["TextSize"] = 14;
-			Tab["12"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-			Tab["12"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-			Tab["12"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-			Tab["12"]["TextColor3"] = Color3.fromRGB(91,91,91);
-			Tab["12"]["BackgroundTransparency"] = 1;
-			Tab["12"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-			Tab["12"]["Size"] = UDim2.new(1, 0, 1, 0);
-			Tab["12"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["12"]["Text"] = option.text;
-			Tab["12"]["Name"] = [[TabText]];
-			Tab["12"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"].CombatTabTab["1a"]
-			Tab["1a"] = Instance.new("Frame", Window["19"]);
-			Tab["1a"]["BorderSizePixel"] = 0;
-			Tab["1a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-			Tab["1a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-			Tab["1a"]["Size"] = UDim2.new(1, 0, 1, 0);
-			Tab["1a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-			Tab["1a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["1a"]["Name"] = option.text..[[TabEverythingHolder]];
-			Tab["1a"]["BackgroundTransparency"] = 1;
-			Tab["1a"]["Visible"] = false;
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"].CombatTabTab["1a"].Outline
-			Tab["1b"] = Instance.new("Frame", Tab["1a"]);
-			Tab["1b"]["BorderSizePixel"] = 0;
-			Tab["1b"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-			Tab["1b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-			Tab["1b"]["Size"] = UDim2.new(1, 0, 1, 0);
-			Tab["1b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-			Tab["1b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["1b"]["Name"] = [[Outline]];
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"].CombatTabTab["1a"].Outline.Innerline
-			Tab["1c"] = Instance.new("Frame", Tab["1b"]);
-			Tab["1c"]["BorderSizePixel"] = 0;
-			Tab["1c"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36);
-			Tab["1c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-			Tab["1c"]["Size"] = UDim2.new(1, -2, 1, -2);
-			Tab["1c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-			Tab["1c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["1c"]["Name"] = [[Innerline]];
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"].CombatTabTab["1a"].Outline.Innerline.Main
-			Tab["1d"] = Instance.new("Frame", Tab["1c"]);
-			Tab["1d"]["BorderSizePixel"] = 0;
-			Tab["1d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-			Tab["1d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-			Tab["1d"]["Size"] = UDim2.new(1, -2, 1, -2);
-			Tab["1d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-			Tab["1d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["1d"]["Name"] = [[Main]];
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"].CombatTabTab["1a"].Outline.Innerline.Main.SectionsHolder
-			Tab["1e"] = Instance.new("ScrollingFrame", Tab["1d"]);
-			Tab["1e"]["ScrollingDirection"] = Enum.ScrollingDirection.Y;
-			Tab["1e"]["BorderSizePixel"] = 0;
-			Tab["1e"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
-			Tab["1e"]["BackgroundColor3"] = Color3.fromRGB(18, 18, 22);
-			Tab["1e"]["Name"] = [[SectionsHolder]];
-			Tab["1e"]["Selectable"] = false;
-			Tab["1e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-			Tab["1e"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y;
-			Tab["1e"]["Size"] = UDim2.new(1, -2, 1, -2);
-			Tab["1e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-			Tab["1e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			Tab["1e"]["ScrollBarThickness"] = 0;
-			Tab["1e"]["BackgroundTransparency"] = 1;
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"].CombatTabTab["1a"].Outline.Innerline.Main.SectionsHolder.UIListLayout
-			Tab["1f"] = Instance.new("UIListLayout", Tab["1e"]);
-			Tab["1f"]["Wraps"] = true;
-			Tab["1f"]["Padding"] = UDim.new(0, 5);
-			Tab["1f"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-			Tab["1f"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-			-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabTab["1a"].CombatTabTab["1a"].Outline.Innerline.Main.SectionsHolder.UIPadding
-			Tab["20"] = Instance.new("UIPadding", Tab["1e"]);
-			Tab["20"]["PaddingTop"] = UDim.new(0, 5);
-			Tab["20"]["PaddingRight"] = UDim.new(0, 5);
-			Tab["20"]["PaddingLeft"] = UDim.new(0, 5);
-			Tab["20"]["PaddingBottom"] = UDim.new(0, 5);
-
-		end
-
-		do -- logic			
-			local oldtabcolor = Color3.fromRGB(91,91,91)
-			local activetabcolor = Color3.fromRGB(255,255,255)
-
-			local function activateTab(tab)
-				if activetab then
-					activetab["1a"].Visible = false
-					activetab["10"].Size = UDim2.new(1, -2, 1, -1);
-					activetab["12"].TextColor3 = oldtabcolor
-					activetab["11"].Rotation = 90
-				end
-
-				tab["1a"].Visible = true
-				tab["10"].Size = UDim2.new(1, -2, 1, 0);
-				tab["12"].TextColor3 = activetabcolor
-				tab["11"].Rotation = -90
-				activetab = tab
-			end
-
-			if firsttab then
-				activateTab(Tab)
-				Tab["1a"].Visible = true
-				firsttab = false
-			end
-
-			local hovertabcolor = Color3.fromRGB(120,120,120)
-
-			Tab["12"].MouseEnter:Connect(function()
-				if activetab ~= Tab then
-					Tab["12"].TextColor3 = hovertabcolor
-				else
-					Tab["12"].TextColor3 = activetabcolor
-				end
-			end)
-
-			Tab["12"].MouseLeave:Connect(function()
-				if activetab ~= Tab then
-					Tab["12"].TextColor3 = oldtabcolor
-				else
-					Tab["12"].TextColor3 = activetabcolor
-				end
-			end)
-
-			Tab["12"].InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					if activetab ~= Tab then
-						activateTab(Tab)
-					end
-				end
-			end)
-		end
-
-		local firstsection = true
-
-		function Tab:NewSection(option)
-			option = typeof(option) == "table" and option or {}
-			option.text = option.text or "NewSection"
-
-			local Section = {}
-
-			do -- section
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder
-				Section["21"] = Instance.new("Frame", Tab["1e"]);
-				Section["21"]["BorderSizePixel"] = 0;
-				Section["21"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36);
-				Section["21"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-				Section["21"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-				Section["21"]["Size"] = UDim2.new(0, 198, 0, 25);
-				Section["21"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				Section["21"]["Name"] = [[SectionHolder]];
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline
-				Section["22"] = Instance.new("Frame", Section["21"]);
-				Section["22"]["BorderSizePixel"] = 0;
-				Section["22"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-				Section["22"]["AnchorPoint"] = Vector2.new(0.5, 0);
-				Section["22"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-				Section["22"]["Size"] = UDim2.new(1, -2, 0, 23);
-				Section["22"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-				Section["22"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				Section["22"]["Name"] = [[Outline]];
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main
-				Section["23"] = Instance.new("Frame", Section["22"]);
-				Section["23"]["BorderSizePixel"] = 0;
-				Section["23"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 26);
-				Section["23"]["AnchorPoint"] = Vector2.new(0.5, 0);
-				Section["23"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-				Section["23"]["Size"] = UDim2.new(1, -2, 0, 21);
-				Section["23"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-				Section["23"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				Section["23"]["Name"] = [[Main]];
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.UIListLayout
-				Section["24"] = Instance.new("UIListLayout", Section["23"]);
-				Section["24"]["VerticalFlex"] = Enum.UIFlexAlignment.SpaceBetween;
-				Section["24"]["Padding"] = UDim.new(0, 5);
-				Section["24"]["VerticalAlignment"] = Enum.VerticalAlignment.Center;
-				Section["24"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.UIPadding
-				Section["25"] = Instance.new("UIPadding", Section["23"]);
-				Section["25"]["PaddingTop"] = UDim.new(0, 5);
-				Section["25"]["PaddingRight"] = UDim.new(0, 5);
-				Section["25"]["PaddingLeft"] = UDim.new(0, 5);
-				Section["25"]["PaddingBottom"] = UDim.new(0, 5);
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SectionText
-				Section["26"] = Instance.new("TextLabel", Section["23"]);
-				Section["26"]["TextStrokeTransparency"] = 0;
-				Section["26"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-				Section["26"]["BorderSizePixel"] = 0;
-				Section["26"]["TextSize"] = 14;
-				Section["26"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-				Section["26"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-				Section["26"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-				Section["26"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-				Section["26"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-				Section["26"]["BackgroundTransparency"] = 1;
-				Section["26"]["Size"] = UDim2.new(1, 0, 0, 14);
-				Section["26"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				Section["26"]["Text"] = option.text;
-				Section["26"]["Name"] = [[SectionText]];
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.UIPadding
-				Section["a1"] = Instance.new("UIPadding", Section["22"]);
-				Section["a1"]["PaddingTop"] = UDim.new(0, 1);
-				Section["a1"]["PaddingBottom"] = UDim.new(0, 1);
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.UIPadding
-				Section["a2"] = Instance.new("UIPadding", Section["21"]);
-				Section["a2"]["PaddingTop"] = UDim.new(0, 1);
-				Section["a2"]["PaddingBottom"] = UDim.new(0, 1);
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Accent
-				Section["a3"] = Instance.new("Frame", Section["21"]);
-				Section["a3"]["BorderSizePixel"] = 0;
-				Section["a3"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-				Section["a3"]["AnchorPoint"] = Vector2.new(0.5, 0);
-				Section["a3"]["Size"] = UDim2.new(1, -4, 0, 1);
-				Section["a3"]["Position"] = UDim2.new(0.5, 0, 0, 2);
-				Section["a3"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				Section["a3"]["Name"] = [[Accent]];
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Accent.AccentGradient
-				Section["a4"] = Instance.new("UIGradient", Section["a3"]);
-				Section["a4"]["Name"] = [[AccentGradient]];
-				Section["a4"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(201, 201, 201))};
-			end
-
-			do -- Logic
-			end
-
-			function Section:NewToggle(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "New Toggle"
-				option.enabled = option.enabled or false
-				option.risky = option.risky or false
-				option.flag = option.flag or option.text
-				option.state = option.enabled
-				option.callback = option.callback or function() end
-				option.utilitytype = "toggle"
-
-				local Toggle = {}
-
-				do -- toggle
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder
-					Toggle["27"] = Instance.new("Frame", Section["23"]);
-					Toggle["27"]["ZIndex"] = 1000;
-					Toggle["27"]["BorderSizePixel"] = 0;
-					Toggle["27"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["27"]["Size"] = UDim2.new(1, 0, 0, 15);
-					Toggle["27"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["27"]["Name"] = [[ToggleHolder]];
-					Toggle["27"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline
-					Toggle["28"] = Instance.new("Frame", Toggle["27"]);
-					Toggle["28"]["Active"] = true;
-					Toggle["28"]["BorderSizePixel"] = 0;
-					Toggle["28"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Toggle["28"]["Size"] = UDim2.new(0, 15, 0, 15);
-					Toggle["28"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["28"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline
-					Toggle["29"] = Instance.new("Frame", Toggle["28"]);
-					Toggle["29"]["Active"] = true;
-					Toggle["29"]["BorderSizePixel"] = 0;
-					Toggle["29"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Toggle["29"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Toggle["29"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Toggle["29"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Toggle["29"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["29"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline.Toggle
-					Toggle["2a"] = Instance.new("Frame", Toggle["29"]);
-					Toggle["2a"]["Active"] = true;
-					Toggle["2a"]["BorderSizePixel"] = 0;
-					Toggle["2a"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Toggle["2a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Toggle["2a"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Toggle["2a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Toggle["2a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2a"]["Name"] = [[Toggle]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline.Toggle.UIGradient
-					Toggle["2b"] = Instance.new("UIGradient", Toggle["2a"]);
-					Toggle["2b"]["Rotation"] = 90;
-					Toggle["2b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline.Toggle.ToggleButton
-					Toggle["2c"] = Instance.new("TextButton", Toggle["2a"]);
-					Toggle["2c"]["BorderSizePixel"] = 0;
-					Toggle["2c"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2c"]["TextTransparency"] = 1;
-					Toggle["2c"]["TextSize"] = 14;
-					Toggle["2c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["2c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Toggle["2c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Toggle["2c"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Toggle["2c"]["BackgroundTransparency"] = 1;
-					Toggle["2c"]["Name"] = [[ToggleButton]];
-					Toggle["2c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.ToggleText
-					Toggle["2d"] = Instance.new("TextLabel", Toggle["27"]);
-					Toggle["2d"]["TextStrokeTransparency"] = 0;
-					Toggle["2d"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Toggle["2d"]["BorderSizePixel"] = 0;
-					Toggle["2d"]["TextSize"] = 14;
-					Toggle["2d"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Toggle["2d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Toggle["2d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["2d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Toggle["2d"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Toggle["2d"]["BackgroundTransparency"] = 1;
-					Toggle["2d"]["AnchorPoint"] = Vector2.new(1, 0);
-					Toggle["2d"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Toggle["2d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2d"]["Text"] = option.text;
-					Toggle["2d"]["Name"] = [[ToggleText]];
-					Toggle["2d"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.ToggleText.UIPadding
-					Toggle["2e"] = Instance.new("UIPadding", Toggle["2d"]);
-					Toggle["2e"]["PaddingRight"] = UDim.new(0, 1);
-					Toggle["2e"]["PaddingLeft"] = UDim.new(0, 18);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.AdditionHolder
-					Toggle["2f"] = Instance.new("Frame", Toggle["27"]);
-					Toggle["2f"]["BorderSizePixel"] = 0;
-					Toggle["2f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["2f"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Toggle["2f"]["Size"] = UDim2.new(0, 50, 1, 0);
-					Toggle["2f"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-					Toggle["2f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2f"]["Name"] = [[AdditionHolder]];
-					Toggle["2f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.AdditionHolder.UIListLayout
-					Toggle["30"] = Instance.new("UIListLayout", Toggle["2f"]);
-					Toggle["30"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Right;
-					Toggle["30"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-					Toggle["30"]["FillDirection"] = Enum.FillDirection.Horizontal;
-				end
-
-				do -- logic
-					local btnToggle = Toggle["2c"]
-					local basiccolor = Color3.fromRGB(31,31,31)
-					local accentcolor = Color3.fromRGB(255,255,255)
-					local hovercolor = Color3.fromRGB(40,40,40)
-
-					btnToggle.MouseButton1Click:Connect(function()
-						if option.state == false then
-							Toggle["2a"]["BackgroundColor3"] = accentcolor
-						elseif option.state == true then
-							Toggle["2a"]["BackgroundColor3"] = basiccolor
-						end
-
-						option.state = not option.state
-						Library.Flags[option.flag] = option.state
-						option.callback(option.state)
-					end)
-
-
-					btnToggle.MouseEnter:Connect(function()
-						Toggle["2d"]["TextColor3"] = Color3.fromRGB(112, 112, 112);
-					end)
-
-					btnToggle.MouseLeave:Connect(function()
-						Toggle["2d"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					end)
-
-					if option.enabled == true then
-						option.callback(true)
-						option.state = true
-						Toggle["2a"]["BackgroundColor3"] = accentcolor
-					end
-
-					function option:SetValue(boolean)
-						boolean = typeof(boolean) == "boolean" and boolean 
-						option.state = boolean
-						option.callback(option.state)
-						Library.Flags[option.flag] = option.state
-						if option.state == true then
-							Toggle["2a"]["BackgroundColor3"] = accentcolor
-						elseif option.state == false then
-							Toggle["2a"]["BackgroundColor3"] = basiccolor
-						end
-					end
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.state
-						Library.Items[option.flag] = option
-					end
-				end
-
-				local hopster = option
-
-				function Toggle:AddKeybind(option)
-					option = typeof(option) == "table" and option or {}
-					option.text = option.text
-					option.key = option.key or Enum.KeyCode.World95
-					option.state = option.state or false
-					option.sync = option.sync or false
-					option.flag = option.flag or option.text
-					option.callback = option.callback or function() end
-					option.utilitytype = "keybind"
-
-					local Keybind = {}
-
-					do -- keybind
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder
-						Keybind["87"] = Instance.new("Frame", Toggle["2f"]);
-						Keybind["87"]["BorderSizePixel"] = 0;
-						Keybind["87"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["87"]["Size"] = UDim2.new(1, 0, 0, 15);
-						Keybind["87"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["87"]["Name"] = [[KeybindHolder]];
-						Keybind["87"]["BackgroundTransparency"] = 1;
-						Keybind["87"]["ZIndex"] = 10
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline
-						Keybind["88"] = Instance.new("Frame", Keybind["87"]);
-						Keybind["88"]["BorderSizePixel"] = 0;
-						Keybind["88"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						Keybind["88"]["AnchorPoint"] = Vector2.new(1, 0.5);
-						Keybind["88"]["Size"] = UDim2.new(0, 25, 1, 0);
-						Keybind["88"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-						Keybind["88"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["88"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline
-						Keybind["89"] = Instance.new("Frame", Keybind["88"]);
-						Keybind["89"]["BorderSizePixel"] = 0;
-						Keybind["89"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["89"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["89"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["89"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["89"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["89"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main
-						Keybind["8a"] = Instance.new("Frame", Keybind["89"]);
-						Keybind["8a"]["BorderSizePixel"] = 0;
-						Keybind["8a"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["8a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8a"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["8a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["8a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8a"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.UIGradient
-						Keybind["8b"] = Instance.new("UIGradient", Keybind["8a"]);
-						Keybind["8b"]["Rotation"] = 90;
-						Keybind["8b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Keybind
-						Keybind["8c"] = Instance.new("TextLabel", Keybind["8a"]);
-						Keybind["8c"]["TextStrokeTransparency"] = 0;
-						Keybind["8c"]["ZIndex"] = 1;
-						Keybind["8c"]["BorderSizePixel"] = 0;
-						Keybind["8c"]["TextSize"] = 12;
-						Keybind["8c"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["8c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["8c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["8c"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["8c"]["BackgroundTransparency"] = 1;
-						Keybind["8c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8c"]["Size"] = UDim2.new(1, 0, 1, 0);
-						Keybind["8c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8c"]["Text"] = [[...]];
-						Keybind["8c"]["Name"] = [[Keybind]];
-						Keybind["8c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings
-						Keybind["8d"] = Instance.new("Frame", Keybind["8a"]);
-						Keybind["8d"]["Visible"] = false;
-						Keybind["8d"]["BorderSizePixel"] = 0;
-						Keybind["8d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						Keybind["8d"]["AnchorPoint"] = Vector2.new(0.5, 0);
-						Keybind["8d"]["Size"] = UDim2.new(0, 50, 0, 50);
-						Keybind["8d"]["Position"] = UDim2.new(0.5, 0, 1, 1);
-						Keybind["8d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8d"]["Name"] = [[Settings]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline
-						Keybind["8e"] = Instance.new("Frame", Keybind["8d"]);
-						Keybind["8e"]["BorderSizePixel"] = 0;
-						Keybind["8e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["8e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8e"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["8e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["8e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8e"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main
-						Keybind["8f"] = Instance.new("Frame", Keybind["8e"]);
-						Keybind["8f"]["BorderSizePixel"] = 0;
-						Keybind["8f"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["8f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8f"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["8f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["8f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8f"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIGradient
-						Keybind["90"] = Instance.new("UIGradient", Keybind["8f"]);
-						Keybind["90"]["Rotation"] = 90;
-						Keybind["90"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIListLayout
-						Keybind["91"] = Instance.new("UIListLayout", Keybind["8f"]);
-						Keybind["91"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-						Keybind["91"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-						Keybind["91"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-						Keybind["91"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Always
-						Keybind["92"] = Instance.new("TextButton", Keybind["8f"]);
-						Keybind["92"]["TextStrokeTransparency"] = 0;
-						Keybind["92"]["BorderSizePixel"] = 0;
-						Keybind["92"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["92"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["92"]["TextSize"] = 12;
-						Keybind["92"]["BackgroundColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["92"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["92"]["Size"] = UDim2.new(0, 200, 0, 50);
-						Keybind["92"]["BackgroundTransparency"] = 1;
-						Keybind["92"]["Name"] = [[Always]];
-						Keybind["92"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["92"]["Text"] = [[always]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Toggle
-						Keybind["93"] = Instance.new("TextButton", Keybind["8f"]);
-						Keybind["93"]["TextStrokeTransparency"] = 0;
-						Keybind["93"]["BorderSizePixel"] = 0;
-						Keybind["93"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["93"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["93"]["TextSize"] = 12;
-						Keybind["93"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["93"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["93"]["Size"] = UDim2.new(0, 200, 0, 50);
-						Keybind["93"]["BackgroundTransparency"] = 1;
-						Keybind["93"]["Name"] = [[Toggle]];
-						Keybind["93"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["93"]["Text"] = [[toggle]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.OnHold
-						Keybind["94"] = Instance.new("TextButton", Keybind["8f"]);
-						Keybind["94"]["TextStrokeTransparency"] = 0;
-						Keybind["94"]["BorderSizePixel"] = 0;
-						Keybind["94"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["94"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["94"]["TextSize"] = 12;
-						Keybind["94"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["94"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["94"]["Size"] = UDim2.new(0, 200, 0, 50);
-						Keybind["94"]["BackgroundTransparency"] = 1;
-						Keybind["94"]["Name"] = [[OnHold]];
-						Keybind["94"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["94"]["Text"] = [[on hold]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.SetKeybindButton
-						Keybind["95"] = Instance.new("TextButton", Keybind["88"]);
-						Keybind["95"]["BorderSizePixel"] = 0;
-						Keybind["95"]["ZIndex"] = 5
-						Keybind["95"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["95"]["TextTransparency"] = 1;
-						Keybind["95"]["TextSize"] = 14;
-						Keybind["95"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["95"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["95"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["95"]["Size"] = UDim2.new(1, 0, 1, 0);
-						Keybind["95"]["BackgroundTransparency"] = 1;
-						Keybind["95"]["Name"] = [[SetKeybindButton]];
-						Keybind["95"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["95"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					end
-
-					do -- logic				
-
-						local hold = false
-						local onhold = false
-						local opened = false
-						local activecolor = Color3.fromRGB(255, 255, 255)
-						local notactivecolor = Color3.fromRGB(92, 92, 92)
-						local activebutton = "button92"
-
-						local shorts = {
-							RightAlt = "RA",
-							LeftAlt = "LA",
-							RightControl = "RC",
-							LeftControl = "LC",
-							LeftShift = "LS",
-							RightShift = "RS",
-							MouseButton1 = "M1",
-							MouseButton2 = "M2",
-							Return = "ENT",
-							Backspace = "BP",
-							Tab = "TAB",
-							CapsLock = "CL",
-							Escape = "ESC",
-							Insert = "INS",
-							PageUp = "UP",
-							PageDown = "DOWN",
-							KeypadMultiply = "*",
-							KeypadDivide = "/",
-							End = "END",
-							Unknown = "?",
-							World95 = "?"
-						}
-
-						local ignored = {
-							W = true,
-							A = true,
-							S = true,
-							D = true,
-							Space = true,
-							F = true,
-							R = true
-						}
-
-						Keybind["8c"].Text = tostring(shorts[option.key.Name]) or tostring(option.key.Name)
-						if Keybind["8c"].Text:match("nil") then
-							Keybind["8c"].Text = tostring(option.key.Name)
-						end
-
-						local newBindButtonSize =
-							game:GetService("TextService"):GetTextSize(
-								Keybind["8c"].Text,
-								Keybind["8c"].TextSize,
-								Keybind["8c"].Font,
-								Vector2.new(math.huge, math.huge)
-							)
-						Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-
-						Keybind["95"].MouseButton2Click:Connect(function()
-							if opened == true then
-								Keybind["8d"].Visible = false
-								opened = false
-							elseif opened == false then
-								Keybind["8d"].Visible = true
-								opened = true
-							end
-						end)
-
-						Keybind["92"].MouseButton1Click:Connect(function()
-							if activebutton ~= "button92" then
-								if activebutton == "button93" then
-									Keybind["93"].TextColor3 = notactivecolor
-								elseif activebutton == "button94" then
-									Keybind["94"].TextColor3 = notactivecolor
-								end	
-							end
-
-							Keybind["92"].TextColor3 = activecolor
-							activebutton = "button92"
-						end)
-
-						Keybind["93"].MouseButton1Click:Connect(function()
-							if activebutton ~= "button93" then
-								if activebutton == "button92" then
-									Keybind["92"].TextColor3 = notactivecolor
-								elseif activebutton == "button94" then
-									Keybind["94"].TextColor3 = notactivecolor
-								end						
-							end
-
-							Keybind["93"].TextColor3 = activecolor
-							activebutton = "button93"
-						end)
-
-
-
-						Keybind["94"].MouseButton1Click:Connect(function()
-							if activebutton ~= "button94" then
-								if activebutton == "button92" then
-									Keybind["92"].TextColor3 = notactivecolor
-								elseif activebutton == "button93" then
-									Keybind["93"].TextColor3 = notactivecolor
-								end	
-							end
-
-							Keybind["94"].TextColor3 = activecolor
-							activebutton = "button94"
-						end)
-
-						Keybind["95"].MouseButton1Click:Connect(function()
-							hold = true
-							if hold == true then
-								Keybind["8c"].Text = " ... "
-								local newBindButtonSize =
-									game:GetService("TextService"):GetTextSize(
-										Keybind["8c"].Text,
-										Keybind["8c"].TextSize,
-										Keybind["8c"].Font,
-										Vector2.new(math.huge, math.huge)
-									)
-								Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-								local Input
-								repeat Input = game:GetService("UserInputService").InputBegan:Wait() until not ignored[Input.KeyCode.Name] do end
-								if Input.KeyCode.Name ~= "Unknown" and not ignored[Input.KeyCode.Name] then
-									local K = shorts[Input.KeyCode.Name] or Input.KeyCode.Name
-									Keybind["8c"].Text = K
-									option.key = Input.KeyCode
-									local newBindButtonSize =
-										game:GetService("TextService"):GetTextSize(
-											Keybind["8c"].Text,
-											Keybind["8c"].TextSize,
-											Keybind["8c"].Font,
-											Vector2.new(math.huge, math.huge)
-										)
-									Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-									Library.Flags[option.flag] = option.key.Name									
-								end
-							end
-							wait()
-							hold = false
-						end)
-
-						local basiccolor = Color3.fromRGB(31,31,31)
-						local accentcolor = Color3.fromRGB(255,255,255)
-
-						if activebutton == "button92" then
-						end
-
-						local state = hopster.state
-
-						UserInputService.InputBegan:Connect(function(k, t)
-							if activebutton == "button93" then
-								if t then return end
-								if k.KeyCode == option.key then
-									if option.sync then
-										if not option.hold then
-											hopster:SetValue(not hopster.state)
-										end
-									end
-								end
-							elseif activebutton == "button94" then
-								if t then return end
-								if k.KeyCode == option.key then
-									if option.sync then
-										if not option.hold then
-											if not onhold then
-												onhold = true
-												hopster:SetValue(not hopster.state)
-											end
-										end
-									end
-								end
-							end
-						end)
-
-						UserInputService.InputEnded:Connect(function(k, t)
-							if activebutton == "button94" then
-								if t then return end
-								if k.KeyCode == option.key then
-									if option.sync then
-										if not option.hold then
-											if onhold then
-												onhold = false
-												hopster:SetValue(not hopster.state)
-											end
-										end
-									end
-								end
-							end
-						end)
-
-
-						if option.flag and option.flag ~= "" then
-							Library.Flags[option.flag] = option.key.Name
-							Library.Items[option.flag] = option
-						end
-
-						function option:SetValue(key)
-							option.key = key
-							local text = shorts[option.key.Name] or option.key.Name
-							Keybind["8c"].Text = text
-							local newBindButtonSize =
-								game:GetService("TextService"):GetTextSize(
-									Keybind["8c"].Text,
-									Keybind["8c"].TextSize,
-									Keybind["8c"].Font,
-									Vector2.new(math.huge, math.huge)
-								)
-							Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-							Library.Flags[option.flag] = option.key.Name
-						end
-					end
-
-					return Keybind
-				end
-
-				function Toggle:AddColorpicker(option)
-					option = typeof(option) == "table" and option or {}
-					option.text = option.text or "New Color" or "nil"
-					option.color = option.color or Color3.fromRGB(255, 255, 255)
-					option.transparency = typeof(option.transparency) == "number" and option.transparency or typeof(option.transparency) == "boolean" and option.transparency or false
-					option.flag = option.flag or option.text
-					option.callback = option.callback or function() end
-					option.transparencyCallback = option.transparencyCallback or function() end
-					option.utilitytype = "color"
-
-					local ColorPicker = {}
-
-					do -- colorpicker
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder
-						ColorPicker["5b"] = Instance.new("Frame", Toggle["2f"]);
-						ColorPicker["5b"]["ZIndex"] = 999;
-						ColorPicker["5b"]["BorderSizePixel"] = 0;
-						ColorPicker["5b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5b"]["Size"] = UDim2.new(0, 25, 0, 15);
-						ColorPicker["5b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5b"]["Name"] = [[ColorpickerHolder]];
-						ColorPicker["5b"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline
-						ColorPicker["5d"] = Instance.new("Frame", ColorPicker["5b"]);
-						ColorPicker["5d"]["BorderSizePixel"] = 0;
-						ColorPicker["5d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["5d"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["5d"]["Size"] = UDim2.new(0, 25, 1, 0);
-						ColorPicker["5d"]["Position"] = UDim2.new(1, 0, 0, 0);
-						ColorPicker["5d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5d"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine
-						ColorPicker["5e"] = Instance.new("Frame", ColorPicker["5d"]);
-						ColorPicker["5e"]["BorderSizePixel"] = 0;
-						ColorPicker["5e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["5e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5e"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5e"]["Name"] = [[InnerLine]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display
-						ColorPicker["5f"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["5f"]["ZIndex"] = 2;
-						ColorPicker["5f"]["BorderSizePixel"] = 0;
-						ColorPicker["5f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5f"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5f"]["Name"] = [[Display]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display.UIGradient
-						ColorPicker["60"] = Instance.new("UIGradient", ColorPicker["5f"]);
-						ColorPicker["60"]["Rotation"] = 90;
-						ColorPicker["60"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerButton
-						ColorPicker["61"] = Instance.new("TextButton", ColorPicker["5e"]);
-						ColorPicker["61"]["BorderSizePixel"] = 0;
-						ColorPicker["61"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["TextTransparency"] = 1;
-						ColorPicker["61"]["AutoButtonColor"] = false;
-						ColorPicker["61"]["TextSize"] = 14;
-						ColorPicker["61"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["61"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["61"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["61"]["Size"] = UDim2.new(1, 0, 1, 0);
-						ColorPicker["61"]["BackgroundTransparency"] = 1;
-						ColorPicker["61"]["Name"] = [[ColorPickerButton]];
-						ColorPicker["61"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain
-						ColorPicker["62"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["62"]["Visible"] = false;
-						ColorPicker["62"]["ZIndex"] = 10000;
-						ColorPicker["62"]["BorderSizePixel"] = 0;
-						ColorPicker["62"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["62"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["62"]["Size"] = UDim2.new(0, 125, 0, 150);
-						ColorPicker["62"]["Position"] = UDim2.new(0, -1, 0, -1);
-						ColorPicker["62"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["62"]["Name"] = [[ColorPickerMain]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline
-						ColorPicker["63"] = Instance.new("Frame", ColorPicker["62"]);
-						ColorPicker["63"]["BorderSizePixel"] = 0;
-						ColorPicker["63"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["63"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["63"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["63"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["63"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["63"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main
-						ColorPicker["64"] = Instance.new("Frame", ColorPicker["63"]);
-						ColorPicker["64"]["BorderSizePixel"] = 0;
-						ColorPicker["64"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["64"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["64"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["64"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["64"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["64"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIGradient
-						ColorPicker["65"] = Instance.new("UIGradient", ColorPicker["64"]);
-						ColorPicker["65"]["Rotation"] = 90;
-						ColorPicker["65"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIPadding
-						ColorPicker["66"] = Instance.new("UIPadding", ColorPicker["64"]);
-						ColorPicker["66"]["PaddingTop"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingRight"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingLeft"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingBottom"] = UDim.new(0, 3);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder
-						ColorPicker["67"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["67"]["BorderSizePixel"] = 0;
-						ColorPicker["67"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["67"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["67"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["67"]["Position"] = UDim2.new(0, 0, 1, 0);
-						ColorPicker["67"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["67"]["Name"] = [[RGBtextHolder]];
-						ColorPicker["67"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.UIListLayout
-						ColorPicker["68"] = Instance.new("UIListLayout", ColorPicker["67"]);
-						ColorPicker["68"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-						ColorPicker["68"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["Padding"] = UDim.new(0, 1);
-						ColorPicker["68"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-						ColorPicker["68"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R
-						ColorPicker["69"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["69"]["BorderSizePixel"] = 0;
-						ColorPicker["69"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["69"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["69"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["69"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["69"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["69"]["Name"] = [[R]];
-						ColorPicker["69"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline
-						ColorPicker["6a"] = Instance.new("Frame", ColorPicker["69"]);
-						ColorPicker["6a"]["BorderSizePixel"] = 0;
-						ColorPicker["6a"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["6a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6a"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6a"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline
-						ColorPicker["6b"] = Instance.new("Frame", ColorPicker["6a"]);
-						ColorPicker["6b"]["BorderSizePixel"] = 0;
-						ColorPicker["6b"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6b"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6b"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main
-						ColorPicker["6c"] = Instance.new("Frame", ColorPicker["6b"]);
-						ColorPicker["6c"]["BorderSizePixel"] = 0;
-						ColorPicker["6c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6c"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6c"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.R
-						ColorPicker["6d"] = Instance.new("TextBox", ColorPicker["6c"]);
-						ColorPicker["6d"]["TextStrokeTransparency"] = 0;
-						ColorPicker["6d"]["Name"] = [[R]];
-						ColorPicker["6d"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["6d"]["BorderSizePixel"] = 0;
-						ColorPicker["6d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["6d"]["TextSize"] = 13;
-						ColorPicker["6d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["6d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6d"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6d"]["Text"] = [[255]];
-						ColorPicker["6d"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.UIGradient
-						ColorPicker["6e"] = Instance.new("UIGradient", ColorPicker["6c"]);
-						ColorPicker["6e"]["Rotation"] = 90;
-						ColorPicker["6e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G
-						ColorPicker["6f"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["6f"]["BorderSizePixel"] = 0;
-						ColorPicker["6f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6f"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["6f"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["6f"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["6f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6f"]["Name"] = [[G]];
-						ColorPicker["6f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline
-						ColorPicker["70"] = Instance.new("Frame", ColorPicker["6f"]);
-						ColorPicker["70"]["BorderSizePixel"] = 0;
-						ColorPicker["70"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["70"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["70"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["70"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["70"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["70"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline
-						ColorPicker["71"] = Instance.new("Frame", ColorPicker["70"]);
-						ColorPicker["71"]["BorderSizePixel"] = 0;
-						ColorPicker["71"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["71"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["71"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["71"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["71"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["71"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main
-						ColorPicker["72"] = Instance.new("Frame", ColorPicker["71"]);
-						ColorPicker["72"]["BorderSizePixel"] = 0;
-						ColorPicker["72"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["72"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["72"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["72"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["72"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["72"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.G
-						ColorPicker["73"] = Instance.new("TextBox", ColorPicker["72"]);
-						ColorPicker["73"]["TextStrokeTransparency"] = 0;
-						ColorPicker["73"]["Name"] = [[G]];
-						ColorPicker["73"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["73"]["BorderSizePixel"] = 0;
-						ColorPicker["73"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["73"]["TextSize"] = 13;
-						ColorPicker["73"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["73"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["73"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["73"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["73"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["73"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["73"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["73"]["Text"] = [[255]];
-						ColorPicker["73"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.UIGradient
-						ColorPicker["74"] = Instance.new("UIGradient", ColorPicker["72"]);
-						ColorPicker["74"]["Rotation"] = 90;
-						ColorPicker["74"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B
-						ColorPicker["75"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["75"]["BorderSizePixel"] = 0;
-						ColorPicker["75"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["75"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["75"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["75"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["75"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["75"]["Name"] = [[B]];
-						ColorPicker["75"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline
-						ColorPicker["76"] = Instance.new("Frame", ColorPicker["75"]);
-						ColorPicker["76"]["BorderSizePixel"] = 0;
-						ColorPicker["76"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["76"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["76"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["76"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["76"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["76"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline
-						ColorPicker["77"] = Instance.new("Frame", ColorPicker["76"]);
-						ColorPicker["77"]["BorderSizePixel"] = 0;
-						ColorPicker["77"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["77"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["77"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["77"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["77"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["77"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main
-						ColorPicker["78"] = Instance.new("Frame", ColorPicker["77"]);
-						ColorPicker["78"]["BorderSizePixel"] = 0;
-						ColorPicker["78"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["78"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["78"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["78"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["78"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["78"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.B
-						ColorPicker["79"] = Instance.new("TextBox", ColorPicker["78"]);
-						ColorPicker["79"]["TextStrokeTransparency"] = 0;
-						ColorPicker["79"]["Name"] = [[B]];
-						ColorPicker["79"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["79"]["BorderSizePixel"] = 0;
-						ColorPicker["79"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["79"]["TextSize"] = 13;
-						ColorPicker["79"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["79"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["79"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["79"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["79"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["79"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["79"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["79"]["Text"] = [[255]];
-						ColorPicker["79"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.UIGradient
-						ColorPicker["7a"] = Instance.new("UIGradient", ColorPicker["78"]);
-						ColorPicker["7a"]["Rotation"] = 90;
-						ColorPicker["7a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue
-						ColorPicker["7b"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7b"]["BorderSizePixel"] = 0;
-						ColorPicker["7b"]["AutoButtonColor"] = false;
-						ColorPicker["7b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7b"]["Selectable"] = false;
-						ColorPicker["7b"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["7b"]["Image"] = [[rbxassetid://2615692420]];
-						ColorPicker["7b"]["Size"] = UDim2.new(0, 15, 0, 95);
-						ColorPicker["7b"]["Name"] = [[Hue]];
-						ColorPicker["7b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7b"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue.huecursor
-						ColorPicker["7c"] = Instance.new("Frame", ColorPicker["7b"]);
-						ColorPicker["7c"]["BorderSizePixel"] = 0;
-						ColorPicker["7c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["7c"]["AnchorPoint"] = Vector2.new(0.5, 0);
-						ColorPicker["7c"]["Size"] = UDim2.new(1, 6, 0, 3);
-						ColorPicker["7c"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-						ColorPicker["7c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7c"]["Name"] = [[huecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme
-						ColorPicker["7d"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7d"]["BorderSizePixel"] = 0;
-						ColorPicker["7d"]["AutoButtonColor"] = false;
-						ColorPicker["7d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7d"]["Selectable"] = false;
-						ColorPicker["7d"]["Image"] = [[rbxassetid://2615689005]];
-						ColorPicker["7d"]["Size"] = UDim2.new(0, 95, 0, 95);
-						ColorPicker["7d"]["Name"] = [[Scheme]];
-						ColorPicker["7d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme.schemecursor
-						ColorPicker["7e"] = Instance.new("ImageLabel", ColorPicker["7d"]);
-						ColorPicker["7e"]["ZIndex"] = 5;
-						ColorPicker["7e"]["BorderSizePixel"] = 0;
-						ColorPicker["7e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["ImageColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["Image"] = [[http://www.roblox.com/asset/?id=16006380635]];
-						ColorPicker["7e"]["ImageRectSize"] = Vector2.new(1000, 1000);
-						ColorPicker["7e"]["Size"] = UDim2.new(0, 5, 0, 5);
-						ColorPicker["7e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["BackgroundTransparency"] = 1;
-						ColorPicker["7e"]["Name"] = [[schemecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency
-						ColorPicker["7f"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["7f"]["BorderSizePixel"] = 0;
-						ColorPicker["7f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7f"]["AnchorPoint"] = Vector2.new(0.5, 1);
-						ColorPicker["7f"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["7f"]["Position"] = UDim2.new(0.5, 0, 1, -20);
-						ColorPicker["7f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7f"]["Name"] = [[Transparency]];
-						ColorPicker["7f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline
-						ColorPicker["80"] = Instance.new("Frame", ColorPicker["7f"]);
-						ColorPicker["80"]["BorderSizePixel"] = 0;
-						ColorPicker["80"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["80"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["80"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["80"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["80"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["80"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline
-						ColorPicker["81"] = Instance.new("Frame", ColorPicker["80"]);
-						ColorPicker["81"]["BorderSizePixel"] = 0;
-						ColorPicker["81"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["81"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["81"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["81"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["81"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["81"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main
-						ColorPicker["82"] = Instance.new("Frame", ColorPicker["81"]);
-						ColorPicker["82"]["BorderSizePixel"] = 0;
-						ColorPicker["82"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["82"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["82"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["82"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["82"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["82"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.Transparency
-						ColorPicker["83"] = Instance.new("TextBox", ColorPicker["82"]);
-						ColorPicker["83"]["TextStrokeTransparency"] = 0;
-						ColorPicker["83"]["Name"] = [[Transparency]];
-						ColorPicker["83"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["83"]["BorderSizePixel"] = 0;
-						ColorPicker["83"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["83"]["TextSize"] = 13;
-						ColorPicker["83"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["83"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["83"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["83"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["83"]["PlaceholderText"] = [[Transparency:]];
-						ColorPicker["83"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["83"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["83"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["83"]["Text"] = [[100]];
-						ColorPicker["83"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.UIGradient
-						ColorPicker["84"] = Instance.new("UIGradient", ColorPicker["82"]);
-						ColorPicker["84"]["Rotation"] = 90;
-						ColorPicker["84"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Frame
-						ColorPicker["86"] = Instance.new("ImageLabel", ColorPicker["5e"]);
-						ColorPicker["86"]["BorderSizePixel"] = 0;
-						ColorPicker["86"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["86"]["ScaleType"] = Enum.ScaleType.Crop;
-						ColorPicker["86"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["86"]["Image"] = [[rbxassetid://98372645101260]];
-						ColorPicker["86"]["ImageRectSize"] = Vector2.new(100, 100);
-						ColorPicker["86"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["86"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["86"]["Name"] = [[Frame]];
-						ColorPicker["86"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					end
-
-					do -- logic
-						local opened = false
-
-						ColorPicker["61"].MouseButton1Click:Connect(function()
-							ColorPicker["62"].Visible = not opened
-							opened = not opened
-						end)
-
-						local colorPickerMain = ColorPicker["62"]
-						local scrollFrame = Tab["1e"]
-
-						-- Function to update position and anchor point
-						local function updatePosition()
-							local pickerAbsPos = colorPickerMain.AbsolutePosition
-							local scrollFrameAbsPos = scrollFrame.AbsolutePosition
-							local scrollFrameSize = scrollFrame.AbsoluteSize
-
-							-- Check if touching the top
-							if pickerAbsPos.Y < scrollFrameAbsPos.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 1, 1) -- Position at the top
-								colorPickerMain.AnchorPoint = Vector2.new(0, 0) -- Anchor point at the top
-								print("Moved to top with AnchorPoint 0,0 and Position {0, -1}, {1, 1}")
-							end
-
-							-- Check if touching the bottom
-							if pickerAbsPos.Y + colorPickerMain.AbsoluteSize.Y > scrollFrameAbsPos.Y + scrollFrameSize.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 0, -1) -- Position at the bottom
-								colorPickerMain.AnchorPoint = Vector2.new(0, 1) -- Anchor point at the bottom
-								print("Moved to bottom with AnchorPoint 0,1 and Position {0, -1}, {0, -1}")
-							end
-						end
-
-						-- Connect to the RenderStepped event for constant checking
-						game:GetService("RunService").RenderStepped:Connect(updatePosition)
-
-						local white, black = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
-						local colors = {
-							Color3.new(1, 0, 0), Color3.new(1, 1, 0), Color3.new(0, 1, 0),
-							Color3.new(0, 1, 1), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 0, 0)
-						}
-
-						local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-						local UserInputService = game:GetService("UserInputService")
-
-						-- UI elements
-						local Schema = ColorPicker["7d"] -- Gradient area
-						local SchemaCursor = ColorPicker["7e"] -- Cursor for the scheme
-						local HUE = ColorPicker["7b"] -- Hue bar
-						local HueCursor = ColorPicker["7c"] -- Cursor for the hue bar
-						local Display = ColorPicker["5f"] -- Color display
-						local TransparencyTextBox = ColorPicker["83"] -- Transparency input box
-						local TextBoxR = ColorPicker["6d"] -- Red input box
-						local TextBoxG = ColorPicker["73"] -- Green input box
-						local TextBoxB = ColorPicker["79"] -- Blue input box
-
-						-- Function: Convert RGB to HSV
-						local function rgbToHSV(color)
-							local r, g, b = color.R, color.G, color.B
-							local max, min = math.max(r, g, b), math.min(r, g, b)
-							local delta = max - min
-
-							local h = 0
-							if delta > 0 then
-								if max == r then
-									h = (g - b) / delta % 6
-								elseif max == g then
-									h = (b - r) / delta + 2
-								elseif max == b then
-									h = (r - g) / delta + 4
-								end
-								h = h / 6
-							end
-
-							local s = (max == 0) and 0 or delta / max
-							local v = max
-							return h, s, v
-						end
-
-						-- Function: Clamp a value between min and max
-						local function clamp(value, min, max)
-							return math.max(min, math.min(max, value))
-						end
-
-						-- Function: Update the color display
-						local function updateColor(outputColor)
-							if typeof(outputColor) ~= "Color3" then
-								error("Invalid color value: Expected Color3, got " .. typeof(outputColor))
-							end
-
-							Display.BackgroundColor3 = outputColor
-							option.color = outputColor
-
-							local r = math.floor(outputColor.R * 255 + 0.5)
-							local g = math.floor(outputColor.G * 255 + 0.5)
-							local b = math.floor(outputColor.B * 255 + 0.5)
-
-							TextBoxR.Text = tostring(r)
-							TextBoxG.Text = tostring(g)
-							TextBoxB.Text = tostring(b)
-
-							if option.callback then
-								option.callback(outputColor)
-							end
-						end
-
-						-- Function to update the hue-based color dynamically
-						local function updateHueColor(huePercent)
-							-- Calculate the color from the hue percentage
-							local hueColor = Color3.fromHSV(huePercent, 1, 1)
-
-							-- Update the scheme's background color to reflect the hue
-							Schema.BackgroundColor3 = hueColor
-
-							-- Calculate the scheme cursor's position and update the final color
-							local xP = math.clamp((SchemaCursor.AbsolutePosition.X - Schema.AbsolutePosition.X) / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp((SchemaCursor.AbsolutePosition.Y - Schema.AbsolutePosition.Y) / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(hueColor, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function to update the scheme-based color dynamically
-						local function updateSchemeColor(relativeX, relativeY)
-							-- Calculate the interpolated color based on cursor position
-							local xP = math.clamp(relativeX / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp(relativeY / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(Schema.BackgroundColor3, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function: Sync color picker cursors and display based on a Color3 value
-						local function syncColor()
-							local h, s, v = rgbToHSV(option.color)
-
-							local huePosition = h * HUE.AbsoluteSize.Y
-							HueCursor.Position = UDim2.new(0.5, 0, 0, huePosition - (HueCursor.AbsoluteSize.Y / 2))
-
-							local hueColor = Color3.fromHSV(h, 1, 1)
-							Schema.BackgroundColor3 = hueColor
-
-							local schemeX = s * Schema.AbsoluteSize.X
-							local schemeY = (1 - v) * Schema.AbsoluteSize.Y
-							SchemaCursor.Position = UDim2.new(0, schemeX - (SchemaCursor.AbsoluteSize.X / 2), 0, schemeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-							updateColor(option.color)
-						end
-
-						-- Function: Update transparency
-						local function updateTransparency(transparencyValue)
-							local clampedValue = clamp(transparencyValue, 0, 100)
-							local callbackValue = 1 - (clampedValue / 100)
-
-							Display.BackgroundTransparency = callbackValue
-							option.transparency = clampedValue
-
-							if option.transparencyCallback then
-								option.transparencyCallback(callbackValue)
-							end
-
-							TransparencyTextBox.Text = tostring(clampedValue)
-						end
-
-						-- Connect transparency TextBox changes
-						TransparencyTextBox.FocusLost:Connect(function()
-							local transparencyValue = tonumber(TransparencyTextBox.Text)
-							if transparencyValue then
-								updateTransparency(transparencyValue)
-							else
-								TransparencyTextBox.Text = tostring(option.transparency)
-							end
-						end)
-
-						TransparencyTextBox:GetPropertyChangedSignal("Text"):Connect(function()
-							local inputText = TransparencyTextBox.Text
-							if not tonumber(inputText) and inputText ~= "" then
-								TransparencyTextBox.Text = inputText:gsub("%D", "")
-							end
-						end)
-
-						-- Function: Handle RGB input changes
-						local function handleRGBInputChange(textBox, component)
-							textBox.FocusLost:Connect(function()
-								local inputValue = tonumber(textBox.Text)
-								if inputValue then
-									local r = component == "R" and inputValue or math.floor(option.color.R * 255 + 0.5)
-									local g = component == "G" and inputValue or math.floor(option.color.G * 255 + 0.5)
-									local b = component == "B" and inputValue or math.floor(option.color.B * 255 + 0.5)
-
-									option.color = Color3.fromRGB(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255))
-									syncColor()
-								else
-									textBox.Text = tostring(math.floor(option.color[component] * 255 + 0.5))
-								end
-							end)
-
-							textBox:GetPropertyChangedSignal("Text"):Connect(function()
-								local inputText = textBox.Text
-								if not tonumber(inputText) and inputText ~= "" then
-									textBox.Text = inputText:gsub("%D", "")
-								end
-							end)
-						end
-
-						-- Logic for interacting with the hue bar
-						HUE.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the hue cursor and color
-							local function updateHueCursor()
-								local relativeY = math.clamp(Mouse.Y - HUE.AbsolutePosition.Y, 0, HUE.AbsoluteSize.Y)
-
-								-- Correct the X offset: center the cursor horizontally within the hue bar
-								HueCursor.Position = UDim2.new(0.5, 0, 0, relativeY - (HueCursor.AbsoluteSize.Y / 2))
-
-								-- Calculate hue as a percentage (0 to 1) and update the color
-								local huePercent = math.clamp(relativeY / HUE.AbsoluteSize.Y, 0, 1)
-								updateHueColor(huePercent)
-							end
-
-							-- Initial update
-							updateHueCursor()
-
-							-- Connect mouse movement for dragging
-							local hueConnection
-							hueConnection = Mouse.Move:Connect(updateHueCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if hueConnection then
-										hueConnection:Disconnect()
-										hueConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						-- Logic for interacting with the scheme area
-						Schema.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the scheme cursor and color
-							local function updateSchemeCursor()
-								local relativeX = math.clamp(Mouse.X - Schema.AbsolutePosition.X, 0, Schema.AbsoluteSize.X)
-								local relativeY = math.clamp(Mouse.Y - Schema.AbsolutePosition.Y, 0, Schema.AbsoluteSize.Y)
-
-								-- Update the cursor position
-								SchemaCursor.Position = UDim2.new(0, relativeX - (SchemaCursor.AbsoluteSize.X / 2), 0, relativeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-								-- Update the scheme-based color
-								updateSchemeColor(relativeX, relativeY)
-							end
-
-							-- Initial update
-							updateSchemeCursor()
-
-							-- Connect mouse movement for dragging
-							local schemeConnection
-							schemeConnection = Mouse.Move:Connect(updateSchemeCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if schemeConnection then
-										schemeConnection:Disconnect()
-										schemeConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						handleRGBInputChange(TextBoxR, "R")
-						handleRGBInputChange(TextBoxG, "G")
-						handleRGBInputChange(TextBoxB, "B")
-
-						-- Initialize color picker
-						syncColor()
-						updateTransparency(option.transparency)
-					end
-
-					return ColorPicker
-				end
-
-				function Toggle:AddColorpicker2(option)
-					option = typeof(option) == "table" and option or {}
-					option.text = option.text or "New Color" or "nil"
-					option.color = option.color or Color3.fromRGB(255, 255, 255)
-					option.transparency = typeof(option.transparency) == "number" and option.transparency or typeof(option.transparency) == "boolean" and option.transparency or false
-					option.flag = option.flag or option.text
-					option.callback = option.callback or function() end
-					option.transparencyCallback = option.transparencyCallback or function() end
-					option.utilitytype = "color"
-
-					local ColorPicker = {}
-
-					do -- colorpicker
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder
-						ColorPicker["5b"] = Instance.new("Frame", Toggle["2f"]);
-						ColorPicker["5b"]["ZIndex"] = 999;
-						ColorPicker["5b"]["BorderSizePixel"] = 0;
-						ColorPicker["5b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5b"]["Size"] = UDim2.new(0, 25, 0, 15);
-						ColorPicker["5b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5b"]["Name"] = [[ColorpickerHolder]];
-						ColorPicker["5b"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline
-						ColorPicker["5d"] = Instance.new("Frame", ColorPicker["5b"]);
-						ColorPicker["5d"]["BorderSizePixel"] = 0;
-						ColorPicker["5d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["5d"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["5d"]["Size"] = UDim2.new(0, 25, 1, 0);
-						ColorPicker["5d"]["Position"] = UDim2.new(1, 0, 0, 0);
-						ColorPicker["5d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5d"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine
-						ColorPicker["5e"] = Instance.new("Frame", ColorPicker["5d"]);
-						ColorPicker["5e"]["BorderSizePixel"] = 0;
-						ColorPicker["5e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["5e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5e"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5e"]["Name"] = [[InnerLine]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display
-						ColorPicker["5f"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["5f"]["ZIndex"] = 2;
-						ColorPicker["5f"]["BorderSizePixel"] = 0;
-						ColorPicker["5f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5f"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5f"]["Name"] = [[Display]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display.UIGradient
-						ColorPicker["60"] = Instance.new("UIGradient", ColorPicker["5f"]);
-						ColorPicker["60"]["Rotation"] = 90;
-						ColorPicker["60"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerButton
-						ColorPicker["61"] = Instance.new("TextButton", ColorPicker["5e"]);
-						ColorPicker["61"]["BorderSizePixel"] = 0;
-						ColorPicker["61"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["TextTransparency"] = 1;
-						ColorPicker["61"]["AutoButtonColor"] = false;
-						ColorPicker["61"]["TextSize"] = 14;
-						ColorPicker["61"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["61"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["61"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["61"]["Size"] = UDim2.new(1, 0, 1, 0);
-						ColorPicker["61"]["BackgroundTransparency"] = 1;
-						ColorPicker["61"]["Name"] = [[ColorPickerButton]];
-						ColorPicker["61"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain
-						ColorPicker["62"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["62"]["Visible"] = false;
-						ColorPicker["62"]["ZIndex"] = 10000;
-						ColorPicker["62"]["BorderSizePixel"] = 0;
-						ColorPicker["62"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["62"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["62"]["Size"] = UDim2.new(0, 125, 0, 150);
-						ColorPicker["62"]["Position"] = UDim2.new(0, -1, 0, -1);
-						ColorPicker["62"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["62"]["Name"] = [[ColorPickerMain]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline
-						ColorPicker["63"] = Instance.new("Frame", ColorPicker["62"]);
-						ColorPicker["63"]["BorderSizePixel"] = 0;
-						ColorPicker["63"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["63"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["63"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["63"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["63"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["63"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main
-						ColorPicker["64"] = Instance.new("Frame", ColorPicker["63"]);
-						ColorPicker["64"]["BorderSizePixel"] = 0;
-						ColorPicker["64"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["64"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["64"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["64"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["64"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["64"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIGradient
-						ColorPicker["65"] = Instance.new("UIGradient", ColorPicker["64"]);
-						ColorPicker["65"]["Rotation"] = 90;
-						ColorPicker["65"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIPadding
-						ColorPicker["66"] = Instance.new("UIPadding", ColorPicker["64"]);
-						ColorPicker["66"]["PaddingTop"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingRight"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingLeft"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingBottom"] = UDim.new(0, 3);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder
-						ColorPicker["67"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["67"]["BorderSizePixel"] = 0;
-						ColorPicker["67"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["67"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["67"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["67"]["Position"] = UDim2.new(0, 0, 1, 0);
-						ColorPicker["67"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["67"]["Name"] = [[RGBtextHolder]];
-						ColorPicker["67"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.UIListLayout
-						ColorPicker["68"] = Instance.new("UIListLayout", ColorPicker["67"]);
-						ColorPicker["68"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-						ColorPicker["68"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["Padding"] = UDim.new(0, 1);
-						ColorPicker["68"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-						ColorPicker["68"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R
-						ColorPicker["69"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["69"]["BorderSizePixel"] = 0;
-						ColorPicker["69"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["69"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["69"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["69"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["69"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["69"]["Name"] = [[R]];
-						ColorPicker["69"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline
-						ColorPicker["6a"] = Instance.new("Frame", ColorPicker["69"]);
-						ColorPicker["6a"]["BorderSizePixel"] = 0;
-						ColorPicker["6a"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["6a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6a"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6a"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline
-						ColorPicker["6b"] = Instance.new("Frame", ColorPicker["6a"]);
-						ColorPicker["6b"]["BorderSizePixel"] = 0;
-						ColorPicker["6b"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6b"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6b"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main
-						ColorPicker["6c"] = Instance.new("Frame", ColorPicker["6b"]);
-						ColorPicker["6c"]["BorderSizePixel"] = 0;
-						ColorPicker["6c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6c"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6c"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.R
-						ColorPicker["6d"] = Instance.new("TextBox", ColorPicker["6c"]);
-						ColorPicker["6d"]["TextStrokeTransparency"] = 0;
-						ColorPicker["6d"]["Name"] = [[R]];
-						ColorPicker["6d"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["6d"]["BorderSizePixel"] = 0;
-						ColorPicker["6d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["6d"]["TextSize"] = 13;
-						ColorPicker["6d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["6d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6d"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6d"]["Text"] = [[255]];
-						ColorPicker["6d"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.UIGradient
-						ColorPicker["6e"] = Instance.new("UIGradient", ColorPicker["6c"]);
-						ColorPicker["6e"]["Rotation"] = 90;
-						ColorPicker["6e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G
-						ColorPicker["6f"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["6f"]["BorderSizePixel"] = 0;
-						ColorPicker["6f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6f"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["6f"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["6f"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["6f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6f"]["Name"] = [[G]];
-						ColorPicker["6f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline
-						ColorPicker["70"] = Instance.new("Frame", ColorPicker["6f"]);
-						ColorPicker["70"]["BorderSizePixel"] = 0;
-						ColorPicker["70"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["70"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["70"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["70"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["70"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["70"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline
-						ColorPicker["71"] = Instance.new("Frame", ColorPicker["70"]);
-						ColorPicker["71"]["BorderSizePixel"] = 0;
-						ColorPicker["71"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["71"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["71"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["71"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["71"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["71"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main
-						ColorPicker["72"] = Instance.new("Frame", ColorPicker["71"]);
-						ColorPicker["72"]["BorderSizePixel"] = 0;
-						ColorPicker["72"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["72"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["72"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["72"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["72"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["72"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.G
-						ColorPicker["73"] = Instance.new("TextBox", ColorPicker["72"]);
-						ColorPicker["73"]["TextStrokeTransparency"] = 0;
-						ColorPicker["73"]["Name"] = [[G]];
-						ColorPicker["73"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["73"]["BorderSizePixel"] = 0;
-						ColorPicker["73"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["73"]["TextSize"] = 13;
-						ColorPicker["73"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["73"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["73"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["73"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["73"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["73"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["73"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["73"]["Text"] = [[255]];
-						ColorPicker["73"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.UIGradient
-						ColorPicker["74"] = Instance.new("UIGradient", ColorPicker["72"]);
-						ColorPicker["74"]["Rotation"] = 90;
-						ColorPicker["74"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B
-						ColorPicker["75"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["75"]["BorderSizePixel"] = 0;
-						ColorPicker["75"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["75"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["75"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["75"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["75"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["75"]["Name"] = [[B]];
-						ColorPicker["75"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline
-						ColorPicker["76"] = Instance.new("Frame", ColorPicker["75"]);
-						ColorPicker["76"]["BorderSizePixel"] = 0;
-						ColorPicker["76"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["76"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["76"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["76"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["76"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["76"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline
-						ColorPicker["77"] = Instance.new("Frame", ColorPicker["76"]);
-						ColorPicker["77"]["BorderSizePixel"] = 0;
-						ColorPicker["77"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["77"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["77"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["77"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["77"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["77"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main
-						ColorPicker["78"] = Instance.new("Frame", ColorPicker["77"]);
-						ColorPicker["78"]["BorderSizePixel"] = 0;
-						ColorPicker["78"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["78"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["78"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["78"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["78"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["78"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.B
-						ColorPicker["79"] = Instance.new("TextBox", ColorPicker["78"]);
-						ColorPicker["79"]["TextStrokeTransparency"] = 0;
-						ColorPicker["79"]["Name"] = [[B]];
-						ColorPicker["79"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["79"]["BorderSizePixel"] = 0;
-						ColorPicker["79"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["79"]["TextSize"] = 13;
-						ColorPicker["79"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["79"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["79"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["79"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["79"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["79"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["79"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["79"]["Text"] = [[255]];
-						ColorPicker["79"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.UIGradient
-						ColorPicker["7a"] = Instance.new("UIGradient", ColorPicker["78"]);
-						ColorPicker["7a"]["Rotation"] = 90;
-						ColorPicker["7a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue
-						ColorPicker["7b"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7b"]["BorderSizePixel"] = 0;
-						ColorPicker["7b"]["AutoButtonColor"] = false;
-						ColorPicker["7b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7b"]["Selectable"] = false;
-						ColorPicker["7b"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["7b"]["Image"] = [[rbxassetid://2615692420]];
-						ColorPicker["7b"]["Size"] = UDim2.new(0, 15, 0, 95);
-						ColorPicker["7b"]["Name"] = [[Hue]];
-						ColorPicker["7b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7b"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue.huecursor
-						ColorPicker["7c"] = Instance.new("Frame", ColorPicker["7b"]);
-						ColorPicker["7c"]["BorderSizePixel"] = 0;
-						ColorPicker["7c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["7c"]["AnchorPoint"] = Vector2.new(0.5, 0);
-						ColorPicker["7c"]["Size"] = UDim2.new(1, 6, 0, 3);
-						ColorPicker["7c"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-						ColorPicker["7c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7c"]["Name"] = [[huecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme
-						ColorPicker["7d"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7d"]["BorderSizePixel"] = 0;
-						ColorPicker["7d"]["AutoButtonColor"] = false;
-						ColorPicker["7d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7d"]["Selectable"] = false;
-						ColorPicker["7d"]["Image"] = [[rbxassetid://2615689005]];
-						ColorPicker["7d"]["Size"] = UDim2.new(0, 95, 0, 95);
-						ColorPicker["7d"]["Name"] = [[Scheme]];
-						ColorPicker["7d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme.schemecursor
-						ColorPicker["7e"] = Instance.new("ImageLabel", ColorPicker["7d"]);
-						ColorPicker["7e"]["ZIndex"] = 5;
-						ColorPicker["7e"]["BorderSizePixel"] = 0;
-						ColorPicker["7e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["ImageColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["Image"] = [[http://www.roblox.com/asset/?id=16006380635]];
-						ColorPicker["7e"]["ImageRectSize"] = Vector2.new(1000, 1000);
-						ColorPicker["7e"]["Size"] = UDim2.new(0, 5, 0, 5);
-						ColorPicker["7e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["BackgroundTransparency"] = 1;
-						ColorPicker["7e"]["Name"] = [[schemecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency
-						ColorPicker["7f"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["7f"]["BorderSizePixel"] = 0;
-						ColorPicker["7f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7f"]["AnchorPoint"] = Vector2.new(0.5, 1);
-						ColorPicker["7f"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["7f"]["Position"] = UDim2.new(0.5, 0, 1, -20);
-						ColorPicker["7f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7f"]["Name"] = [[Transparency]];
-						ColorPicker["7f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline
-						ColorPicker["80"] = Instance.new("Frame", ColorPicker["7f"]);
-						ColorPicker["80"]["BorderSizePixel"] = 0;
-						ColorPicker["80"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["80"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["80"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["80"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["80"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["80"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline
-						ColorPicker["81"] = Instance.new("Frame", ColorPicker["80"]);
-						ColorPicker["81"]["BorderSizePixel"] = 0;
-						ColorPicker["81"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["81"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["81"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["81"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["81"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["81"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main
-						ColorPicker["82"] = Instance.new("Frame", ColorPicker["81"]);
-						ColorPicker["82"]["BorderSizePixel"] = 0;
-						ColorPicker["82"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["82"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["82"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["82"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["82"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["82"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.Transparency
-						ColorPicker["83"] = Instance.new("TextBox", ColorPicker["82"]);
-						ColorPicker["83"]["TextStrokeTransparency"] = 0;
-						ColorPicker["83"]["Name"] = [[Transparency]];
-						ColorPicker["83"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["83"]["BorderSizePixel"] = 0;
-						ColorPicker["83"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["83"]["TextSize"] = 13;
-						ColorPicker["83"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["83"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["83"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["83"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["83"]["PlaceholderText"] = [[Transparency:]];
-						ColorPicker["83"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["83"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["83"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["83"]["Text"] = [[100]];
-						ColorPicker["83"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.UIGradient
-						ColorPicker["84"] = Instance.new("UIGradient", ColorPicker["82"]);
-						ColorPicker["84"]["Rotation"] = 90;
-						ColorPicker["84"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Frame
-						ColorPicker["86"] = Instance.new("ImageLabel", ColorPicker["5e"]);
-						ColorPicker["86"]["BorderSizePixel"] = 0;
-						ColorPicker["86"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["86"]["ScaleType"] = Enum.ScaleType.Crop;
-						ColorPicker["86"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["86"]["Image"] = [[rbxassetid://98372645101260]];
-						ColorPicker["86"]["ImageRectSize"] = Vector2.new(100, 100);
-						ColorPicker["86"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["86"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["86"]["Name"] = [[Frame]];
-						ColorPicker["86"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					end
-
-					do -- logic
-						local opened = false
-
-						ColorPicker["61"].MouseButton1Click:Connect(function()
-							ColorPicker["62"].Visible = not opened
-							opened = not opened
-						end)
-
-						local colorPickerMain = ColorPicker["62"]
-						local scrollFrame = Tab["1e"]
-
-						-- Function to update position and anchor point
-						local function updatePosition()
-							local pickerAbsPos = colorPickerMain.AbsolutePosition
-							local scrollFrameAbsPos = scrollFrame.AbsolutePosition
-							local scrollFrameSize = scrollFrame.AbsoluteSize
-
-							-- Check if touching the top
-							if pickerAbsPos.Y < scrollFrameAbsPos.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 1, 1) -- Position at the top
-								colorPickerMain.AnchorPoint = Vector2.new(0, 0) -- Anchor point at the top
-								print("Moved to top with AnchorPoint 0,0 and Position {0, -1}, {1, 1}")
-							end
-
-							-- Check if touching the bottom
-							if pickerAbsPos.Y + colorPickerMain.AbsoluteSize.Y > scrollFrameAbsPos.Y + scrollFrameSize.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 0, -1) -- Position at the bottom
-								colorPickerMain.AnchorPoint = Vector2.new(0, 1) -- Anchor point at the bottom
-								print("Moved to bottom with AnchorPoint 0,1 and Position {0, -1}, {0, -1}")
-							end
-						end
-
-						-- Connect to the RenderStepped event for constant checking
-						game:GetService("RunService").RenderStepped:Connect(updatePosition)
-
-						local white, black = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
-						local colors = {
-							Color3.new(1, 0, 0), Color3.new(1, 1, 0), Color3.new(0, 1, 0),
-							Color3.new(0, 1, 1), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 0, 0)
-						}
-
-						local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-						local UserInputService = game:GetService("UserInputService")
-
-						-- UI elements
-						local Schema = ColorPicker["7d"] -- Gradient area
-						local SchemaCursor = ColorPicker["7e"] -- Cursor for the scheme
-						local HUE = ColorPicker["7b"] -- Hue bar
-						local HueCursor = ColorPicker["7c"] -- Cursor for the hue bar
-						local Display = ColorPicker["5f"] -- Color display
-						local TransparencyTextBox = ColorPicker["83"] -- Transparency input box
-						local TextBoxR = ColorPicker["6d"] -- Red input box
-						local TextBoxG = ColorPicker["73"] -- Green input box
-						local TextBoxB = ColorPicker["79"] -- Blue input box
-
-						-- Function: Convert RGB to HSV
-						local function rgbToHSV(color)
-							local r, g, b = color.R, color.G, color.B
-							local max, min = math.max(r, g, b), math.min(r, g, b)
-							local delta = max - min
-
-							local h = 0
-							if delta > 0 then
-								if max == r then
-									h = (g - b) / delta % 6
-								elseif max == g then
-									h = (b - r) / delta + 2
-								elseif max == b then
-									h = (r - g) / delta + 4
-								end
-								h = h / 6
-							end
-
-							local s = (max == 0) and 0 or delta / max
-							local v = max
-							return h, s, v
-						end
-
-						-- Function: Clamp a value between min and max
-						local function clamp(value, min, max)
-							return math.max(min, math.min(max, value))
-						end
-
-						-- Function: Update the color display
-						local function updateColor(outputColor)
-							if typeof(outputColor) ~= "Color3" then
-								error("Invalid color value: Expected Color3, got " .. typeof(outputColor))
-							end
-
-							Display.BackgroundColor3 = outputColor
-							option.color = outputColor
-
-							local r = math.floor(outputColor.R * 255 + 0.5)
-							local g = math.floor(outputColor.G * 255 + 0.5)
-							local b = math.floor(outputColor.B * 255 + 0.5)
-
-							TextBoxR.Text = tostring(r)
-							TextBoxG.Text = tostring(g)
-							TextBoxB.Text = tostring(b)
-
-							if option.callback then
-								option.callback(outputColor)
-							end
-						end
-
-						-- Function to update the hue-based color dynamically
-						local function updateHueColor(huePercent)
-							-- Calculate the color from the hue percentage
-							local hueColor = Color3.fromHSV(huePercent, 1, 1)
-
-							-- Update the scheme's background color to reflect the hue
-							Schema.BackgroundColor3 = hueColor
-
-							-- Calculate the scheme cursor's position and update the final color
-							local xP = math.clamp((SchemaCursor.AbsolutePosition.X - Schema.AbsolutePosition.X) / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp((SchemaCursor.AbsolutePosition.Y - Schema.AbsolutePosition.Y) / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(hueColor, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function to update the scheme-based color dynamically
-						local function updateSchemeColor(relativeX, relativeY)
-							-- Calculate the interpolated color based on cursor position
-							local xP = math.clamp(relativeX / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp(relativeY / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(Schema.BackgroundColor3, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function: Sync color picker cursors and display based on a Color3 value
-						local function syncColor()
-							local h, s, v = rgbToHSV(option.color)
-
-							local huePosition = h * HUE.AbsoluteSize.Y
-							HueCursor.Position = UDim2.new(0.5, 0, 0, huePosition - (HueCursor.AbsoluteSize.Y / 2))
-
-							local hueColor = Color3.fromHSV(h, 1, 1)
-							Schema.BackgroundColor3 = hueColor
-
-							local schemeX = s * Schema.AbsoluteSize.X
-							local schemeY = (1 - v) * Schema.AbsoluteSize.Y
-							SchemaCursor.Position = UDim2.new(0, schemeX - (SchemaCursor.AbsoluteSize.X / 2), 0, schemeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-							updateColor(option.color)
-						end
-
-						-- Function: Update transparency
-						local function updateTransparency(transparencyValue)
-							local clampedValue = clamp(transparencyValue, 0, 100)
-							local callbackValue = 1 - (clampedValue / 100)
-
-							Display.BackgroundTransparency = callbackValue
-							option.transparency = clampedValue
-
-							if option.transparencyCallback then
-								option.transparencyCallback(callbackValue)
-							end
-
-							TransparencyTextBox.Text = tostring(clampedValue)
-						end
-
-						-- Connect transparency TextBox changes
-						TransparencyTextBox.FocusLost:Connect(function()
-							local transparencyValue = tonumber(TransparencyTextBox.Text)
-							if transparencyValue then
-								updateTransparency(transparencyValue)
-							else
-								TransparencyTextBox.Text = tostring(option.transparency)
-							end
-						end)
-
-						TransparencyTextBox:GetPropertyChangedSignal("Text"):Connect(function()
-							local inputText = TransparencyTextBox.Text
-							if not tonumber(inputText) and inputText ~= "" then
-								TransparencyTextBox.Text = inputText:gsub("%D", "")
-							end
-						end)
-
-						-- Function: Handle RGB input changes
-						local function handleRGBInputChange(textBox, component)
-							textBox.FocusLost:Connect(function()
-								local inputValue = tonumber(textBox.Text)
-								if inputValue then
-									local r = component == "R" and inputValue or math.floor(option.color.R * 255 + 0.5)
-									local g = component == "G" and inputValue or math.floor(option.color.G * 255 + 0.5)
-									local b = component == "B" and inputValue or math.floor(option.color.B * 255 + 0.5)
-
-									option.color = Color3.fromRGB(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255))
-									syncColor()
-								else
-									textBox.Text = tostring(math.floor(option.color[component] * 255 + 0.5))
-								end
-							end)
-
-							textBox:GetPropertyChangedSignal("Text"):Connect(function()
-								local inputText = textBox.Text
-								if not tonumber(inputText) and inputText ~= "" then
-									textBox.Text = inputText:gsub("%D", "")
-								end
-							end)
-						end
-
-						-- Logic for interacting with the hue bar
-						HUE.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the hue cursor and color
-							local function updateHueCursor()
-								local relativeY = math.clamp(Mouse.Y - HUE.AbsolutePosition.Y, 0, HUE.AbsoluteSize.Y)
-
-								-- Correct the X offset: center the cursor horizontally within the hue bar
-								HueCursor.Position = UDim2.new(0.5, 0, 0, relativeY - (HueCursor.AbsoluteSize.Y / 2))
-
-								-- Calculate hue as a percentage (0 to 1) and update the color
-								local huePercent = math.clamp(relativeY / HUE.AbsoluteSize.Y, 0, 1)
-								updateHueColor(huePercent)
-							end
-
-							-- Initial update
-							updateHueCursor()
-
-							-- Connect mouse movement for dragging
-							local hueConnection
-							hueConnection = Mouse.Move:Connect(updateHueCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if hueConnection then
-										hueConnection:Disconnect()
-										hueConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						-- Logic for interacting with the scheme area
-						Schema.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the scheme cursor and color
-							local function updateSchemeCursor()
-								local relativeX = math.clamp(Mouse.X - Schema.AbsolutePosition.X, 0, Schema.AbsoluteSize.X)
-								local relativeY = math.clamp(Mouse.Y - Schema.AbsolutePosition.Y, 0, Schema.AbsoluteSize.Y)
-
-								-- Update the cursor position
-								SchemaCursor.Position = UDim2.new(0, relativeX - (SchemaCursor.AbsoluteSize.X / 2), 0, relativeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-								-- Update the scheme-based color
-								updateSchemeColor(relativeX, relativeY)
-							end
-
-							-- Initial update
-							updateSchemeCursor()
-
-							-- Connect mouse movement for dragging
-							local schemeConnection
-							schemeConnection = Mouse.Move:Connect(updateSchemeCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if schemeConnection then
-										schemeConnection:Disconnect()
-										schemeConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						handleRGBInputChange(TextBoxR, "R")
-						handleRGBInputChange(TextBoxG, "G")
-						handleRGBInputChange(TextBoxB, "B")
-
-						-- Initialize color picker
-						syncColor()
-						updateTransparency(option.transparency)
-					end
-
-					return ColorPicker
-				end
-
-				return Toggle
-			end
-
-			function Section:NewButton(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "Button"
-				option.callback = option.callback or function() end
-
-				local Button = {}
-
-				do -- button
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder
-					Button["54"] = Instance.new("Frame", Section["23"]);
-					Button["54"]["BorderSizePixel"] = 0;
-					Button["54"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Button["54"]["Size"] = UDim2.new(1, 0, 0, 18);
-					Button["54"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["54"]["Name"] = [[ButtonHolder]];
-					Button["54"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline
-					Button["55"] = Instance.new("Frame", Button["54"]);
-					Button["55"]["BorderSizePixel"] = 0;
-					Button["55"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Button["55"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["55"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Button["55"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Button["55"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["55"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline
-					Button["56"] = Instance.new("Frame", Button["55"]);
-					Button["56"]["BorderSizePixel"] = 0;
-					Button["56"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Button["56"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["56"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Button["56"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Button["56"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["56"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline.Main
-					Button["57"] = Instance.new("Frame", Button["56"]);
-					Button["57"]["BorderSizePixel"] = 0;
-					Button["57"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Button["57"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["57"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Button["57"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Button["57"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["57"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline.Main.UIGradient
-					Button["58"] = Instance.new("UIGradient", Button["57"]);
-					Button["58"]["Rotation"] = 90;
-					Button["58"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline.Main.TextLabel
-					Button["59"] = Instance.new("TextLabel", Button["57"]);
-					Button["59"]["TextStrokeTransparency"] = 0;
-					Button["59"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Button["59"]["BorderSizePixel"] = 0;
-					Button["59"]["TextSize"] = 14;
-					Button["59"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Button["59"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Button["59"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Button["59"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Button["59"]["BackgroundTransparency"] = 1;
-					Button["59"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["59"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Button["59"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["59"]["Text"] = option.text;
-					Button["59"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Button
-					Button["5a"] = Instance.new("TextButton", Button["54"]);
-					Button["5a"]["BorderSizePixel"] = 0;
-					Button["5a"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["5a"]["TextTransparency"] = 1;
-					Button["5a"]["TextSize"] = 14;
-					Button["5a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Button["5a"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Button["5a"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Button["5a"]["BackgroundTransparency"] = 1;
-					Button["5a"]["Name"] = [[Button]];
-					Button["5a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				end
-
-				do -- logic
-					local btnButton = Button["5a"]
-					local basiccolor = Color3.fromRGB(31,31,31)
-
-					btnButton.MouseButton1Click:Connect(function()
-						pcall(option.callback)
-						Button["56"]["BackgroundColor3"] = basiccolor
-						wait(0.05)
-						Button["56"]["BackgroundColor3"] = Color3.fromRGB(50,50,50)
-						tweenObject(Button["56"], {BackgroundColor3 = basiccolor}, 2)
-					end)
-
-					btnButton.MouseEnter:Connect(function()
-						Button["59"]["TextColor3"] = Color3.fromRGB(112, 112, 112);
-					end)
-
-					btnButton.MouseLeave:Connect(function()
-						Button["59"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					end)
-				end
-
-				return Button
-			end
-
-			function Section:NewKeybind(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text
-				option.key = option.key or Enum.KeyCode.World95
-				option.flag = option.flag or option.text
-				option.callback = option.callback or function() end
-				option.utilitytype = "keybind"
-
-				local Keybind = {}
-
-				do -- keybind
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder
-					Keybind["87"] = Instance.new("Frame", Section["23"]);
-					Keybind["87"]["BorderSizePixel"] = 0;
-					Keybind["87"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["87"]["Size"] = UDim2.new(1, 0, 0, 15);
-					Keybind["87"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["87"]["Name"] = [[KeybindHolder]];
-					Keybind["87"]["BackgroundTransparency"] = 1;
-					Keybind["87"]["ZIndex"] = 10
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline
-					Keybind["88"] = Instance.new("Frame", Keybind["87"]);
-					Keybind["88"]["BorderSizePixel"] = 0;
-					Keybind["88"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Keybind["88"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Keybind["88"]["Size"] = UDim2.new(0, 25, 1, 0);
-					Keybind["88"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-					Keybind["88"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["88"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline
-					Keybind["89"] = Instance.new("Frame", Keybind["88"]);
-					Keybind["89"]["BorderSizePixel"] = 0;
-					Keybind["89"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["89"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["89"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["89"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["89"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["89"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main
-					Keybind["8a"] = Instance.new("Frame", Keybind["89"]);
-					Keybind["8a"]["BorderSizePixel"] = 0;
-					Keybind["8a"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["8a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8a"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["8a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["8a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8a"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.UIGradient
-					Keybind["8b"] = Instance.new("UIGradient", Keybind["8a"]);
-					Keybind["8b"]["Rotation"] = 90;
-					Keybind["8b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Keybind
-					Keybind["8c"] = Instance.new("TextLabel", Keybind["8a"]);
-					Keybind["8c"]["TextStrokeTransparency"] = 0;
-					Keybind["8c"]["ZIndex"] = 1;
-					Keybind["8c"]["BorderSizePixel"] = 0;
-					Keybind["8c"]["TextSize"] = 12;
-					Keybind["8c"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["8c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["8c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["8c"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["8c"]["BackgroundTransparency"] = 1;
-					Keybind["8c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8c"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Keybind["8c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8c"]["Text"] = [[...]];
-					Keybind["8c"]["Name"] = [[Keybind]];
-					Keybind["8c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings
-					Keybind["8d"] = Instance.new("Frame", Keybind["8a"]);
-					Keybind["8d"]["Visible"] = false;
-					Keybind["8d"]["BorderSizePixel"] = 0;
-					Keybind["8d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Keybind["8d"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Keybind["8d"]["Size"] = UDim2.new(0, 50, 0, 50);
-					Keybind["8d"]["Position"] = UDim2.new(0.5, 0, 1, 1);
-					Keybind["8d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8d"]["Name"] = [[Settings]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline
-					Keybind["8e"] = Instance.new("Frame", Keybind["8d"]);
-					Keybind["8e"]["BorderSizePixel"] = 0;
-					Keybind["8e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["8e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8e"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["8e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["8e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8e"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main
-					Keybind["8f"] = Instance.new("Frame", Keybind["8e"]);
-					Keybind["8f"]["BorderSizePixel"] = 0;
-					Keybind["8f"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["8f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8f"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["8f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["8f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8f"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIGradient
-					Keybind["90"] = Instance.new("UIGradient", Keybind["8f"]);
-					Keybind["90"]["Rotation"] = 90;
-					Keybind["90"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIListLayout
-					Keybind["91"] = Instance.new("UIListLayout", Keybind["8f"]);
-					Keybind["91"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-					Keybind["91"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-					Keybind["91"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-					Keybind["91"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Always
-					Keybind["92"] = Instance.new("TextButton", Keybind["8f"]);
-					Keybind["92"]["TextStrokeTransparency"] = 0;
-					Keybind["92"]["BorderSizePixel"] = 0;
-					Keybind["92"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["92"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["92"]["TextSize"] = 12;
-					Keybind["92"]["BackgroundColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["92"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["92"]["Size"] = UDim2.new(0, 200, 0, 50);
-					Keybind["92"]["BackgroundTransparency"] = 1;
-					Keybind["92"]["Name"] = [[Always]];
-					Keybind["92"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["92"]["Text"] = [[always]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Toggle
-					Keybind["93"] = Instance.new("TextButton", Keybind["8f"]);
-					Keybind["93"]["TextStrokeTransparency"] = 0;
-					Keybind["93"]["BorderSizePixel"] = 0;
-					Keybind["93"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["93"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["93"]["TextSize"] = 12;
-					Keybind["93"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["93"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["93"]["Size"] = UDim2.new(0, 200, 0, 50);
-					Keybind["93"]["BackgroundTransparency"] = 1;
-					Keybind["93"]["Name"] = [[Toggle]];
-					Keybind["93"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["93"]["Text"] = [[toggle]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.OnHold
-					Keybind["94"] = Instance.new("TextButton", Keybind["8f"]);
-					Keybind["94"]["TextStrokeTransparency"] = 0;
-					Keybind["94"]["BorderSizePixel"] = 0;
-					Keybind["94"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["94"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["94"]["TextSize"] = 12;
-					Keybind["94"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["94"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["94"]["Size"] = UDim2.new(0, 200, 0, 50);
-					Keybind["94"]["BackgroundTransparency"] = 1;
-					Keybind["94"]["Name"] = [[OnHold]];
-					Keybind["94"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["94"]["Text"] = [[on hold]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.SetKeybindButton
-					Keybind["95"] = Instance.new("TextButton", Keybind["88"]);
-					Keybind["95"]["BorderSizePixel"] = 0;
-					Keybind["95"]["ZIndex"] = 5
-					Keybind["95"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["95"]["TextTransparency"] = 1;
-					Keybind["95"]["TextSize"] = 14;
-					Keybind["95"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["95"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["95"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["95"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Keybind["95"]["BackgroundTransparency"] = 1;
-					Keybind["95"]["Name"] = [[SetKeybindButton]];
-					Keybind["95"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["95"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.KeybindText
-					Keybind["96"] = Instance.new("TextLabel", Keybind["87"]);
-					Keybind["96"]["TextStrokeTransparency"] = 0;
-					Keybind["96"]["BorderSizePixel"] = 0;
-					Keybind["96"]["TextSize"] = 14;
-					Keybind["96"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Keybind["96"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["96"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["96"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["96"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["96"]["BackgroundTransparency"] = 1;
-					Keybind["96"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					Keybind["96"]["Size"] = UDim2.new(1, -25, 1, 0);
-					Keybind["96"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["96"]["Text"] = option.text;
-					Keybind["96"]["Name"] = [[KeybindText]];
-					Keybind["96"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-				end
-
-				do -- logic				
-
-					local hold = false
-					local onhold = false
-					local opened = false
-					local activecolor = Color3.fromRGB(255, 255, 255)
-					local notactivecolor = Color3.fromRGB(92, 92, 92)
-					local activebutton = "button92"
-
-					local shorts = {
-						RightAlt = "RA",
-						LeftAlt = "LA",
-						RightControl = "RC",
-						LeftControl = "LC",
-						LeftShift = "LS",
-						RightShift = "RS",
-						MouseButton1 = "M1",
-						MouseButton2 = "M2",
-						Return = "ENT",
-						Backspace = "BP",
-						Tab = "TAB",
-						CapsLock = "CL",
-						Escape = "ESC",
-						Insert = "INS",
-						PageUp = "UP",
-						PageDown = "DOWN",
-						KeypadMultiply = "*",
-						KeypadDivide = "/",
-						End = "END",
-						Unknown = "?",
-						World95 = "?"
-					}
-
-					local ignored = {
-						W = true,
-						A = true,
-						S = true,
-						D = true,
-						Space = true,
-						F = true,
-						R = true
-					}
-
-					Keybind["8c"].Text = tostring(shorts[option.key.Name]) or tostring(option.key.Name)
-					if Keybind["8c"].Text:match("nil") then
-						Keybind["8c"].Text = tostring(option.key.Name)
-					end
-
-					local newBindButtonSize =
-						game:GetService("TextService"):GetTextSize(
-							Keybind["8c"].Text,
-							Keybind["8c"].TextSize,
-							Keybind["8c"].Font,
-							Vector2.new(math.huge, math.huge)
-						)
-					Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-
-					Keybind["95"].MouseButton2Click:Connect(function()
-						if opened == true then
-							Keybind["8d"].Visible = false
-							opened = false
-						elseif opened == false then
-							Keybind["8d"].Visible = true
-							opened = true
-						end
-					end)
-
-					Keybind["92"].MouseButton1Click:Connect(function()
-						if activebutton ~= "button92" then
-							if activebutton == "button93" then
-								Keybind["93"].TextColor3 = notactivecolor
-							elseif activebutton == "button94" then
-								Keybind["94"].TextColor3 = notactivecolor
-							end	
-						end
-
-						Keybind["92"].TextColor3 = activecolor
-						activebutton = "button92"
-					end)
-
-					Keybind["93"].MouseButton1Click:Connect(function()
-						if activebutton ~= "button93" then
-							if activebutton == "button92" then
-								Keybind["92"].TextColor3 = notactivecolor
-							elseif activebutton == "button94" then
-								Keybind["94"].TextColor3 = notactivecolor
-							end						
-						end
-
-						Keybind["93"].TextColor3 = activecolor
-						activebutton = "button93"
-					end)
-
-
-
-					Keybind["94"].MouseButton1Click:Connect(function()
-						if activebutton ~= "button94" then
-							if activebutton == "button92" then
-								Keybind["92"].TextColor3 = notactivecolor
-							elseif activebutton == "button93" then
-								Keybind["93"].TextColor3 = notactivecolor
-							end	
-						end
-
-						Keybind["94"].TextColor3 = activecolor
-						activebutton = "button94"
-					end)
-
-					Keybind["95"].MouseButton1Click:Connect(function()
-						hold = true
-						if hold == true then
-							Keybind["8c"].Text = " ... "
-							local newBindButtonSize =
-								game:GetService("TextService"):GetTextSize(
-									Keybind["8c"].Text,
-									Keybind["8c"].TextSize,
-									Keybind["8c"].Font,
-									Vector2.new(math.huge, math.huge)
-								)
-							Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-							local Input
-							repeat Input = game:GetService("UserInputService").InputBegan:Wait() until not ignored[Input.KeyCode.Name] do end
-							if Input.KeyCode.Name ~= "Unknown" and not ignored[Input.KeyCode.Name] then
-								local K = shorts[Input.KeyCode.Name] or Input.KeyCode.Name
-								Keybind["8c"].Text = K
-								option.key = Input.KeyCode
-								local newBindButtonSize =
-									game:GetService("TextService"):GetTextSize(
-										Keybind["8c"].Text,
-										Keybind["8c"].TextSize,
-										Keybind["8c"].Font,
-										Vector2.new(math.huge, math.huge)
-									)
-								Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-								Library.Flags[option.flag] = option.key.Name									
-							end
-						end
-						wait()
-						hold = false
-					end)
-
-					if activebutton == "button92" then
-						print("lol")
-					end
-
-					UserInputService.InputBegan:Connect(function(k, t)
-						if activebutton == "button93" then
-							if t then return end
-							if k.KeyCode == option.key then
-								if not option.hold then
-									option.callback(option.key)
-								end
-							end
-						elseif activebutton == "button94" then
-							if t then return end
-							if k.KeyCode == option.key then
-								if not option.hold then
-									if not onhold then
-										onhold = true
-										print("holding")
-									end
-								end
-							end
-						end
-					end)
-
-					UserInputService.InputEnded:Connect(function(k, t)
-						if activebutton == "button94" then
-							if t then return end
-							if k.KeyCode == option.key then
-								if not option.hold then
-									if onhold then
-										onhold = false
-										print("released")
-									end
-								end
-							end
-						end
-					end)
-
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.key.Name
-						Library.Items[option.flag] = option
-					end
-
-					function option:SetValue(key)
-						option.key = key
-						local text = shorts[option.key.Name] or option.key.Name
-						Keybind["8c"].Text = text
-						local newBindButtonSize =
-							game:GetService("TextService"):GetTextSize(
-								Keybind["8c"].Text,
-								Keybind["8c"].TextSize,
-								Keybind["8c"].Font,
-								Vector2.new(math.huge, math.huge)
-							)
-						Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-						Library.Flags[option.flag] = option.key.Name
-					end
-				end
-
-				return Keybind
-			end
-
-			function Section:NewLabel(option)
-				option = typeof(option) and option or {}
-				option.text = option.text or "New Label"
-
-				local Label = {}
-
-				do -- label
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.LabelHolder
-					Label["3c"] = Instance.new("Frame", Section["23"]);
-					Label["3c"]["BorderSizePixel"] = 0;
-					Label["3c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Label["3c"]["Size"] = UDim2.new(1, 0, 0, 15);
-					Label["3c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Label["3c"]["Name"] = [[LabelHolder]];
-					Label["3c"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.LabelHolder.LabelText
-					Label["3d"] = Instance.new("TextLabel", Label["3c"]);
-					Label["3d"]["TextStrokeTransparency"] = 0;
-					Label["3d"]["BorderSizePixel"] = 0;
-					Label["3d"]["TextSize"] = 14;
-					Label["3d"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Label["3d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Label["3d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Label["3d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Label["3d"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Label["3d"]["BackgroundTransparency"] = 1;
-					Label["3d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Label["3d"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Label["3d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Label["3d"]["Text"] = option.text;
-					Label["3d"]["Name"] = [[LabelText]];
-					Label["3d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-				end
-
-				return Label
-			end
-
-			function Section:NewSlider(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "New Slider"
-				option.min = option.min or 0
-				option.max = option.max  or 100
-				option.value = option.value or 0
-				option.flag = option.flag or option.text
-				option.float = typeof(option.float) == "number" and option.float or 0
-				option.suffix = option.suffix or ""
-				option.callback = option.callback or function() end
-				option.utilitytype = "slider"
-
-				local Slider = {}
-
-				do -- slider
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder
-					Slider["31"] = Instance.new("Frame", Section["23"]);
-					Slider["31"]["BorderSizePixel"] = 0;
-					Slider["31"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["31"]["Size"] = UDim2.new(1, 0, 0, 33);
-					Slider["31"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["31"]["Name"] = [[SliderHolder]];
-					Slider["31"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderTextHolder
-					Slider["32"] = Instance.new("Frame", Slider["31"]);
-					Slider["32"]["BorderSizePixel"] = 0;
-					Slider["32"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["32"]["Size"] = UDim2.new(1, 0, 0.5, -1);
-					Slider["32"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["32"]["Name"] = [[SliderTextHolder]];
-					Slider["32"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderTextHolder.SliderText
-					Slider["33"] = Instance.new("TextLabel", Slider["32"]);
-					Slider["33"]["TextStrokeTransparency"] = 0;
-					Slider["33"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Slider["33"]["BorderSizePixel"] = 0;
-					Slider["33"]["TextSize"] = 14;
-					Slider["33"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Slider["33"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Slider["33"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["33"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Slider["33"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Slider["33"]["BackgroundTransparency"] = 1;
-					Slider["33"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["33"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Slider["33"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["33"]["Text"] = option.text;
-					Slider["33"]["Name"] = [[SliderText]];
-					Slider["33"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder
-					Slider["34"] = Instance.new("Frame", Slider["31"]);
-					Slider["34"]["BorderSizePixel"] = 0;
-					Slider["34"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["34"]["AnchorPoint"] = Vector2.new(0, 1);
-					Slider["34"]["Size"] = UDim2.new(1, 0, 0.5, 2);
-					Slider["34"]["Position"] = UDim2.new(0, 0, 1, 0);
-					Slider["34"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["34"]["Name"] = [[SliderMainHolder]];
-					Slider["34"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline
-					Slider["35"] = Instance.new("Frame", Slider["34"]);
-					Slider["35"]["BorderSizePixel"] = 0;
-					Slider["35"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Slider["35"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["35"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Slider["35"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Slider["35"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["35"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline
-					Slider["36"] = Instance.new("Frame", Slider["35"]);
-					Slider["36"]["BorderSizePixel"] = 0;
-					Slider["36"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Slider["36"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["36"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Slider["36"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Slider["36"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["36"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderBackground
-					Slider["37"] = Instance.new("Frame", Slider["36"]);
-					Slider["37"]["Active"] = true;
-					Slider["37"]["ZIndex"] = 0;
-					Slider["37"]["BorderSizePixel"] = 0;
-					Slider["37"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Slider["37"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["37"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Slider["37"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Slider["37"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["37"]["Name"] = [[SliderBackground]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderBackground.UIGradient
-					Slider["38"] = Instance.new("UIGradient", Slider["37"]);
-					Slider["38"]["Rotation"] = 90;
-					Slider["38"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderFill
-					Slider["39"] = Instance.new("Frame", Slider["36"]);
-					Slider["39"]["BorderSizePixel"] = 0;
-					Slider["39"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["39"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					Slider["39"]["Size"] = UDim2.new(0.5, 0, 1, 0);
-					Slider["39"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-					Slider["39"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["39"]["Name"] = [[SliderFill]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderFill.UIGradient
-					Slider["3a"] = Instance.new("UIGradient", Slider["39"]);
-					Slider["3a"]["Rotation"] = 90;
-					Slider["3a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderFill.TextLabel
-					Slider["3b"] = Instance.new("TextBox", Slider["39"]);
-					Slider["3b"]["TextStrokeTransparency"] = 0;
-					Slider["3b"]["Name"] = [[TextLabel]];
-					Slider["3b"]["BorderSizePixel"] = 0;
-					Slider["3b"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Slider["3b"]["TextSize"] = 13;
-					Slider["3b"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["3b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["3b"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Slider["3b"]["Selectable"] = false;
-					Slider["3b"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Slider["3b"]["Size"] = UDim2.new(0, 1, 1, 0);
-					Slider["3b"]["Position"] = UDim2.new(1, 1, 0.5, 0);
-					Slider["3b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["3b"]["Text"] = [[50/100]];
-				end
-
-				do -- logic
-					local frameSlider = Slider["39"]
-					local ignoreSliderValue = Slider["3b"]
-					local btnSlider = Slider["37"]
-
-					local dragging = false
-					local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-
-					if option.value > option.max then
-						option.value = option.max
-						frameSlider.Size = UDim2.new(0, option.value == option.min and 0 or math.floor((((option.value - option.min) / (option.max - option.min)) * 178) + 0.5), 0, 15)
-
-						ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					elseif option.value < option.min then
-						option.value = option.min
-						frameSlider.Size = UDim2.new(0, option.value == option.min and 0 or math.floor((((option.value - option.min) / (option.max - option.min)) * 178) + 0.5), 0, 15)
-						ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					else
-						option.value = option.value
-						frameSlider.Size = UDim2.new(0, option.value == option.min and 0 or math.floor((((option.value - option.min) / (option.max - option.min)) * 178) + 0.5), 0, 15)
-
-						ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					end
-					option.callback(option.value)
-
-					frameSlider.Size = UDim2.new(0, math.floor(((((option.value - option.min) / (option.max - option.min)) * 178) + 0) * 100) / 100, 0, 15)
-
-					ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					option.callback(option.value)
-
-					local UIS = game:GetService("UserInputService")
-
-					local function updateSlider()
-						frameSlider.Size = UDim2.new(0, math.clamp(math.floor(((option.value - option.min) / (option.max - option.min)) * 178), 0, 178), 0, 15)
-						ignoreSliderValue.Text = tostring(option.value) .. "/" .. tostring(option.max) .. option.suffix
-						if option.callback then
-							pcall(option.callback, option.value)
-						end
-					end
-
-
-					btnSlider.InputBegan:Connect(function(input)
-						if input.UserInputType == Enum.UserInputType.MouseButton1 then
-							dragging = true
-							local moveConnection
-							moveConnection = Mouse.Move:Connect(function()
-								local mouseDelta = math.clamp(Mouse.X - frameSlider.AbsolutePosition.X, 0, 178)
-								option.value = tonumber(string.format("%." .. option.float .. "f", (mouseDelta / 178) * (option.max - option.min) + option.min))
-								updateSlider()
-							end)
-
-							local releaseConnection
-							releaseConnection = UIS.InputEnded:Connect(function(releaseInput)
-								if releaseInput.UserInputType == Enum.UserInputType.MouseButton1 then
-									moveConnection:Disconnect()
-									releaseConnection:Disconnect()
-									dragging = false
-								end
-							end)
-						end
-					end)
-
-					-- Add a listener for the TextBox to handle user input
-					ignoreSliderValue.FocusLost:Connect(function(enterPressed)
-						if enterPressed then
-							-- Try to parse the user input as a number
-							local inputValue = tonumber(ignoreSliderValue.Text)
-
-							if inputValue then
-								-- Clamp the input value to the valid range
-								if inputValue < option.min then
-									option.value = option.min
-								elseif inputValue > option.max then
-									option.value = option.max
-								else
-									option.value = tonumber(string.format("%." .. option.float .. "f", inputValue))
-								end
-
-								-- Update the slider's size and text display
-								frameSlider.Size = UDim2.new(0, math.floor(((option.value - option.min) / (option.max - option.min)) * 178), 0, 15)
-								ignoreSliderValue.Text = tostring(option.value) .. "/" .. tostring(option.max) .. option.suffix
-
-								-- Call the callback function if it exists
-								if option.callback then
-									pcall(option.callback, option.value)
-								end
-
-								-- Update the flag if applicable
-								if option.flag then
-									Library.Flags[option.flag] = option.value
-								end
-							else
-								-- If input is invalid, reset the TextBox to the current value
-								ignoreSliderValue.Text = tostring(option.value) .. "/" .. tostring(option.max) .. option.suffix
-							end
-						end
-					end)
-
-					btnSlider.MouseEnter:Connect(function()
-						--UISbtnSlider.Color = Library.Theme.Accent
-					end)
-					btnSlider.MouseLeave:Connect(function()
-						if not dragging then
-							--UISbtnSlider.Color = Library.Theme.Border
-						end
-					end)
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.value
-						Library.Items[option.flag] = option
-					end
-
-					function option:SetValue(int)
-						if int > option.max then
-							option.value = option.max
-							frameSlider.Size =  UDim2.new(0, math.floor((((option.value - option.min) / (option.max - option.min)) * 279) + 0.5), 0, 15)
-							ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-						elseif int < option.min then
-							option.value = option.min
-							frameSlider.Size =  UDim2.new(0, math.floor((((option.value - option.min) / (option.max - option.min)) * 279) + 0.5), 0, 15)
-							ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-						else
-							option.value = int
-							frameSlider.Size =  UDim2.new(0, math.floor((((option.value - option.min) / (option.max - option.min)) * 279) + 0.5), 0, 15)
-							ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-						end
-						option.callback(option.value)
-						Library.Flags[option.flag] = option.value
-					end
-				end
-
-				return Slider
-			end
-
-			function Section:NewDropdown(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "nil"
-				option.multi = option.multi or false
-				option.value = typeof(option.value) == "table" and option.value or option.value or ""
-				option.values = typeof(option.values) == "table" and option.values or {}
-				option.flag = option.flag or option.text or "DDYDR"
-				option.callback = option.callback or function() end
-				option.utilitytype = "dropdown"
-
-				local Dropdown = {}
-
-				do -- dropdown
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder
-					Dropdown["3e"] = Instance.new("Frame", Section["23"]);
-					Dropdown["3e"]["ZIndex"] = 2;
-					Dropdown["3e"]["BorderSizePixel"] = 0;
-					Dropdown["3e"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["3e"]["Size"] = UDim2.new(1, 0, 0, 33);
-					Dropdown["3e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["3e"]["Name"] = [[DropdownHolder]];
-					Dropdown["3e"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownTextHolder
-					Dropdown["3f"] = Instance.new("Frame", Dropdown["3e"]);
-					Dropdown["3f"]["BorderSizePixel"] = 0;
-					Dropdown["3f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["3f"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Dropdown["3f"]["Size"] = UDim2.new(1, 0, 0.5, -1);
-					Dropdown["3f"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					Dropdown["3f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["3f"]["Name"] = [[DropdownTextHolder]];
-					Dropdown["3f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownTextHolder.DropdownText
-					Dropdown["40"] = Instance.new("TextLabel", Dropdown["3f"]);
-					Dropdown["40"]["TextStrokeTransparency"] = 0;
-					Dropdown["40"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Dropdown["40"]["BorderSizePixel"] = 0;
-					Dropdown["40"]["TextSize"] = 14;
-					Dropdown["40"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Dropdown["40"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Dropdown["40"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["40"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["40"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Dropdown["40"]["BackgroundTransparency"] = 1;
-					Dropdown["40"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["40"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["40"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["40"]["Text"] = option.text;
-					Dropdown["40"]["Name"] = [[DropdownText]];
-					Dropdown["40"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder
-					Dropdown["41"] = Instance.new("Frame", Dropdown["3e"]);
-					Dropdown["41"]["BorderSizePixel"] = 0;
-					Dropdown["41"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["41"]["AnchorPoint"] = Vector2.new(0.5, 1);
-					Dropdown["41"]["Size"] = UDim2.new(1, 0, 0.5, 2);
-					Dropdown["41"]["Position"] = UDim2.new(0.5, 0, 1, 0);
-					Dropdown["41"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["41"]["Name"] = [[DropdownMainHolder]];
-					Dropdown["41"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline
-					Dropdown["42"] = Instance.new("Frame", Dropdown["41"]);
-					Dropdown["42"]["BorderSizePixel"] = 0;
-					Dropdown["42"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Dropdown["42"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["42"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["42"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["42"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["42"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline
-					Dropdown["43"] = Instance.new("Frame", Dropdown["42"]);
-					Dropdown["43"]["BorderSizePixel"] = 0;
-					Dropdown["43"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["43"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["43"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Dropdown["43"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["43"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["43"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main
-					Dropdown["44"] = Instance.new("Frame", Dropdown["43"]);
-					Dropdown["44"]["BorderSizePixel"] = 0;
-					Dropdown["44"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["44"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["44"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Dropdown["44"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["44"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["44"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.UIGradient
-					Dropdown["45"] = Instance.new("UIGradient", Dropdown["44"]);
-					Dropdown["45"]["Rotation"] = 90;
-					Dropdown["45"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownValueText
-					Dropdown["46"] = Instance.new("TextLabel", Dropdown["44"]);
-					Dropdown["46"]["TextStrokeTransparency"] = 0;
-					Dropdown["46"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Dropdown["46"]["ZIndex"] = 2;
-					Dropdown["46"]["BorderSizePixel"] = 0;
-					Dropdown["46"]["TextSize"] = 13;
-					Dropdown["46"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Dropdown["46"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Dropdown["46"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["46"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["46"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["46"]["BackgroundTransparency"] = 1;
-					Dropdown["46"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					Dropdown["46"]["Size"] = UDim2.new(1, -15, 1, 0);
-					Dropdown["46"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["46"]["Name"] = [[DropdownValueText]];
-					Dropdown["46"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownValueText.UIPadding
-					Dropdown["47"] = Instance.new("UIPadding", Dropdown["46"]);
-					Dropdown["47"]["PaddingRight"] = UDim.new(0, 1);
-					Dropdown["47"]["PaddingLeft"] = UDim.new(0, 1);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.+/-
-					Dropdown["48"] = Instance.new("TextLabel", Dropdown["44"]);
-					Dropdown["48"]["TextStrokeTransparency"] = 0;
-					Dropdown["48"]["ZIndex"] = 2;
-					Dropdown["48"]["BorderSizePixel"] = 0;
-					Dropdown["48"]["TextSize"] = 12;
-					Dropdown["48"]["TextXAlignment"] = Enum.TextXAlignment.Right;
-					Dropdown["48"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Dropdown["48"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["48"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["48"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["48"]["BackgroundTransparency"] = 1;
-					Dropdown["48"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Dropdown["48"]["Size"] = UDim2.new(0, 15, 1, 0);
-					Dropdown["48"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["48"]["Text"] = [[+]];
-					Dropdown["48"]["Name"] = [[+/-]];
-					Dropdown["48"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.+/-.UIPadding
-					Dropdown["49"] = Instance.new("UIPadding", Dropdown["48"]);
-					Dropdown["49"]["PaddingRight"] = UDim.new(0, 2);
-					Dropdown["49"]["PaddingLeft"] = UDim.new(0, 2);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownButton
-					Dropdown["4a"] = Instance.new("TextButton", Dropdown["44"]);
-					Dropdown["4a"]["BorderSizePixel"] = 0;
-					Dropdown["4a"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4a"]["TextTransparency"] = 1;
-					Dropdown["4a"]["TextSize"] = 14;
-					Dropdown["4a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["4a"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["4a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["4a"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["4a"]["BackgroundTransparency"] = 1;
-					Dropdown["4a"]["Name"] = [[DropdownButton]];
-					Dropdown["4a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder
-					Dropdown["4b"] = Instance.new("Frame", Dropdown["44"]);
-					Dropdown["4b"]["Visible"] = false;
-					Dropdown["4b"]["BorderSizePixel"] = 0;
-					Dropdown["4b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["4b"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Dropdown["4b"]["Size"] = UDim2.new(1, 4, 0, 45);
-					Dropdown["4b"]["Position"] = UDim2.new(0.5, 0, 1, 0);
-					Dropdown["4b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4b"]["Name"] = [[DropdownOpenedHolder]];
-					Dropdown["4b"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline
-					Dropdown["4c"] = Instance.new("Frame", Dropdown["4b"]);
-					Dropdown["4c"]["BorderSizePixel"] = 0;
-					Dropdown["4c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Dropdown["4c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["4c"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["4c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["4c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4c"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline
-					Dropdown["4d"] = Instance.new("Frame", Dropdown["4c"]);
-					Dropdown["4d"]["BorderSizePixel"] = 0;
-					Dropdown["4d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["4d"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Dropdown["4d"]["Size"] = UDim2.new(1, -2, 1, -1);
-					Dropdown["4d"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					Dropdown["4d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4d"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main
-					Dropdown["4e"] = Instance.new("Frame", Dropdown["4d"]);
-					Dropdown["4e"]["BorderSizePixel"] = 0;
-					Dropdown["4e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["4e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["4e"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Dropdown["4e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["4e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4e"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main.UIGradient
-					Dropdown["4f"] = Instance.new("UIGradient", Dropdown["4e"]);
-					Dropdown["4f"]["Rotation"] = 90;
-					Dropdown["4f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main.VariantsHolder
-					Dropdown["50"] = Instance.new("ScrollingFrame", Dropdown["4e"]);
-					Dropdown["50"]["Active"] = true;
-					Dropdown["50"]["ScrollingDirection"] = Enum.ScrollingDirection.Y;
-					Dropdown["50"]["BorderSizePixel"] = 0;
-					Dropdown["50"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
-					Dropdown["50"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["50"]["Name"] = [[VariantsHolder]];
-					Dropdown["50"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["50"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y;
-					Dropdown["50"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["50"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["50"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["50"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["50"]["ScrollBarThickness"] = 0;
-					Dropdown["50"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main.VariantsHolder.UIListLayout
-					Dropdown["51"] = Instance.new("UIListLayout", Dropdown["50"]);
-					Dropdown["51"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-				end
-
-				do -- logic
-					local selected = {}
-					local dropped = false
-
-					-- Dropdown elements
-					local btnDD = Dropdown["46"]
-					local D = Dropdown["4b"]
-
-					-- Dropdown toggle
-					Dropdown["4a"].MouseButton1Click:Connect(function()
-						D.Visible = not dropped
-						if D.Visible == true then
-							Dropdown["3e"]["ZIndex"] = 3152
-							Dropdown["48"]["Text"] = [[-]];
-						else
-							Dropdown["3e"]["ZIndex"] = 2
-							Dropdown["48"]["Text"] = [[+]];
-						end
-						dropped = not dropped
-					end)
-
-					-- Helper function for updating dropdown text
-					local function updateDropdownText()
-						if option.multi then
-							btnDD.Text = (#selected > 0) and table.concat(selected, ", ") or "None"
-						else
-							btnDD.Text = tostring(option.value)
-						end
-					end
-
-					-- Helper function for selecting or deselecting an option
-					local function toggleOption(button, value)
-						local activeColor = Color3.fromRGB(255, 255, 255)
-						local inactiveColor = Color3.fromRGB(91, 91, 91)
-
-						if option.multi then
-							if table.find(selected, value) then
-								table.remove(selected, table.find(selected, value))
-								button.TextColor3 = inactiveColor
-							else
-								table.insert(selected, value)
-								button.TextColor3 = activeColor
-							end
-							option.value = selected
-						else
-							option.value = value
-							for _, sibling in ipairs(button.Parent:GetChildren()) do
-								if sibling:IsA("TextButton") then
-									sibling.TextColor3 = inactiveColor
-								end
-							end
-							button.TextColor3 = activeColor
-						end
-
-						updateDropdownText()
-						option.callback(option.value)
-					end
-
-					-- Create dropdown buttons for each option
-					for _, value in ipairs(option.values) do
-						local button = Instance.new("TextButton", Dropdown["50"]) -- Correct parent
-						button.Name = "Option" -- Rename from "Variant" to something descriptive
-						button.Size = UDim2.new(1, 0, 0, 15)
-						button.BackgroundTransparency = 1
-						button.Text = tostring(value) -- Set text to the dropdown value
-						button.TextColor3 = Color3.fromRGB(91, 91, 91) -- Default text color
-						button.TextXAlignment = Enum.TextXAlignment.Left
-						button.Font = Enum.Font.SourceSans
-						button.TextSize = 13
-
-						local padding = Instance.new("UIPadding", button)
-						padding.PaddingRight = UDim.new(0, 2)
-						padding.PaddingLeft = UDim.new(0, 2)
-
-						-- Ensure no extra buttons are preselected incorrectly
-						if option.multi then
-							if table.find(selected, value) then
-								button.TextColor3 = Color3.fromRGB(255, 255, 255)
-							end
-						else
-							if option.value == value then
-								button.TextColor3 = Color3.fromRGB(255, 255, 255)
-							end
-						end
-
-						-- Attach button click functionality
-						button.MouseButton1Click:Connect(function()
-							toggleOption(button, value)
-						end)
-					end
-
-					-- Initialization
-					updateDropdownText()
-					option.callback(option.value)
-
-					-- Store option in library
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.value
-						Library.Items[option.flag] = option
-					end
-
-					-- Function to set values programmatically
-					function option:SetValue(newValue)
-						if option.multi then
-							selected = type(newValue) == "table" and newValue or {}
-							for _, button in ipairs(D:GetChildren()) do
-								if button:IsA("TextButton") then
-									button.TextColor3 = table.find(selected, button.Text) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(91, 91, 91)
-								end
-							end
-						else
-							option.value = newValue
-						end
-						updateDropdownText()
-						option.callback(option.value)
-					end
-
-					function option:SetValues(newValues)
-						-- Clear out existing dropdown buttons
-						for _, child in ipairs(Dropdown["50"]:GetChildren()) do
-							if child:IsA("TextButton") and child.Name == "Option" then
-								child:Destroy()
-							end
-						end
-
-						-- Update the values array
-						option.values = newValues or {}
-
-						-- Set the first value in the dropdown automatically, if it exists
-						if #option.values > 0 then
-							if option.multi then
-								selected = { option.values[1] }
-							else
-								option.value = option.values[1]
-							end
-						else
-							-- Handle the case where the newValues array is empty
-							if option.multi then
-								selected = {}
-							else
-								option.value = nil
-							end
-						end
-
-						-- Create new buttons for the dropdown
-						for _, value in ipairs(option.values) do
-							local button = Instance.new("TextButton", Dropdown["50"]) -- Correct parent
-							button.Name = "Option" -- Name the button for easier identification
-							button.Size = UDim2.new(1, 0, 0, 15)
-							button.BackgroundTransparency = 1
-							button.Text = tostring(value) -- Set text to the dropdown value
-							button.TextColor3 = Color3.fromRGB(91, 91, 91) -- Default text color
-							button.TextXAlignment = Enum.TextXAlignment.Left
-							button.Font = Enum.Font.SourceSans
-							button.TextSize = 13
-
-							local padding = Instance.new("UIPadding", button)
-							padding.PaddingRight = UDim.new(0, 2)
-							padding.PaddingLeft = UDim.new(0, 2)
-
-							-- Ensure no extra buttons are preselected incorrectly
-							if option.multi then
-								if table.find(selected, value) then
-									button.TextColor3 = Color3.fromRGB(255, 255, 255)
-								end
-							else
-								if option.value == value then
-									button.TextColor3 = Color3.fromRGB(255, 255, 255)
-								end
-							end
-
-							-- Attach button click functionality
-							button.MouseButton1Click:Connect(function()
-								toggleOption(button, value)
-							end)
-						end
-
-						-- Update the dropdown display text
-						updateDropdownText()
-
-						-- Call the callback with the updated value
-						option.callback(option.value)
-					end
-				end
-
-				return Dropdown
-			end
-
-			function Section:NewTextBox(option)
-				option = typeof(option) == "table" and option or {}
-				option.textr = option.textr or "new text box"
-				option.text = option.text or "nil"
-				option.placeholder = option.placeholder or "Value"
-				option.value = option.value or ""
-				option.clearonfocus = option.clearonfocus or false
-				option.flag = option.flag or option.text or option.value or option.placeholder
-				option.callback = option.callback or function() end
-				option.utilitytype = "textbox"
-
-				local TextBox = {}
-
-				do -- textbox
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder
-					TextBox["97"] = Instance.new("Frame", Section["23"]);
-					TextBox["97"]["BorderSizePixel"] = 0;
-					TextBox["97"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["97"]["Size"] = UDim2.new(1, 0, 0, 33);
-					TextBox["97"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["97"]["Name"] = [[TextBoxHolder]];
-					TextBox["97"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxText
-					TextBox["98"] = Instance.new("Frame", TextBox["97"]);
-					TextBox["98"]["BorderSizePixel"] = 0;
-					TextBox["98"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["98"]["Size"] = UDim2.new(1, 0, 0.5, -1);
-					TextBox["98"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["98"]["Name"] = [[TextBoxText]];
-					TextBox["98"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxText.TextBoxTXT
-					TextBox["99"] = Instance.new("TextLabel", TextBox["98"]);
-					TextBox["99"]["TextStrokeTransparency"] = 0;
-					TextBox["99"]["BorderSizePixel"] = 0;
-					TextBox["99"]["TextSize"] = 14;
-					TextBox["99"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					TextBox["99"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					TextBox["99"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["99"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					TextBox["99"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					TextBox["99"]["BackgroundTransparency"] = 1;
-					TextBox["99"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["99"]["Size"] = UDim2.new(1, 0, 1, 0);
-					TextBox["99"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["99"]["Text"] = option.textr;
-					TextBox["99"]["Name"] = [[TextBoxTXT]];
-					TextBox["99"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain
-					TextBox["9a"] = Instance.new("Frame", TextBox["97"]);
-					TextBox["9a"]["BorderSizePixel"] = 0;
-					TextBox["9a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["9a"]["AnchorPoint"] = Vector2.new(0, 1);
-					TextBox["9a"]["Size"] = UDim2.new(1, 0, 0.5, 2);
-					TextBox["9a"]["Position"] = UDim2.new(0, 0, 1, 0);
-					TextBox["9a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9a"]["Name"] = [[TextBoxMain]];
-					TextBox["9a"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline
-					TextBox["9b"] = Instance.new("Frame", TextBox["9a"]);
-					TextBox["9b"]["BorderSizePixel"] = 0;
-					TextBox["9b"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					TextBox["9b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9b"]["Size"] = UDim2.new(1, 0, 1, 0);
-					TextBox["9b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9b"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline
-					TextBox["9c"] = Instance.new("Frame", TextBox["9b"]);
-					TextBox["9c"]["BorderSizePixel"] = 0;
-					TextBox["9c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					TextBox["9c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9c"]["Size"] = UDim2.new(1, -2, 1, -2);
-					TextBox["9c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9c"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main
-					TextBox["9d"] = Instance.new("Frame", TextBox["9c"]);
-					TextBox["9d"]["BorderSizePixel"] = 0;
-					TextBox["9d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					TextBox["9d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9d"]["Size"] = UDim2.new(1, -2, 1, -2);
-					TextBox["9d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9d"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main.UIGradient
-					TextBox["9e"] = Instance.new("UIGradient", TextBox["9d"]);
-					TextBox["9e"]["Rotation"] = 90;
-					TextBox["9e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main.TextBox
-					TextBox["9f"] = Instance.new("TextBox", TextBox["9d"]);
-					TextBox["9f"]["CursorPosition"] = -1;
-					TextBox["9f"]["TextStrokeTransparency"] = 0;
-					TextBox["9f"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					TextBox["9f"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					TextBox["9f"]["BorderSizePixel"] = 0;
-					TextBox["9f"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					TextBox["9f"]["TextSize"] = 13;
-					TextBox["9f"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["9f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["9f"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					TextBox["9f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9f"]["PlaceholderText"] = option.placeholder;
-					TextBox["9f"]["Size"] = UDim2.new(1, 0, 1, 0);
-					TextBox["9f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9f"]["BackgroundTransparency"] = 1;
-					TextBox["9f"].Text = tostring(option.text)
-					TextBox["9f"].ClearTextOnFocus = typeof(option.clearonfocus) == "boolean" and option.clearonfocus or false
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main.TextBox.UIPadding
-					TextBox["a0"] = Instance.new("UIPadding", TextBox["9f"]);
-					TextBox["a0"]["PaddingRight"] = UDim.new(0, 1);
-					TextBox["a0"]["PaddingLeft"] = UDim.new(0, 1);
-				end
-
-				do -- logic
-					local txt = TextBox["9f"]
-					local down = false
-
-					game:GetService("UserInputService").InputBegan:Connect(function(input) if input.KeyCode == Enum.KeyCode.Return then  down = true end end)
-
-					game:GetService("UserInputService").InputEnded:Connect(function(input) if input.KeyCode == Enum.KeyCode.Return then  down = false  end end)
-
-					txt.FocusLost:Connect(function()
-						task.wait()
-						if down then 
-							option.value = txt.Text
-							option.callback(option.value)
-							Library.Flags[option.flag] = option.value
-						end 
-					end)
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.value
-						Library.Items[option.flag] = option
-					end
-
-					option.callback(option.value)
-
-					function option:SetValue(str)
-						option.value = tostring(str)
-						txt.Text = option.value
-						Library.Flags[option.flag] = option.value
-						option.callback(option.value)
-					end
-				end
-
-				return TextBox
-			end
-
-			function Section:NewColorpicker(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "New Color" or "nil"
-				option.color = option.color or Color3.fromRGB(255, 255, 255)
-				option.transparency = typeof(option.transparency) == "number" and option.transparency or typeof(option.transparency) == "boolean" and option.transparency or false
-				option.flag = option.flag or option.text
-				option.callback = option.callback or function() end
-				option.transparencyCallback = option.transparencyCallback or function() end
-				option.utilitytype = "color"
-
-				local ColorPicker = {}
-
-				do -- colorpicker
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder
-					ColorPicker["5b"] = Instance.new("Frame", Section["23"]);
-					ColorPicker["5b"]["ZIndex"] = 999;
-					ColorPicker["5b"]["BorderSizePixel"] = 0;
-					ColorPicker["5b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["5b"]["Size"] = UDim2.new(1, 0, 0, 15);
-					ColorPicker["5b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5b"]["Name"] = [[ColorpickerHolder]];
-					ColorPicker["5b"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.ColorpickerText
-					ColorPicker["5c"] = Instance.new("TextLabel", ColorPicker["5b"]);
-					ColorPicker["5c"]["TextStrokeTransparency"] = 0;
-					ColorPicker["5c"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					ColorPicker["5c"]["BorderSizePixel"] = 0;
-					ColorPicker["5c"]["TextSize"] = 14;
-					ColorPicker["5c"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					ColorPicker["5c"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["5c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["5c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["5c"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["5c"]["BackgroundTransparency"] = 1;
-					ColorPicker["5c"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					ColorPicker["5c"]["Size"] = UDim2.new(1, -20, 1, 0);
-					ColorPicker["5c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5c"]["Text"] = [[ColorPicker preview]];
-					ColorPicker["5c"]["Name"] = [[ColorpickerText]];
-					ColorPicker["5c"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline
-					ColorPicker["5d"] = Instance.new("Frame", ColorPicker["5b"]);
-					ColorPicker["5d"]["BorderSizePixel"] = 0;
-					ColorPicker["5d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["5d"]["AnchorPoint"] = Vector2.new(1, 0);
-					ColorPicker["5d"]["Size"] = UDim2.new(0, 25, 1, 0);
-					ColorPicker["5d"]["Position"] = UDim2.new(1, 0, 0, 0);
-					ColorPicker["5d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5d"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine
-					ColorPicker["5e"] = Instance.new("Frame", ColorPicker["5d"]);
-					ColorPicker["5e"]["BorderSizePixel"] = 0;
-					ColorPicker["5e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["5e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["5e"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["5e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["5e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5e"]["Name"] = [[InnerLine]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display
-					ColorPicker["5f"] = Instance.new("Frame", ColorPicker["5e"]);
-					ColorPicker["5f"]["ZIndex"] = 2;
-					ColorPicker["5f"]["BorderSizePixel"] = 0;
-					ColorPicker["5f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["5f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["5f"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["5f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["5f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5f"]["Name"] = [[Display]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display.UIGradient
-					ColorPicker["60"] = Instance.new("UIGradient", ColorPicker["5f"]);
-					ColorPicker["60"]["Rotation"] = 90;
-					ColorPicker["60"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerButton
-					ColorPicker["61"] = Instance.new("TextButton", ColorPicker["5e"]);
-					ColorPicker["61"]["BorderSizePixel"] = 0;
-					ColorPicker["61"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["61"]["TextTransparency"] = 1;
-					ColorPicker["61"]["AutoButtonColor"] = false;
-					ColorPicker["61"]["TextSize"] = 14;
-					ColorPicker["61"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["61"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["61"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["61"]["Size"] = UDim2.new(1, 0, 1, 0);
-					ColorPicker["61"]["BackgroundTransparency"] = 1;
-					ColorPicker["61"]["Name"] = [[ColorPickerButton]];
-					ColorPicker["61"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["61"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain
-					ColorPicker["62"] = Instance.new("Frame", ColorPicker["5e"]);
-					ColorPicker["62"]["Visible"] = false;
-					ColorPicker["62"]["ZIndex"] = 10000;
-					ColorPicker["62"]["BorderSizePixel"] = 0;
-					ColorPicker["62"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["62"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["62"]["Size"] = UDim2.new(0, 125, 0, 150);
-					ColorPicker["62"]["Position"] = UDim2.new(0, -1, 0, -1);
-					ColorPicker["62"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["62"]["Name"] = [[ColorPickerMain]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline
-					ColorPicker["63"] = Instance.new("Frame", ColorPicker["62"]);
-					ColorPicker["63"]["BorderSizePixel"] = 0;
-					ColorPicker["63"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["63"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["63"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["63"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["63"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["63"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main
-					ColorPicker["64"] = Instance.new("Frame", ColorPicker["63"]);
-					ColorPicker["64"]["BorderSizePixel"] = 0;
-					ColorPicker["64"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["64"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["64"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["64"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["64"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["64"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIGradient
-					ColorPicker["65"] = Instance.new("UIGradient", ColorPicker["64"]);
-					ColorPicker["65"]["Rotation"] = 90;
-					ColorPicker["65"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIPadding
-					ColorPicker["66"] = Instance.new("UIPadding", ColorPicker["64"]);
-					ColorPicker["66"]["PaddingTop"] = UDim.new(0, 3);
-					ColorPicker["66"]["PaddingRight"] = UDim.new(0, 3);
-					ColorPicker["66"]["PaddingLeft"] = UDim.new(0, 3);
-					ColorPicker["66"]["PaddingBottom"] = UDim.new(0, 3);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder
-					ColorPicker["67"] = Instance.new("Frame", ColorPicker["64"]);
-					ColorPicker["67"]["BorderSizePixel"] = 0;
-					ColorPicker["67"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["67"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["67"]["Size"] = UDim2.new(1, 0, 0, 18);
-					ColorPicker["67"]["Position"] = UDim2.new(0, 0, 1, 0);
-					ColorPicker["67"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["67"]["Name"] = [[RGBtextHolder]];
-					ColorPicker["67"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.UIListLayout
-					ColorPicker["68"] = Instance.new("UIListLayout", ColorPicker["67"]);
-					ColorPicker["68"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-					ColorPicker["68"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-					ColorPicker["68"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-					ColorPicker["68"]["Padding"] = UDim.new(0, 1);
-					ColorPicker["68"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-					ColorPicker["68"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R
-					ColorPicker["69"] = Instance.new("Frame", ColorPicker["67"]);
-					ColorPicker["69"]["BorderSizePixel"] = 0;
-					ColorPicker["69"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["69"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["69"]["Size"] = UDim2.new(0, 33, 0, 15);
-					ColorPicker["69"]["Position"] = UDim2.new(0, 37, 1, 0);
-					ColorPicker["69"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["69"]["Name"] = [[R]];
-					ColorPicker["69"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline
-					ColorPicker["6a"] = Instance.new("Frame", ColorPicker["69"]);
-					ColorPicker["6a"]["BorderSizePixel"] = 0;
-					ColorPicker["6a"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["6a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6a"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6a"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline
-					ColorPicker["6b"] = Instance.new("Frame", ColorPicker["6a"]);
-					ColorPicker["6b"]["BorderSizePixel"] = 0;
-					ColorPicker["6b"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["6b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6b"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6b"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main
-					ColorPicker["6c"] = Instance.new("Frame", ColorPicker["6b"]);
-					ColorPicker["6c"]["BorderSizePixel"] = 0;
-					ColorPicker["6c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["6c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6c"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6c"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.R
-					ColorPicker["6d"] = Instance.new("TextBox", ColorPicker["6c"]);
-					ColorPicker["6d"]["TextStrokeTransparency"] = 0;
-					ColorPicker["6d"]["Name"] = [[R]];
-					ColorPicker["6d"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["6d"]["BorderSizePixel"] = 0;
-					ColorPicker["6d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["6d"]["TextSize"] = 13;
-					ColorPicker["6d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["6d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["6d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["6d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6d"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6d"]["Text"] = [[255]];
-					ColorPicker["6d"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.UIGradient
-					ColorPicker["6e"] = Instance.new("UIGradient", ColorPicker["6c"]);
-					ColorPicker["6e"]["Rotation"] = 90;
-					ColorPicker["6e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G
-					ColorPicker["6f"] = Instance.new("Frame", ColorPicker["67"]);
-					ColorPicker["6f"]["BorderSizePixel"] = 0;
-					ColorPicker["6f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["6f"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["6f"]["Size"] = UDim2.new(0, 33, 0, 15);
-					ColorPicker["6f"]["Position"] = UDim2.new(0, 37, 1, 0);
-					ColorPicker["6f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6f"]["Name"] = [[G]];
-					ColorPicker["6f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline
-					ColorPicker["70"] = Instance.new("Frame", ColorPicker["6f"]);
-					ColorPicker["70"]["BorderSizePixel"] = 0;
-					ColorPicker["70"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["70"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["70"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["70"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["70"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["70"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline
-					ColorPicker["71"] = Instance.new("Frame", ColorPicker["70"]);
-					ColorPicker["71"]["BorderSizePixel"] = 0;
-					ColorPicker["71"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["71"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["71"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["71"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["71"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["71"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main
-					ColorPicker["72"] = Instance.new("Frame", ColorPicker["71"]);
-					ColorPicker["72"]["BorderSizePixel"] = 0;
-					ColorPicker["72"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["72"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["72"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["72"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["72"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["72"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.G
-					ColorPicker["73"] = Instance.new("TextBox", ColorPicker["72"]);
-					ColorPicker["73"]["TextStrokeTransparency"] = 0;
-					ColorPicker["73"]["Name"] = [[G]];
-					ColorPicker["73"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["73"]["BorderSizePixel"] = 0;
-					ColorPicker["73"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["73"]["TextSize"] = 13;
-					ColorPicker["73"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["73"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["73"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["73"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["73"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["73"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["73"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["73"]["Text"] = [[255]];
-					ColorPicker["73"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.UIGradient
-					ColorPicker["74"] = Instance.new("UIGradient", ColorPicker["72"]);
-					ColorPicker["74"]["Rotation"] = 90;
-					ColorPicker["74"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B
-					ColorPicker["75"] = Instance.new("Frame", ColorPicker["67"]);
-					ColorPicker["75"]["BorderSizePixel"] = 0;
-					ColorPicker["75"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["75"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["75"]["Size"] = UDim2.new(0, 33, 0, 15);
-					ColorPicker["75"]["Position"] = UDim2.new(0, 37, 1, 0);
-					ColorPicker["75"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["75"]["Name"] = [[B]];
-					ColorPicker["75"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline
-					ColorPicker["76"] = Instance.new("Frame", ColorPicker["75"]);
-					ColorPicker["76"]["BorderSizePixel"] = 0;
-					ColorPicker["76"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["76"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["76"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["76"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["76"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["76"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline
-					ColorPicker["77"] = Instance.new("Frame", ColorPicker["76"]);
-					ColorPicker["77"]["BorderSizePixel"] = 0;
-					ColorPicker["77"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["77"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["77"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["77"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["77"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["77"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main
-					ColorPicker["78"] = Instance.new("Frame", ColorPicker["77"]);
-					ColorPicker["78"]["BorderSizePixel"] = 0;
-					ColorPicker["78"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["78"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["78"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["78"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["78"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["78"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.B
-					ColorPicker["79"] = Instance.new("TextBox", ColorPicker["78"]);
-					ColorPicker["79"]["TextStrokeTransparency"] = 0;
-					ColorPicker["79"]["Name"] = [[B]];
-					ColorPicker["79"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["79"]["BorderSizePixel"] = 0;
-					ColorPicker["79"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["79"]["TextSize"] = 13;
-					ColorPicker["79"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["79"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["79"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["79"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["79"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["79"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["79"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["79"]["Text"] = [[255]];
-					ColorPicker["79"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.UIGradient
-					ColorPicker["7a"] = Instance.new("UIGradient", ColorPicker["78"]);
-					ColorPicker["7a"]["Rotation"] = 90;
-					ColorPicker["7a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue
-					ColorPicker["7b"] = Instance.new("ImageButton", ColorPicker["64"]);
-					ColorPicker["7b"]["BorderSizePixel"] = 0;
-					ColorPicker["7b"]["AutoButtonColor"] = false;
-					ColorPicker["7b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["7b"]["Selectable"] = false;
-					ColorPicker["7b"]["AnchorPoint"] = Vector2.new(1, 0);
-					ColorPicker["7b"]["Image"] = [[rbxassetid://2615692420]];
-					ColorPicker["7b"]["Size"] = UDim2.new(0, 15, 0, 95);
-					ColorPicker["7b"]["Name"] = [[Hue]];
-					ColorPicker["7b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7b"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue.huecursor
-					ColorPicker["7c"] = Instance.new("Frame", ColorPicker["7b"]);
-					ColorPicker["7c"]["BorderSizePixel"] = 0;
-					ColorPicker["7c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["7c"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					ColorPicker["7c"]["Size"] = UDim2.new(1, 6, 0, 3);
-					ColorPicker["7c"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					ColorPicker["7c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7c"]["Name"] = [[huecursor]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme
-					ColorPicker["7d"] = Instance.new("ImageButton", ColorPicker["64"]);
-					ColorPicker["7d"]["BorderSizePixel"] = 0;
-					ColorPicker["7d"]["AutoButtonColor"] = false;
-					ColorPicker["7d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["7d"]["Selectable"] = false;
-					ColorPicker["7d"]["Image"] = [[rbxassetid://2615689005]];
-					ColorPicker["7d"]["Size"] = UDim2.new(0, 95, 0, 95);
-					ColorPicker["7d"]["Name"] = [[Scheme]];
-					ColorPicker["7d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme.schemecursor
-					ColorPicker["7e"] = Instance.new("ImageLabel", ColorPicker["7d"]);
-					ColorPicker["7e"]["ZIndex"] = 5;
-					ColorPicker["7e"]["BorderSizePixel"] = 0;
-					ColorPicker["7e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7e"]["ImageColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7e"]["Image"] = [[http://www.roblox.com/asset/?id=16006380635]];
-					ColorPicker["7e"]["ImageRectSize"] = Vector2.new(1000, 1000);
-					ColorPicker["7e"]["Size"] = UDim2.new(0, 5, 0, 5);
-					ColorPicker["7e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7e"]["BackgroundTransparency"] = 1;
-					ColorPicker["7e"]["Name"] = [[schemecursor]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency
-					ColorPicker["7f"] = Instance.new("Frame", ColorPicker["64"]);
-					ColorPicker["7f"]["BorderSizePixel"] = 0;
-					ColorPicker["7f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["7f"]["AnchorPoint"] = Vector2.new(0.5, 1);
-					ColorPicker["7f"]["Size"] = UDim2.new(1, 0, 0, 18);
-					ColorPicker["7f"]["Position"] = UDim2.new(0.5, 0, 1, -20);
-					ColorPicker["7f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7f"]["Name"] = [[Transparency]];
-					ColorPicker["7f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline
-					ColorPicker["80"] = Instance.new("Frame", ColorPicker["7f"]);
-					ColorPicker["80"]["BorderSizePixel"] = 0;
-					ColorPicker["80"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["80"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["80"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["80"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["80"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["80"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline
-					ColorPicker["81"] = Instance.new("Frame", ColorPicker["80"]);
-					ColorPicker["81"]["BorderSizePixel"] = 0;
-					ColorPicker["81"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["81"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["81"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["81"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["81"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["81"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main
-					ColorPicker["82"] = Instance.new("Frame", ColorPicker["81"]);
-					ColorPicker["82"]["BorderSizePixel"] = 0;
-					ColorPicker["82"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["82"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["82"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["82"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["82"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["82"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.Transparency
-					ColorPicker["83"] = Instance.new("TextBox", ColorPicker["82"]);
-					ColorPicker["83"]["TextStrokeTransparency"] = 0;
-					ColorPicker["83"]["Name"] = [[Transparency]];
-					ColorPicker["83"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["83"]["BorderSizePixel"] = 0;
-					ColorPicker["83"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["83"]["TextSize"] = 13;
-					ColorPicker["83"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["83"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["83"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["83"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["83"]["PlaceholderText"] = [[Transparency:]];
-					ColorPicker["83"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["83"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["83"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["83"]["Text"] = [[100]];
-					ColorPicker["83"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.UIGradient
-					ColorPicker["84"] = Instance.new("UIGradient", ColorPicker["82"]);
-					ColorPicker["84"]["Rotation"] = 90;
-					ColorPicker["84"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Frame
-					ColorPicker["86"] = Instance.new("ImageLabel", ColorPicker["5e"]);
-					ColorPicker["86"]["BorderSizePixel"] = 0;
-					ColorPicker["86"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["86"]["ScaleType"] = Enum.ScaleType.Crop;
-					ColorPicker["86"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["86"]["Image"] = [[rbxassetid://98372645101260]];
-					ColorPicker["86"]["ImageRectSize"] = Vector2.new(100, 100);
-					ColorPicker["86"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["86"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["86"]["Name"] = [[Frame]];
-					ColorPicker["86"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-				end
-
-				do -- logic
-					local opened = false
-
-					ColorPicker["61"].MouseButton1Click:Connect(function()
-						ColorPicker["62"].Visible = not opened
-						opened = not opened
-					end)
-
-					local colorPickerMain = ColorPicker["62"]
-					local scrollFrame = Tab["1e"]
-
-					-- Function to update position and anchor point
-					local function updatePosition()
-						local pickerAbsPos = colorPickerMain.AbsolutePosition
-						local scrollFrameAbsPos = scrollFrame.AbsolutePosition
-						local scrollFrameSize = scrollFrame.AbsoluteSize
-
-						-- Check if touching the top
-						if pickerAbsPos.Y < scrollFrameAbsPos.Y then
-							colorPickerMain.Position = UDim2.new(0, -1, 1, 1) -- Position at the top
-							colorPickerMain.AnchorPoint = Vector2.new(0, 0) -- Anchor point at the top
-							print("Moved to top with AnchorPoint 0,0 and Position {0, -1}, {1, 1}")
-						end
-
-						-- Check if touching the bottom
-						if pickerAbsPos.Y + colorPickerMain.AbsoluteSize.Y > scrollFrameAbsPos.Y + scrollFrameSize.Y then
-							colorPickerMain.Position = UDim2.new(0, -1, 0, -1) -- Position at the bottom
-							colorPickerMain.AnchorPoint = Vector2.new(0, 1) -- Anchor point at the bottom
-							print("Moved to bottom with AnchorPoint 0,1 and Position {0, -1}, {0, -1}")
-						end
-					end
-
-					-- Connect to the RenderStepped event for constant checking
-					game:GetService("RunService").RenderStepped:Connect(updatePosition)
-
-					local white, black = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
-					local colors = {
-						Color3.new(1, 0, 0), Color3.new(1, 1, 0), Color3.new(0, 1, 0),
-						Color3.new(0, 1, 1), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 0, 0)
-					}
-
-					local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-					local UserInputService = game:GetService("UserInputService")
-
-					-- UI elements
-					local Schema = ColorPicker["7d"] -- Gradient area
-					local SchemaCursor = ColorPicker["7e"] -- Cursor for the scheme
-					local HUE = ColorPicker["7b"] -- Hue bar
-					local HueCursor = ColorPicker["7c"] -- Cursor for the hue bar
-					local Display = ColorPicker["5f"] -- Color display
-					local TransparencyTextBox = ColorPicker["83"] -- Transparency input box
-					local TextBoxR = ColorPicker["6d"] -- Red input box
-					local TextBoxG = ColorPicker["73"] -- Green input box
-					local TextBoxB = ColorPicker["79"] -- Blue input box
-
-					-- Function: Convert RGB to HSV
-					local function rgbToHSV(color)
-						local r, g, b = color.R, color.G, color.B
-						local max, min = math.max(r, g, b), math.min(r, g, b)
-						local delta = max - min
-
-						local h = 0
-						if delta > 0 then
-							if max == r then
-								h = (g - b) / delta % 6
-							elseif max == g then
-								h = (b - r) / delta + 2
-							elseif max == b then
-								h = (r - g) / delta + 4
-							end
-							h = h / 6
-						end
-
-						local s = (max == 0) and 0 or delta / max
-						local v = max
-						return h, s, v
-					end
-
-					-- Function: Clamp a value between min and max
-					local function clamp(value, min, max)
-						return math.max(min, math.min(max, value))
-					end
-
-					-- Function: Update the color display
-					local function updateColor(outputColor)
-						if typeof(outputColor) ~= "Color3" then
-							error("Invalid color value: Expected Color3, got " .. typeof(outputColor))
-						end
-
-						Display.BackgroundColor3 = outputColor
-						option.color = outputColor
-
-						local r = math.floor(outputColor.R * 255 + 0.5)
-						local g = math.floor(outputColor.G * 255 + 0.5)
-						local b = math.floor(outputColor.B * 255 + 0.5)
-
-						TextBoxR.Text = tostring(r)
-						TextBoxG.Text = tostring(g)
-						TextBoxB.Text = tostring(b)
-
-						if option.callback then
-							option.callback(outputColor)
-						end
-					end
-
-					-- Function to update the hue-based color dynamically
-					local function updateHueColor(huePercent)
-						-- Calculate the color from the hue percentage
-						local hueColor = Color3.fromHSV(huePercent, 1, 1)
-
-						-- Update the scheme's background color to reflect the hue
-						Schema.BackgroundColor3 = hueColor
-
-						-- Calculate the scheme cursor's position and update the final color
-						local xP = math.clamp((SchemaCursor.AbsolutePosition.X - Schema.AbsolutePosition.X) / Schema.AbsoluteSize.X, 0, 1)
-						local yP = math.clamp((SchemaCursor.AbsolutePosition.Y - Schema.AbsolutePosition.Y) / Schema.AbsoluteSize.Y, 0, 1)
-						local outputColor = white:Lerp(hueColor, xP):Lerp(black, yP)
-
-						-- Update the display, text boxes, and trigger callbacks
-						updateColor(outputColor)
-					end
-
-					-- Function to update the scheme-based color dynamically
-					local function updateSchemeColor(relativeX, relativeY)
-						-- Calculate the interpolated color based on cursor position
-						local xP = math.clamp(relativeX / Schema.AbsoluteSize.X, 0, 1)
-						local yP = math.clamp(relativeY / Schema.AbsoluteSize.Y, 0, 1)
-						local outputColor = white:Lerp(Schema.BackgroundColor3, xP):Lerp(black, yP)
-
-						-- Update the display, text boxes, and trigger callbacks
-						updateColor(outputColor)
-					end
-
-					-- Function: Sync color picker cursors and display based on a Color3 value
-					local function syncColor()
-						local h, s, v = rgbToHSV(option.color)
-
-						local huePosition = h * HUE.AbsoluteSize.Y
-						HueCursor.Position = UDim2.new(0.5, 0, 0, huePosition - (HueCursor.AbsoluteSize.Y / 2))
-
-						local hueColor = Color3.fromHSV(h, 1, 1)
-						Schema.BackgroundColor3 = hueColor
-
-						local schemeX = s * Schema.AbsoluteSize.X
-						local schemeY = (1 - v) * Schema.AbsoluteSize.Y
-						SchemaCursor.Position = UDim2.new(0, schemeX - (SchemaCursor.AbsoluteSize.X / 2), 0, schemeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-						updateColor(option.color)
-					end
-
-					-- Function: Update transparency
-					local function updateTransparency(transparencyValue)
-						local clampedValue = clamp(transparencyValue, 0, 100)
-						local callbackValue = 1 - (clampedValue / 100)
-
-						Display.BackgroundTransparency = callbackValue
-						option.transparency = clampedValue
-
-						if option.transparencyCallback then
-							option.transparencyCallback(callbackValue)
-						end
-
-						TransparencyTextBox.Text = tostring(clampedValue)
-					end
-
-					-- Connect transparency TextBox changes
-					TransparencyTextBox.FocusLost:Connect(function()
-						local transparencyValue = tonumber(TransparencyTextBox.Text)
-						if transparencyValue then
-							updateTransparency(transparencyValue)
-						else
-							TransparencyTextBox.Text = tostring(option.transparency)
-						end
-					end)
-
-					TransparencyTextBox:GetPropertyChangedSignal("Text"):Connect(function()
-						local inputText = TransparencyTextBox.Text
-						if not tonumber(inputText) and inputText ~= "" then
-							TransparencyTextBox.Text = inputText:gsub("%D", "")
-						end
-					end)
-
-					-- Function: Handle RGB input changes
-					local function handleRGBInputChange(textBox, component)
-						textBox.FocusLost:Connect(function()
-							local inputValue = tonumber(textBox.Text)
-							if inputValue then
-								local r = component == "R" and inputValue or math.floor(option.color.R * 255 + 0.5)
-								local g = component == "G" and inputValue or math.floor(option.color.G * 255 + 0.5)
-								local b = component == "B" and inputValue or math.floor(option.color.B * 255 + 0.5)
-
-								option.color = Color3.fromRGB(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255))
-								syncColor()
-							else
-								textBox.Text = tostring(math.floor(option.color[component] * 255 + 0.5))
-							end
-						end)
-
-						textBox:GetPropertyChangedSignal("Text"):Connect(function()
-							local inputText = textBox.Text
-							if not tonumber(inputText) and inputText ~= "" then
-								textBox.Text = inputText:gsub("%D", "")
-							end
-						end)
-					end
-
-					-- Logic for interacting with the hue bar
-					HUE.MouseButton1Down:Connect(function()
-						-- Function to dynamically update the hue cursor and color
-						local function updateHueCursor()
-							local relativeY = math.clamp(Mouse.Y - HUE.AbsolutePosition.Y, 0, HUE.AbsoluteSize.Y)
-
-							-- Correct the X offset: center the cursor horizontally within the hue bar
-							HueCursor.Position = UDim2.new(0.5, 0, 0, relativeY - (HueCursor.AbsoluteSize.Y / 2))
-
-							-- Calculate hue as a percentage (0 to 1) and update the color
-							local huePercent = math.clamp(relativeY / HUE.AbsoluteSize.Y, 0, 1)
-							updateHueColor(huePercent)
-						end
-
-						-- Initial update
-						updateHueCursor()
-
-						-- Connect mouse movement for dragging
-						local hueConnection
-						hueConnection = Mouse.Move:Connect(updateHueCursor)
-
-						-- Detect when the mouse button is released
-						local inputEndedConnection
-						inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-							if input.UserInputType == Enum.UserInputType.MouseButton1 then
-								-- Disconnect connections safely
-								if hueConnection then
-									hueConnection:Disconnect()
-									hueConnection = nil
-								end
-								if inputEndedConnection then
-									inputEndedConnection:Disconnect()
-									inputEndedConnection = nil
-								end
-							end
-						end)
-					end)
-
-					-- Logic for interacting with the scheme area
-					Schema.MouseButton1Down:Connect(function()
-						-- Function to dynamically update the scheme cursor and color
-						local function updateSchemeCursor()
-							local relativeX = math.clamp(Mouse.X - Schema.AbsolutePosition.X, 0, Schema.AbsoluteSize.X)
-							local relativeY = math.clamp(Mouse.Y - Schema.AbsolutePosition.Y, 0, Schema.AbsoluteSize.Y)
-
-							-- Update the cursor position
-							SchemaCursor.Position = UDim2.new(0, relativeX - (SchemaCursor.AbsoluteSize.X / 2), 0, relativeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-							-- Update the scheme-based color
-							updateSchemeColor(relativeX, relativeY)
-						end
-
-						-- Initial update
-						updateSchemeCursor()
-
-						-- Connect mouse movement for dragging
-						local schemeConnection
-						schemeConnection = Mouse.Move:Connect(updateSchemeCursor)
-
-						-- Detect when the mouse button is released
-						local inputEndedConnection
-						inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-							if input.UserInputType == Enum.UserInputType.MouseButton1 then
-								-- Disconnect connections safely
-								if schemeConnection then
-									schemeConnection:Disconnect()
-									schemeConnection = nil
-								end
-								if inputEndedConnection then
-									inputEndedConnection:Disconnect()
-									inputEndedConnection = nil
-								end
-							end
-						end)
-					end)
-
-					handleRGBInputChange(TextBoxR, "R")
-					handleRGBInputChange(TextBoxG, "G")
-					handleRGBInputChange(TextBoxB, "B")
-
-					-- Initialize color picker
-					syncColor()
-					updateTransparency(option.transparency)
-				end
-
-				return ColorPicker
-			end
-
-			return Section
-		end
-
-		function Tab:NewMultiSection(option)
-			option = typeof(option) == "table" and option or {}
-			option.variants = typeof(option.variants) == "table" and option.variants or {}
-
-			local MultiSection = {}
-
-			local section = {}
-
-			do -- multisection
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder
-				MultiSection["a5"] = Instance.new("Frame", Tab["1e"]);
-				MultiSection["a5"]["BorderSizePixel"] = 0;
-				MultiSection["a5"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36);
-				MultiSection["a5"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-				MultiSection["a5"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-				MultiSection["a5"]["Size"] = UDim2.new(0, 198, 0, 25);
-				MultiSection["a5"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				MultiSection["a5"]["Name"] = [[MultiSectionHolder]];
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.UIPadding
-				MultiSection["a6"] = Instance.new("UIPadding", MultiSection["a5"]);
-				MultiSection["a6"]["PaddingTop"] = UDim.new(0, 1);
-				MultiSection["a6"]["PaddingBottom"] = UDim.new(0, 1);
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.Accent
-				MultiSection["a7"] = Instance.new("Frame", MultiSection["a5"]);
-				MultiSection["a7"]["ZIndex"] = 2;
-				MultiSection["a7"]["BorderSizePixel"] = 0;
-				MultiSection["a7"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-				MultiSection["a7"]["AnchorPoint"] = Vector2.new(0.5, 0);
-				MultiSection["a7"]["Size"] = UDim2.new(1, -4, 0, 1);
-				MultiSection["a7"]["Position"] = UDim2.new(0.5, 0, 0, 2);
-				MultiSection["a7"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				MultiSection["a7"]["Name"] = [[Accent]];
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.Accent.AccentGradient
-				MultiSection["a8"] = Instance.new("UIGradient", MultiSection["a7"]);
-				MultiSection["a8"]["Name"] = [[AccentGradient]];
-				MultiSection["a8"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(201, 201, 201))};
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.ButtonsHolder
-				MultiSection["a9"] = Instance.new("ScrollingFrame", MultiSection["a5"]);
-				MultiSection["a9"]["ScrollingDirection"] = Enum.ScrollingDirection.X;
-				MultiSection["a9"]["ZIndex"] = 2;
-				MultiSection["a9"]["BorderSizePixel"] = 0;
-				MultiSection["a9"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
-				MultiSection["a9"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 26);
-				MultiSection["a9"]["Name"] = [[ButtonsHolder]];
-				MultiSection["a9"]["Selectable"] = false;
-				MultiSection["a9"]["AnchorPoint"] = Vector2.new(0.5, 0);
-				MultiSection["a9"]["AutomaticCanvasSize"] = Enum.AutomaticSize.X;
-				MultiSection["a9"]["Size"] = UDim2.new(1, -4, 0, 17);
-				MultiSection["a9"]["Position"] = UDim2.new(0.5, 0, 0, 3);
-				MultiSection["a9"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				MultiSection["a9"]["ScrollBarThickness"] = 0;
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.ButtonsHolder.UIListLayout
-				MultiSection["aa"] = Instance.new("UIListLayout", MultiSection["a9"]);
-				MultiSection["aa"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-				MultiSection["aa"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-				-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.VariantsHolder
-				MultiSection["b1"] = Instance.new("Frame", MultiSection["a5"]);
-				MultiSection["b1"]["BorderSizePixel"] = 0;
-				MultiSection["b1"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-				MultiSection["b1"]["AnchorPoint"] = Vector2.new(0.5, 0);
-				MultiSection["b1"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-				MultiSection["b1"]["Size"] = UDim2.new(1, 0, 0, 23);
-				MultiSection["b1"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-				MultiSection["b1"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				MultiSection["b1"]["Name"] = [[VariantsHolder]];
-				MultiSection["b1"]["BackgroundTransparency"] = 1;
-			end
-
-			do -- logic
-				local activatedsection = nil
-
-				for i,v in ipairs(option.variants) do
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.ButtonsHolder.MultiSectionVariant
-					section["ab"] = Instance.new("Frame", MultiSection["a9"]);
-					section["ab"]["Active"] = true;
-					section["ab"]["BorderSizePixel"] = 0;
-					section["ab"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					section["ab"]["AutomaticSize"] = Enum.AutomaticSize.X;
-					section["ab"]["Size"] = UDim2.new(0, 1, 1, 0);
-					section["ab"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					section["ab"]["Name"] = [[MultiSectionVariant]];
-					section["ab"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.sectionHolder.ButtonsHolder.MultiSectionVariant.SectionText
-					section["ac"] = Instance.new("TextLabel", section["ab"]);
-					section["ac"]["TextStrokeTransparency"] = 0;
-					section["ac"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					section["ac"]["BorderSizePixel"] = 0;
-					section["ac"]["TextSize"] = 14;
-					section["ac"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					section["ac"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					section["ac"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					section["ac"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					section["ac"]["TextColor3"] = Color3.fromRGB(91, 91, 91);
-					section["ac"]["BackgroundTransparency"] = 1;
-					section["ac"]["Size"] = UDim2.new(1, 0, 0, 14);
-					section["ac"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					section["ac"]["Text"] = tostring(v);
-					section["ac"]["AutomaticSize"] = Enum.AutomaticSize.X;
-					section["ac"]["Name"] = [[SectionText]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.ButtonsHolder.MultiSectionVariant.SectionText.UIPadding
-					section["ad"] = Instance.new("UIPadding", section["ac"]);
-					section["ad"]["PaddingTop"] = UDim.new(0, 11);
-					section["ad"]["PaddingLeft"] = UDim.new(0, 5);
-					section["ad"]["PaddingBottom"] = UDim.new(0, 5);
-
-
-					------------
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.VariantsHolder.Outline
-					section["b2"] = Instance.new("Frame", MultiSection["b1"]);
-					section["b2"]["Visible"] = false
-					section["b2"]["BorderSizePixel"] = 0;
-					section["b2"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					section["b2"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					section["b2"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-					section["b2"]["Size"] = UDim2.new(1, -2, 0, 23);
-					section["b2"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					section["b2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					section["b2"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.VariantsHolder.Outline.Main
-					section["b3"] = Instance.new("Frame", section["b2"]);
-					section["b3"]["BorderSizePixel"] = 0;
-					section["b3"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 26);
-					section["b3"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					section["b3"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-					section["b3"]["Size"] = UDim2.new(1, -2, 0, 21);
-					section["b3"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					section["b3"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					section["b3"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.VariantsHolder.Outline.Main.UIListLayout
-					section["b4"] = Instance.new("UIListLayout", section["b3"]);
-					section["b4"]["VerticalFlex"] = Enum.UIFlexAlignment.SpaceBetween;
-					section["b4"]["Padding"] = UDim.new(0, 5);
-					section["b4"]["VerticalAlignment"] = Enum.VerticalAlignment.Center;
-					section["b4"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.MultiSectionHolder.VariantsHolder.Outline.Main.UIPadding
-					section["b5"] = Instance.new("UIPadding", section["b3"]);
-					section["b5"]["PaddingTop"] = UDim.new(0, 5);
-					section["b5"]["PaddingRight"] = UDim.new(0, 5);
-					section["b5"]["PaddingLeft"] = UDim.new(0, 5);
-					section["b5"]["PaddingBottom"] = UDim.new(0, 5);
-
-					local function ActivateSection(section)
-						if activatedsection ~= section and activatedsection ~= nil then
-							activatedsection["b2"].Visible = false
-							activatedsection["ac"].TextColor3 = Color3.fromRGB(91, 91, 91);
-						end
-
-						section["b2"]["Visible"] = true
-						section["ac"]["TextColor3"] = Color3.fromRGB(255, 255, 255)
-						activatedsection = section
-					end
-
-					if firstsection then
-						ActivateSection(section)
-					end
-
-					section["ab"].InputBegan:Connect(function(input)
-						if input.UserInputType == Enum.UserInputType.MouseButton1 then
-							ActivateSection(section)
-						end
-					end)
-				end
-			end
-
-			function section:NewToggle(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "New Toggle"
-				option.enabled = option.enabled or false
-				option.risky = option.risky or false
-				option.flag = option.flag or option.text
-				option.state = option.enabled
-				option.callback = option.callback or function() end
-				option.utilitytype = "toggle"
-
-				local Toggle = {}
-
-				do -- toggle
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder
-					Toggle["27"] = Instance.new("Frame", section["b3"]);
-					Toggle["27"]["ZIndex"] = 1000;
-					Toggle["27"]["BorderSizePixel"] = 0;
-					Toggle["27"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["27"]["Size"] = UDim2.new(1, 0, 0, 15);
-					Toggle["27"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["27"]["Name"] = [[ToggleHolder]];
-					Toggle["27"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline
-					Toggle["28"] = Instance.new("Frame", Toggle["27"]);
-					Toggle["28"]["Active"] = true;
-					Toggle["28"]["BorderSizePixel"] = 0;
-					Toggle["28"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Toggle["28"]["Size"] = UDim2.new(0, 15, 0, 15);
-					Toggle["28"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["28"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline
-					Toggle["29"] = Instance.new("Frame", Toggle["28"]);
-					Toggle["29"]["Active"] = true;
-					Toggle["29"]["BorderSizePixel"] = 0;
-					Toggle["29"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Toggle["29"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Toggle["29"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Toggle["29"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Toggle["29"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["29"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline.Toggle
-					Toggle["2a"] = Instance.new("Frame", Toggle["29"]);
-					Toggle["2a"]["Active"] = true;
-					Toggle["2a"]["BorderSizePixel"] = 0;
-					Toggle["2a"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Toggle["2a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Toggle["2a"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Toggle["2a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Toggle["2a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2a"]["Name"] = [[Toggle]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline.Toggle.UIGradient
-					Toggle["2b"] = Instance.new("UIGradient", Toggle["2a"]);
-					Toggle["2b"]["Rotation"] = 90;
-					Toggle["2b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.Outline.Innerline.Toggle.ToggleButton
-					Toggle["2c"] = Instance.new("TextButton", Toggle["2a"]);
-					Toggle["2c"]["BorderSizePixel"] = 0;
-					Toggle["2c"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2c"]["TextTransparency"] = 1;
-					Toggle["2c"]["TextSize"] = 14;
-					Toggle["2c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["2c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Toggle["2c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Toggle["2c"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Toggle["2c"]["BackgroundTransparency"] = 1;
-					Toggle["2c"]["Name"] = [[ToggleButton]];
-					Toggle["2c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.ToggleText
-					Toggle["2d"] = Instance.new("TextLabel", Toggle["27"]);
-					Toggle["2d"]["TextStrokeTransparency"] = 0;
-					Toggle["2d"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Toggle["2d"]["BorderSizePixel"] = 0;
-					Toggle["2d"]["TextSize"] = 14;
-					Toggle["2d"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Toggle["2d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Toggle["2d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["2d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Toggle["2d"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Toggle["2d"]["BackgroundTransparency"] = 1;
-					Toggle["2d"]["AnchorPoint"] = Vector2.new(1, 0);
-					Toggle["2d"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Toggle["2d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2d"]["Text"] = option.text;
-					Toggle["2d"]["Name"] = [[ToggleText]];
-					Toggle["2d"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.ToggleText.UIPadding
-					Toggle["2e"] = Instance.new("UIPadding", Toggle["2d"]);
-					Toggle["2e"]["PaddingRight"] = UDim.new(0, 1);
-					Toggle["2e"]["PaddingLeft"] = UDim.new(0, 18);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.AdditionHolder
-					Toggle["2f"] = Instance.new("Frame", Toggle["27"]);
-					Toggle["2f"]["BorderSizePixel"] = 0;
-					Toggle["2f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Toggle["2f"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Toggle["2f"]["Size"] = UDim2.new(0, 50, 1, 0);
-					Toggle["2f"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-					Toggle["2f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Toggle["2f"]["Name"] = [[AdditionHolder]];
-					Toggle["2f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ToggleHolder.AdditionHolder.UIListLayout
-					Toggle["30"] = Instance.new("UIListLayout", Toggle["2f"]);
-					Toggle["30"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Right;
-					Toggle["30"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-					Toggle["30"]["FillDirection"] = Enum.FillDirection.Horizontal;
-				end
-
-				do -- logic
-					local btnToggle = Toggle["2c"]
-					local basiccolor = Color3.fromRGB(31,31,31)
-					local accentcolor = Color3.fromRGB(255,255,255)
-					local hovercolor = Color3.fromRGB(40,40,40)
-
-					btnToggle.MouseButton1Click:Connect(function()
-						if option.state == false then
-							Toggle["2a"]["BackgroundColor3"] = accentcolor
-						elseif option.state == true then
-							Toggle["2a"]["BackgroundColor3"] = basiccolor
-						end
-
-						option.state = not option.state
-						Library.Flags[option.flag] = option.state
-						option.callback(option.state)
-					end)
-
-
-					btnToggle.MouseEnter:Connect(function()
-						Toggle["2d"]["TextColor3"] = Color3.fromRGB(112, 112, 112);
-					end)
-
-					btnToggle.MouseLeave:Connect(function()
-						Toggle["2d"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					end)
-
-					if option.enabled == true then
-						option.callback(true)
-						option.state = true
-						Toggle["2a"]["BackgroundColor3"] = accentcolor
-					end
-
-					function option:SetValue(boolean)
-						boolean = typeof(boolean) == "boolean" and boolean 
-						option.state = boolean
-						option.callback(option.state)
-						Library.Flags[option.flag] = option.state
-						if option.state == true then
-							Toggle["2a"]["BackgroundColor3"] = accentcolor
-						elseif option.state == false then
-							Toggle["2a"]["BackgroundColor3"] = basiccolor
-						end
-					end
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.state
-						Library.Items[option.flag] = option
-					end
-				end
-
-				local hopster = option
-
-				function Toggle:AddKeybind(option)
-					option = typeof(option) == "table" and option or {}
-					option.text = option.text
-					option.key = option.key or Enum.KeyCode.World95
-					option.state = option.state or false
-					option.sync = option.sync or false
-					option.flag = option.flag or option.text
-					option.callback = option.callback or function() end
-					option.utilitytype = "keybind"
-
-					local Keybind = {}
-
-					do -- keybind
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder
-						Keybind["87"] = Instance.new("Frame", Toggle["2f"]);
-						Keybind["87"]["BorderSizePixel"] = 0;
-						Keybind["87"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["87"]["Size"] = UDim2.new(1, 0, 0, 15);
-						Keybind["87"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["87"]["Name"] = [[KeybindHolder]];
-						Keybind["87"]["BackgroundTransparency"] = 1;
-						Keybind["87"]["ZIndex"] = 10
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline
-						Keybind["88"] = Instance.new("Frame", Keybind["87"]);
-						Keybind["88"]["BorderSizePixel"] = 0;
-						Keybind["88"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						Keybind["88"]["AnchorPoint"] = Vector2.new(1, 0.5);
-						Keybind["88"]["Size"] = UDim2.new(0, 25, 1, 0);
-						Keybind["88"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-						Keybind["88"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["88"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline
-						Keybind["89"] = Instance.new("Frame", Keybind["88"]);
-						Keybind["89"]["BorderSizePixel"] = 0;
-						Keybind["89"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["89"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["89"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["89"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["89"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["89"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main
-						Keybind["8a"] = Instance.new("Frame", Keybind["89"]);
-						Keybind["8a"]["BorderSizePixel"] = 0;
-						Keybind["8a"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["8a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8a"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["8a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["8a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8a"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.UIGradient
-						Keybind["8b"] = Instance.new("UIGradient", Keybind["8a"]);
-						Keybind["8b"]["Rotation"] = 90;
-						Keybind["8b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Keybind
-						Keybind["8c"] = Instance.new("TextLabel", Keybind["8a"]);
-						Keybind["8c"]["TextStrokeTransparency"] = 0;
-						Keybind["8c"]["ZIndex"] = 1;
-						Keybind["8c"]["BorderSizePixel"] = 0;
-						Keybind["8c"]["TextSize"] = 12;
-						Keybind["8c"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["8c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["8c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["8c"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["8c"]["BackgroundTransparency"] = 1;
-						Keybind["8c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8c"]["Size"] = UDim2.new(1, 0, 1, 0);
-						Keybind["8c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8c"]["Text"] = [[...]];
-						Keybind["8c"]["Name"] = [[Keybind]];
-						Keybind["8c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings
-						Keybind["8d"] = Instance.new("Frame", Keybind["8a"]);
-						Keybind["8d"]["Visible"] = false;
-						Keybind["8d"]["BorderSizePixel"] = 0;
-						Keybind["8d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						Keybind["8d"]["AnchorPoint"] = Vector2.new(0.5, 0);
-						Keybind["8d"]["Size"] = UDim2.new(0, 50, 0, 50);
-						Keybind["8d"]["Position"] = UDim2.new(0.5, 0, 1, 1);
-						Keybind["8d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8d"]["Name"] = [[Settings]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline
-						Keybind["8e"] = Instance.new("Frame", Keybind["8d"]);
-						Keybind["8e"]["BorderSizePixel"] = 0;
-						Keybind["8e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["8e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8e"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["8e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["8e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8e"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main
-						Keybind["8f"] = Instance.new("Frame", Keybind["8e"]);
-						Keybind["8f"]["BorderSizePixel"] = 0;
-						Keybind["8f"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						Keybind["8f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["8f"]["Size"] = UDim2.new(1, -2, 1, -2);
-						Keybind["8f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						Keybind["8f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["8f"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIGradient
-						Keybind["90"] = Instance.new("UIGradient", Keybind["8f"]);
-						Keybind["90"]["Rotation"] = 90;
-						Keybind["90"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIListLayout
-						Keybind["91"] = Instance.new("UIListLayout", Keybind["8f"]);
-						Keybind["91"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-						Keybind["91"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-						Keybind["91"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-						Keybind["91"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Always
-						Keybind["92"] = Instance.new("TextButton", Keybind["8f"]);
-						Keybind["92"]["TextStrokeTransparency"] = 0;
-						Keybind["92"]["BorderSizePixel"] = 0;
-						Keybind["92"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["92"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["92"]["TextSize"] = 12;
-						Keybind["92"]["BackgroundColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["92"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["92"]["Size"] = UDim2.new(0, 200, 0, 50);
-						Keybind["92"]["BackgroundTransparency"] = 1;
-						Keybind["92"]["Name"] = [[Always]];
-						Keybind["92"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["92"]["Text"] = [[always]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Toggle
-						Keybind["93"] = Instance.new("TextButton", Keybind["8f"]);
-						Keybind["93"]["TextStrokeTransparency"] = 0;
-						Keybind["93"]["BorderSizePixel"] = 0;
-						Keybind["93"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["93"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["93"]["TextSize"] = 12;
-						Keybind["93"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["93"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["93"]["Size"] = UDim2.new(0, 200, 0, 50);
-						Keybind["93"]["BackgroundTransparency"] = 1;
-						Keybind["93"]["Name"] = [[Toggle]];
-						Keybind["93"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["93"]["Text"] = [[toggle]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.OnHold
-						Keybind["94"] = Instance.new("TextButton", Keybind["8f"]);
-						Keybind["94"]["TextStrokeTransparency"] = 0;
-						Keybind["94"]["BorderSizePixel"] = 0;
-						Keybind["94"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-						Keybind["94"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						Keybind["94"]["TextSize"] = 12;
-						Keybind["94"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["94"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["94"]["Size"] = UDim2.new(0, 200, 0, 50);
-						Keybind["94"]["BackgroundTransparency"] = 1;
-						Keybind["94"]["Name"] = [[OnHold]];
-						Keybind["94"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["94"]["Text"] = [[on hold]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.SetKeybindButton
-						Keybind["95"] = Instance.new("TextButton", Keybind["88"]);
-						Keybind["95"]["BorderSizePixel"] = 0;
-						Keybind["95"]["ZIndex"] = 5
-						Keybind["95"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["95"]["TextTransparency"] = 1;
-						Keybind["95"]["TextSize"] = 14;
-						Keybind["95"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						Keybind["95"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						Keybind["95"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						Keybind["95"]["Size"] = UDim2.new(1, 0, 1, 0);
-						Keybind["95"]["BackgroundTransparency"] = 1;
-						Keybind["95"]["Name"] = [[SetKeybindButton]];
-						Keybind["95"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						Keybind["95"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					end
-
-					do -- logic				
-
-						local hold = false
-						local onhold = false
-						local opened = false
-						local activecolor = Color3.fromRGB(255, 255, 255)
-						local notactivecolor = Color3.fromRGB(92, 92, 92)
-						local activebutton = "button92"
-
-						local shorts = {
-							RightAlt = "RA",
-							LeftAlt = "LA",
-							RightControl = "RC",
-							LeftControl = "LC",
-							LeftShift = "LS",
-							RightShift = "RS",
-							MouseButton1 = "M1",
-							MouseButton2 = "M2",
-							Return = "ENT",
-							Backspace = "BP",
-							Tab = "TAB",
-							CapsLock = "CL",
-							Escape = "ESC",
-							Insert = "INS",
-							PageUp = "UP",
-							PageDown = "DOWN",
-							KeypadMultiply = "*",
-							KeypadDivide = "/",
-							End = "END",
-							Unknown = "?",
-							World95 = "?"
-						}
-
-						local ignored = {
-							W = true,
-							A = true,
-							S = true,
-							D = true,
-							Space = true,
-							F = true,
-							R = true
-						}
-
-						Keybind["8c"].Text = tostring(shorts[option.key.Name]) or tostring(option.key.Name)
-						if Keybind["8c"].Text:match("nil") then
-							Keybind["8c"].Text = tostring(option.key.Name)
-						end
-
-						local newBindButtonSize =
-							game:GetService("TextService"):GetTextSize(
-								Keybind["8c"].Text,
-								Keybind["8c"].TextSize,
-								Keybind["8c"].Font,
-								Vector2.new(math.huge, math.huge)
-							)
-						Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-
-						Keybind["95"].MouseButton2Click:Connect(function()
-							if opened == true then
-								Keybind["8d"].Visible = false
-								opened = false
-							elseif opened == false then
-								Keybind["8d"].Visible = true
-								opened = true
-							end
-						end)
-
-						Keybind["92"].MouseButton1Click:Connect(function()
-							if activebutton ~= "button92" then
-								if activebutton == "button93" then
-									Keybind["93"].TextColor3 = notactivecolor
-								elseif activebutton == "button94" then
-									Keybind["94"].TextColor3 = notactivecolor
-								end	
-							end
-
-							Keybind["92"].TextColor3 = activecolor
-							activebutton = "button92"
-						end)
-
-						Keybind["93"].MouseButton1Click:Connect(function()
-							if activebutton ~= "button93" then
-								if activebutton == "button92" then
-									Keybind["92"].TextColor3 = notactivecolor
-								elseif activebutton == "button94" then
-									Keybind["94"].TextColor3 = notactivecolor
-								end						
-							end
-
-							Keybind["93"].TextColor3 = activecolor
-							activebutton = "button93"
-						end)
-
-
-
-						Keybind["94"].MouseButton1Click:Connect(function()
-							if activebutton ~= "button94" then
-								if activebutton == "button92" then
-									Keybind["92"].TextColor3 = notactivecolor
-								elseif activebutton == "button93" then
-									Keybind["93"].TextColor3 = notactivecolor
-								end	
-							end
-
-							Keybind["94"].TextColor3 = activecolor
-							activebutton = "button94"
-						end)
-
-						Keybind["95"].MouseButton1Click:Connect(function()
-							hold = true
-							if hold == true then
-								Keybind["8c"].Text = " ... "
-								local newBindButtonSize =
-									game:GetService("TextService"):GetTextSize(
-										Keybind["8c"].Text,
-										Keybind["8c"].TextSize,
-										Keybind["8c"].Font,
-										Vector2.new(math.huge, math.huge)
-									)
-								Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-								local Input
-								repeat Input = game:GetService("UserInputService").InputBegan:Wait() until not ignored[Input.KeyCode.Name] do end
-								if Input.KeyCode.Name ~= "Unknown" and not ignored[Input.KeyCode.Name] then
-									local K = shorts[Input.KeyCode.Name] or Input.KeyCode.Name
-									Keybind["8c"].Text = K
-									option.key = Input.KeyCode
-									local newBindButtonSize =
-										game:GetService("TextService"):GetTextSize(
-											Keybind["8c"].Text,
-											Keybind["8c"].TextSize,
-											Keybind["8c"].Font,
-											Vector2.new(math.huge, math.huge)
-										)
-									Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-									Library.Flags[option.flag] = option.key.Name									
-								end
-							end
-							wait()
-							hold = false
-						end)
-
-						local basiccolor = Color3.fromRGB(31,31,31)
-						local accentcolor = Color3.fromRGB(255,255,255)
-
-						if activebutton == "button92" then
-						end
-
-						local state = hopster.state
-
-						UserInputService.InputBegan:Connect(function(k, t)
-							if activebutton == "button93" then
-								if t then return end
-								if k.KeyCode == option.key then
-									if option.sync then
-										if not option.hold then
-											hopster:SetValue(not hopster.state)
-										end
-									end
-								end
-							elseif activebutton == "button94" then
-								if t then return end
-								if k.KeyCode == option.key then
-									if option.sync then
-										if not option.hold then
-											if not onhold then
-												onhold = true
-												hopster:SetValue(not hopster.state)
-											end
-										end
-									end
-								end
-							end
-						end)
-
-						UserInputService.InputEnded:Connect(function(k, t)
-							if activebutton == "button94" then
-								if t then return end
-								if k.KeyCode == option.key then
-									if option.sync then
-										if not option.hold then
-											if onhold then
-												onhold = false
-												hopster:SetValue(not hopster.state)
-											end
-										end
-									end
-								end
-							end
-						end)
-
-
-						if option.flag and option.flag ~= "" then
-							Library.Flags[option.flag] = option.key.Name
-							Library.Items[option.flag] = option
-						end
-
-						function option:SetValue(key)
-							option.key = key
-							local text = shorts[option.key.Name] or option.key.Name
-							Keybind["8c"].Text = text
-							local newBindButtonSize =
-								game:GetService("TextService"):GetTextSize(
-									Keybind["8c"].Text,
-									Keybind["8c"].TextSize,
-									Keybind["8c"].Font,
-									Vector2.new(math.huge, math.huge)
-								)
-							Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-							Library.Flags[option.flag] = option.key.Name
-						end
-					end
-
-					return Keybind
-				end
-
-				function Toggle:AddColorpicker(option)
-					option = typeof(option) == "table" and option or {}
-					option.text = option.text or "New Color" or "nil"
-					option.color = option.color or Color3.fromRGB(255, 255, 255)
-					option.transparency = typeof(option.transparency) == "number" and option.transparency or typeof(option.transparency) == "boolean" and option.transparency or false
-					option.flag = option.flag or option.text
-					option.callback = option.callback or function() end
-					option.transparencyCallback = option.transparencyCallback or function() end
-					option.utilitytype = "color"
-
-					local ColorPicker = {}
-
-					do -- colorpicker
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder
-						ColorPicker["5b"] = Instance.new("Frame", Toggle["2f"]);
-						ColorPicker["5b"]["ZIndex"] = 999;
-						ColorPicker["5b"]["BorderSizePixel"] = 0;
-						ColorPicker["5b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5b"]["Size"] = UDim2.new(0, 25, 0, 15);
-						ColorPicker["5b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5b"]["Name"] = [[ColorpickerHolder]];
-						ColorPicker["5b"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline
-						ColorPicker["5d"] = Instance.new("Frame", ColorPicker["5b"]);
-						ColorPicker["5d"]["BorderSizePixel"] = 0;
-						ColorPicker["5d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["5d"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["5d"]["Size"] = UDim2.new(0, 25, 1, 0);
-						ColorPicker["5d"]["Position"] = UDim2.new(1, 0, 0, 0);
-						ColorPicker["5d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5d"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine
-						ColorPicker["5e"] = Instance.new("Frame", ColorPicker["5d"]);
-						ColorPicker["5e"]["BorderSizePixel"] = 0;
-						ColorPicker["5e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["5e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5e"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5e"]["Name"] = [[InnerLine]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display
-						ColorPicker["5f"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["5f"]["ZIndex"] = 2;
-						ColorPicker["5f"]["BorderSizePixel"] = 0;
-						ColorPicker["5f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5f"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5f"]["Name"] = [[Display]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display.UIGradient
-						ColorPicker["60"] = Instance.new("UIGradient", ColorPicker["5f"]);
-						ColorPicker["60"]["Rotation"] = 90;
-						ColorPicker["60"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerButton
-						ColorPicker["61"] = Instance.new("TextButton", ColorPicker["5e"]);
-						ColorPicker["61"]["BorderSizePixel"] = 0;
-						ColorPicker["61"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["TextTransparency"] = 1;
-						ColorPicker["61"]["AutoButtonColor"] = false;
-						ColorPicker["61"]["TextSize"] = 14;
-						ColorPicker["61"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["61"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["61"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["61"]["Size"] = UDim2.new(1, 0, 1, 0);
-						ColorPicker["61"]["BackgroundTransparency"] = 1;
-						ColorPicker["61"]["Name"] = [[ColorPickerButton]];
-						ColorPicker["61"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain
-						ColorPicker["62"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["62"]["Visible"] = false;
-						ColorPicker["62"]["ZIndex"] = 10000;
-						ColorPicker["62"]["BorderSizePixel"] = 0;
-						ColorPicker["62"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["62"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["62"]["Size"] = UDim2.new(0, 125, 0, 150);
-						ColorPicker["62"]["Position"] = UDim2.new(0, -1, 0, -1);
-						ColorPicker["62"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["62"]["Name"] = [[ColorPickerMain]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline
-						ColorPicker["63"] = Instance.new("Frame", ColorPicker["62"]);
-						ColorPicker["63"]["BorderSizePixel"] = 0;
-						ColorPicker["63"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["63"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["63"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["63"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["63"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["63"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main
-						ColorPicker["64"] = Instance.new("Frame", ColorPicker["63"]);
-						ColorPicker["64"]["BorderSizePixel"] = 0;
-						ColorPicker["64"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["64"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["64"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["64"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["64"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["64"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIGradient
-						ColorPicker["65"] = Instance.new("UIGradient", ColorPicker["64"]);
-						ColorPicker["65"]["Rotation"] = 90;
-						ColorPicker["65"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIPadding
-						ColorPicker["66"] = Instance.new("UIPadding", ColorPicker["64"]);
-						ColorPicker["66"]["PaddingTop"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingRight"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingLeft"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingBottom"] = UDim.new(0, 3);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder
-						ColorPicker["67"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["67"]["BorderSizePixel"] = 0;
-						ColorPicker["67"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["67"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["67"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["67"]["Position"] = UDim2.new(0, 0, 1, 0);
-						ColorPicker["67"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["67"]["Name"] = [[RGBtextHolder]];
-						ColorPicker["67"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.UIListLayout
-						ColorPicker["68"] = Instance.new("UIListLayout", ColorPicker["67"]);
-						ColorPicker["68"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-						ColorPicker["68"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["Padding"] = UDim.new(0, 1);
-						ColorPicker["68"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-						ColorPicker["68"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R
-						ColorPicker["69"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["69"]["BorderSizePixel"] = 0;
-						ColorPicker["69"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["69"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["69"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["69"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["69"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["69"]["Name"] = [[R]];
-						ColorPicker["69"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline
-						ColorPicker["6a"] = Instance.new("Frame", ColorPicker["69"]);
-						ColorPicker["6a"]["BorderSizePixel"] = 0;
-						ColorPicker["6a"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["6a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6a"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6a"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline
-						ColorPicker["6b"] = Instance.new("Frame", ColorPicker["6a"]);
-						ColorPicker["6b"]["BorderSizePixel"] = 0;
-						ColorPicker["6b"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6b"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6b"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main
-						ColorPicker["6c"] = Instance.new("Frame", ColorPicker["6b"]);
-						ColorPicker["6c"]["BorderSizePixel"] = 0;
-						ColorPicker["6c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6c"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6c"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.R
-						ColorPicker["6d"] = Instance.new("TextBox", ColorPicker["6c"]);
-						ColorPicker["6d"]["TextStrokeTransparency"] = 0;
-						ColorPicker["6d"]["Name"] = [[R]];
-						ColorPicker["6d"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["6d"]["BorderSizePixel"] = 0;
-						ColorPicker["6d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["6d"]["TextSize"] = 13;
-						ColorPicker["6d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["6d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6d"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6d"]["Text"] = [[255]];
-						ColorPicker["6d"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.UIGradient
-						ColorPicker["6e"] = Instance.new("UIGradient", ColorPicker["6c"]);
-						ColorPicker["6e"]["Rotation"] = 90;
-						ColorPicker["6e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G
-						ColorPicker["6f"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["6f"]["BorderSizePixel"] = 0;
-						ColorPicker["6f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6f"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["6f"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["6f"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["6f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6f"]["Name"] = [[G]];
-						ColorPicker["6f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline
-						ColorPicker["70"] = Instance.new("Frame", ColorPicker["6f"]);
-						ColorPicker["70"]["BorderSizePixel"] = 0;
-						ColorPicker["70"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["70"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["70"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["70"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["70"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["70"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline
-						ColorPicker["71"] = Instance.new("Frame", ColorPicker["70"]);
-						ColorPicker["71"]["BorderSizePixel"] = 0;
-						ColorPicker["71"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["71"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["71"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["71"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["71"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["71"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main
-						ColorPicker["72"] = Instance.new("Frame", ColorPicker["71"]);
-						ColorPicker["72"]["BorderSizePixel"] = 0;
-						ColorPicker["72"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["72"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["72"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["72"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["72"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["72"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.G
-						ColorPicker["73"] = Instance.new("TextBox", ColorPicker["72"]);
-						ColorPicker["73"]["TextStrokeTransparency"] = 0;
-						ColorPicker["73"]["Name"] = [[G]];
-						ColorPicker["73"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["73"]["BorderSizePixel"] = 0;
-						ColorPicker["73"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["73"]["TextSize"] = 13;
-						ColorPicker["73"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["73"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["73"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["73"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["73"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["73"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["73"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["73"]["Text"] = [[255]];
-						ColorPicker["73"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.UIGradient
-						ColorPicker["74"] = Instance.new("UIGradient", ColorPicker["72"]);
-						ColorPicker["74"]["Rotation"] = 90;
-						ColorPicker["74"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B
-						ColorPicker["75"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["75"]["BorderSizePixel"] = 0;
-						ColorPicker["75"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["75"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["75"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["75"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["75"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["75"]["Name"] = [[B]];
-						ColorPicker["75"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline
-						ColorPicker["76"] = Instance.new("Frame", ColorPicker["75"]);
-						ColorPicker["76"]["BorderSizePixel"] = 0;
-						ColorPicker["76"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["76"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["76"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["76"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["76"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["76"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline
-						ColorPicker["77"] = Instance.new("Frame", ColorPicker["76"]);
-						ColorPicker["77"]["BorderSizePixel"] = 0;
-						ColorPicker["77"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["77"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["77"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["77"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["77"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["77"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main
-						ColorPicker["78"] = Instance.new("Frame", ColorPicker["77"]);
-						ColorPicker["78"]["BorderSizePixel"] = 0;
-						ColorPicker["78"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["78"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["78"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["78"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["78"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["78"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.B
-						ColorPicker["79"] = Instance.new("TextBox", ColorPicker["78"]);
-						ColorPicker["79"]["TextStrokeTransparency"] = 0;
-						ColorPicker["79"]["Name"] = [[B]];
-						ColorPicker["79"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["79"]["BorderSizePixel"] = 0;
-						ColorPicker["79"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["79"]["TextSize"] = 13;
-						ColorPicker["79"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["79"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["79"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["79"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["79"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["79"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["79"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["79"]["Text"] = [[255]];
-						ColorPicker["79"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.UIGradient
-						ColorPicker["7a"] = Instance.new("UIGradient", ColorPicker["78"]);
-						ColorPicker["7a"]["Rotation"] = 90;
-						ColorPicker["7a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue
-						ColorPicker["7b"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7b"]["BorderSizePixel"] = 0;
-						ColorPicker["7b"]["AutoButtonColor"] = false;
-						ColorPicker["7b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7b"]["Selectable"] = false;
-						ColorPicker["7b"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["7b"]["Image"] = [[rbxassetid://2615692420]];
-						ColorPicker["7b"]["Size"] = UDim2.new(0, 15, 0, 95);
-						ColorPicker["7b"]["Name"] = [[Hue]];
-						ColorPicker["7b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7b"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue.huecursor
-						ColorPicker["7c"] = Instance.new("Frame", ColorPicker["7b"]);
-						ColorPicker["7c"]["BorderSizePixel"] = 0;
-						ColorPicker["7c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["7c"]["AnchorPoint"] = Vector2.new(0.5, 0);
-						ColorPicker["7c"]["Size"] = UDim2.new(1, 6, 0, 3);
-						ColorPicker["7c"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-						ColorPicker["7c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7c"]["Name"] = [[huecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme
-						ColorPicker["7d"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7d"]["BorderSizePixel"] = 0;
-						ColorPicker["7d"]["AutoButtonColor"] = false;
-						ColorPicker["7d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7d"]["Selectable"] = false;
-						ColorPicker["7d"]["Image"] = [[rbxassetid://2615689005]];
-						ColorPicker["7d"]["Size"] = UDim2.new(0, 95, 0, 95);
-						ColorPicker["7d"]["Name"] = [[Scheme]];
-						ColorPicker["7d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme.schemecursor
-						ColorPicker["7e"] = Instance.new("ImageLabel", ColorPicker["7d"]);
-						ColorPicker["7e"]["ZIndex"] = 5;
-						ColorPicker["7e"]["BorderSizePixel"] = 0;
-						ColorPicker["7e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["ImageColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["Image"] = [[http://www.roblox.com/asset/?id=16006380635]];
-						ColorPicker["7e"]["ImageRectSize"] = Vector2.new(1000, 1000);
-						ColorPicker["7e"]["Size"] = UDim2.new(0, 5, 0, 5);
-						ColorPicker["7e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["BackgroundTransparency"] = 1;
-						ColorPicker["7e"]["Name"] = [[schemecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency
-						ColorPicker["7f"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["7f"]["BorderSizePixel"] = 0;
-						ColorPicker["7f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7f"]["AnchorPoint"] = Vector2.new(0.5, 1);
-						ColorPicker["7f"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["7f"]["Position"] = UDim2.new(0.5, 0, 1, -20);
-						ColorPicker["7f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7f"]["Name"] = [[Transparency]];
-						ColorPicker["7f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline
-						ColorPicker["80"] = Instance.new("Frame", ColorPicker["7f"]);
-						ColorPicker["80"]["BorderSizePixel"] = 0;
-						ColorPicker["80"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["80"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["80"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["80"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["80"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["80"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline
-						ColorPicker["81"] = Instance.new("Frame", ColorPicker["80"]);
-						ColorPicker["81"]["BorderSizePixel"] = 0;
-						ColorPicker["81"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["81"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["81"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["81"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["81"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["81"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main
-						ColorPicker["82"] = Instance.new("Frame", ColorPicker["81"]);
-						ColorPicker["82"]["BorderSizePixel"] = 0;
-						ColorPicker["82"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["82"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["82"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["82"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["82"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["82"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.Transparency
-						ColorPicker["83"] = Instance.new("TextBox", ColorPicker["82"]);
-						ColorPicker["83"]["TextStrokeTransparency"] = 0;
-						ColorPicker["83"]["Name"] = [[Transparency]];
-						ColorPicker["83"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["83"]["BorderSizePixel"] = 0;
-						ColorPicker["83"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["83"]["TextSize"] = 13;
-						ColorPicker["83"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["83"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["83"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["83"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["83"]["PlaceholderText"] = [[Transparency:]];
-						ColorPicker["83"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["83"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["83"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["83"]["Text"] = [[100]];
-						ColorPicker["83"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.UIGradient
-						ColorPicker["84"] = Instance.new("UIGradient", ColorPicker["82"]);
-						ColorPicker["84"]["Rotation"] = 90;
-						ColorPicker["84"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Frame
-						ColorPicker["86"] = Instance.new("ImageLabel", ColorPicker["5e"]);
-						ColorPicker["86"]["BorderSizePixel"] = 0;
-						ColorPicker["86"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["86"]["ScaleType"] = Enum.ScaleType.Crop;
-						ColorPicker["86"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["86"]["Image"] = [[rbxassetid://98372645101260]];
-						ColorPicker["86"]["ImageRectSize"] = Vector2.new(100, 100);
-						ColorPicker["86"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["86"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["86"]["Name"] = [[Frame]];
-						ColorPicker["86"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					end
-
-					do -- logic
-						local opened = false
-
-						ColorPicker["61"].MouseButton1Click:Connect(function()
-							ColorPicker["62"].Visible = not opened
-							opened = not opened
-						end)
-
-						local colorPickerMain = ColorPicker["62"]
-						local scrollFrame = Tab["1e"]
-
-						-- Function to update position and anchor point
-						local function updatePosition()
-							local pickerAbsPos = colorPickerMain.AbsolutePosition
-							local scrollFrameAbsPos = scrollFrame.AbsolutePosition
-							local scrollFrameSize = scrollFrame.AbsoluteSize
-
-							-- Check if touching the top
-							if pickerAbsPos.Y < scrollFrameAbsPos.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 1, 1) -- Position at the top
-								colorPickerMain.AnchorPoint = Vector2.new(0, 0) -- Anchor point at the top
-								print("Moved to top with AnchorPoint 0,0 and Position {0, -1}, {1, 1}")
-							end
-
-							-- Check if touching the bottom
-							if pickerAbsPos.Y + colorPickerMain.AbsoluteSize.Y > scrollFrameAbsPos.Y + scrollFrameSize.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 0, -1) -- Position at the bottom
-								colorPickerMain.AnchorPoint = Vector2.new(0, 1) -- Anchor point at the bottom
-								print("Moved to bottom with AnchorPoint 0,1 and Position {0, -1}, {0, -1}")
-							end
-						end
-
-						-- Connect to the RenderStepped event for constant checking
-						game:GetService("RunService").RenderStepped:Connect(updatePosition)
-
-						local white, black = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
-						local colors = {
-							Color3.new(1, 0, 0), Color3.new(1, 1, 0), Color3.new(0, 1, 0),
-							Color3.new(0, 1, 1), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 0, 0)
-						}
-
-						local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-						local UserInputService = game:GetService("UserInputService")
-
-						-- UI elements
-						local Schema = ColorPicker["7d"] -- Gradient area
-						local SchemaCursor = ColorPicker["7e"] -- Cursor for the scheme
-						local HUE = ColorPicker["7b"] -- Hue bar
-						local HueCursor = ColorPicker["7c"] -- Cursor for the hue bar
-						local Display = ColorPicker["5f"] -- Color display
-						local TransparencyTextBox = ColorPicker["83"] -- Transparency input box
-						local TextBoxR = ColorPicker["6d"] -- Red input box
-						local TextBoxG = ColorPicker["73"] -- Green input box
-						local TextBoxB = ColorPicker["79"] -- Blue input box
-
-						-- Function: Convert RGB to HSV
-						local function rgbToHSV(color)
-							local r, g, b = color.R, color.G, color.B
-							local max, min = math.max(r, g, b), math.min(r, g, b)
-							local delta = max - min
-
-							local h = 0
-							if delta > 0 then
-								if max == r then
-									h = (g - b) / delta % 6
-								elseif max == g then
-									h = (b - r) / delta + 2
-								elseif max == b then
-									h = (r - g) / delta + 4
-								end
-								h = h / 6
-							end
-
-							local s = (max == 0) and 0 or delta / max
-							local v = max
-							return h, s, v
-						end
-
-						-- Function: Clamp a value between min and max
-						local function clamp(value, min, max)
-							return math.max(min, math.min(max, value))
-						end
-
-						-- Function: Update the color display
-						local function updateColor(outputColor)
-							if typeof(outputColor) ~= "Color3" then
-								error("Invalid color value: Expected Color3, got " .. typeof(outputColor))
-							end
-
-							Display.BackgroundColor3 = outputColor
-							option.color = outputColor
-
-							local r = math.floor(outputColor.R * 255 + 0.5)
-							local g = math.floor(outputColor.G * 255 + 0.5)
-							local b = math.floor(outputColor.B * 255 + 0.5)
-
-							TextBoxR.Text = tostring(r)
-							TextBoxG.Text = tostring(g)
-							TextBoxB.Text = tostring(b)
-
-							if option.callback then
-								option.callback(outputColor)
-							end
-						end
-
-						-- Function to update the hue-based color dynamically
-						local function updateHueColor(huePercent)
-							-- Calculate the color from the hue percentage
-							local hueColor = Color3.fromHSV(huePercent, 1, 1)
-
-							-- Update the scheme's background color to reflect the hue
-							Schema.BackgroundColor3 = hueColor
-
-							-- Calculate the scheme cursor's position and update the final color
-							local xP = math.clamp((SchemaCursor.AbsolutePosition.X - Schema.AbsolutePosition.X) / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp((SchemaCursor.AbsolutePosition.Y - Schema.AbsolutePosition.Y) / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(hueColor, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function to update the scheme-based color dynamically
-						local function updateSchemeColor(relativeX, relativeY)
-							-- Calculate the interpolated color based on cursor position
-							local xP = math.clamp(relativeX / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp(relativeY / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(Schema.BackgroundColor3, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function: Sync color picker cursors and display based on a Color3 value
-						local function syncColor()
-							local h, s, v = rgbToHSV(option.color)
-
-							local huePosition = h * HUE.AbsoluteSize.Y
-							HueCursor.Position = UDim2.new(0.5, 0, 0, huePosition - (HueCursor.AbsoluteSize.Y / 2))
-
-							local hueColor = Color3.fromHSV(h, 1, 1)
-							Schema.BackgroundColor3 = hueColor
-
-							local schemeX = s * Schema.AbsoluteSize.X
-							local schemeY = (1 - v) * Schema.AbsoluteSize.Y
-							SchemaCursor.Position = UDim2.new(0, schemeX - (SchemaCursor.AbsoluteSize.X / 2), 0, schemeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-							updateColor(option.color)
-						end
-
-						-- Function: Update transparency
-						local function updateTransparency(transparencyValue)
-							local clampedValue = clamp(transparencyValue, 0, 100)
-							local callbackValue = 1 - (clampedValue / 100)
-
-							Display.BackgroundTransparency = callbackValue
-							option.transparency = clampedValue
-
-							if option.transparencyCallback then
-								option.transparencyCallback(callbackValue)
-							end
-
-							TransparencyTextBox.Text = tostring(clampedValue)
-						end
-
-						-- Connect transparency TextBox changes
-						TransparencyTextBox.FocusLost:Connect(function()
-							local transparencyValue = tonumber(TransparencyTextBox.Text)
-							if transparencyValue then
-								updateTransparency(transparencyValue)
-							else
-								TransparencyTextBox.Text = tostring(option.transparency)
-							end
-						end)
-
-						TransparencyTextBox:GetPropertyChangedSignal("Text"):Connect(function()
-							local inputText = TransparencyTextBox.Text
-							if not tonumber(inputText) and inputText ~= "" then
-								TransparencyTextBox.Text = inputText:gsub("%D", "")
-							end
-						end)
-
-						-- Function: Handle RGB input changes
-						local function handleRGBInputChange(textBox, component)
-							textBox.FocusLost:Connect(function()
-								local inputValue = tonumber(textBox.Text)
-								if inputValue then
-									local r = component == "R" and inputValue or math.floor(option.color.R * 255 + 0.5)
-									local g = component == "G" and inputValue or math.floor(option.color.G * 255 + 0.5)
-									local b = component == "B" and inputValue or math.floor(option.color.B * 255 + 0.5)
-
-									option.color = Color3.fromRGB(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255))
-									syncColor()
-								else
-									textBox.Text = tostring(math.floor(option.color[component] * 255 + 0.5))
-								end
-							end)
-
-							textBox:GetPropertyChangedSignal("Text"):Connect(function()
-								local inputText = textBox.Text
-								if not tonumber(inputText) and inputText ~= "" then
-									textBox.Text = inputText:gsub("%D", "")
-								end
-							end)
-						end
-
-						-- Logic for interacting with the hue bar
-						HUE.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the hue cursor and color
-							local function updateHueCursor()
-								local relativeY = math.clamp(Mouse.Y - HUE.AbsolutePosition.Y, 0, HUE.AbsoluteSize.Y)
-
-								-- Correct the X offset: center the cursor horizontally within the hue bar
-								HueCursor.Position = UDim2.new(0.5, 0, 0, relativeY - (HueCursor.AbsoluteSize.Y / 2))
-
-								-- Calculate hue as a percentage (0 to 1) and update the color
-								local huePercent = math.clamp(relativeY / HUE.AbsoluteSize.Y, 0, 1)
-								updateHueColor(huePercent)
-							end
-
-							-- Initial update
-							updateHueCursor()
-
-							-- Connect mouse movement for dragging
-							local hueConnection
-							hueConnection = Mouse.Move:Connect(updateHueCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if hueConnection then
-										hueConnection:Disconnect()
-										hueConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						-- Logic for interacting with the scheme area
-						Schema.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the scheme cursor and color
-							local function updateSchemeCursor()
-								local relativeX = math.clamp(Mouse.X - Schema.AbsolutePosition.X, 0, Schema.AbsoluteSize.X)
-								local relativeY = math.clamp(Mouse.Y - Schema.AbsolutePosition.Y, 0, Schema.AbsoluteSize.Y)
-
-								-- Update the cursor position
-								SchemaCursor.Position = UDim2.new(0, relativeX - (SchemaCursor.AbsoluteSize.X / 2), 0, relativeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-								-- Update the scheme-based color
-								updateSchemeColor(relativeX, relativeY)
-							end
-
-							-- Initial update
-							updateSchemeCursor()
-
-							-- Connect mouse movement for dragging
-							local schemeConnection
-							schemeConnection = Mouse.Move:Connect(updateSchemeCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if schemeConnection then
-										schemeConnection:Disconnect()
-										schemeConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						handleRGBInputChange(TextBoxR, "R")
-						handleRGBInputChange(TextBoxG, "G")
-						handleRGBInputChange(TextBoxB, "B")
-
-						-- Initialize color picker
-						syncColor()
-						updateTransparency(option.transparency)
-					end
-
-					return ColorPicker
-				end
-
-				function Toggle:AddColorpicker2(option)
-					option = typeof(option) == "table" and option or {}
-					option.text = option.text or "New Color" or "nil"
-					option.color = option.color or Color3.fromRGB(255, 255, 255)
-					option.transparency = typeof(option.transparency) == "number" and option.transparency or typeof(option.transparency) == "boolean" and option.transparency or false
-					option.flag = option.flag or option.text
-					option.callback = option.callback or function() end
-					option.transparencyCallback = option.transparencyCallback or function() end
-					option.utilitytype = "color"
-
-					local ColorPicker = {}
-
-					do -- colorpicker
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder
-						ColorPicker["5b"] = Instance.new("Frame", Toggle["2f"]);
-						ColorPicker["5b"]["ZIndex"] = 999;
-						ColorPicker["5b"]["BorderSizePixel"] = 0;
-						ColorPicker["5b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5b"]["Size"] = UDim2.new(0, 25, 0, 15);
-						ColorPicker["5b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5b"]["Name"] = [[ColorpickerHolder]];
-						ColorPicker["5b"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline
-						ColorPicker["5d"] = Instance.new("Frame", ColorPicker["5b"]);
-						ColorPicker["5d"]["BorderSizePixel"] = 0;
-						ColorPicker["5d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["5d"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["5d"]["Size"] = UDim2.new(0, 25, 1, 0);
-						ColorPicker["5d"]["Position"] = UDim2.new(1, 0, 0, 0);
-						ColorPicker["5d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5d"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine
-						ColorPicker["5e"] = Instance.new("Frame", ColorPicker["5d"]);
-						ColorPicker["5e"]["BorderSizePixel"] = 0;
-						ColorPicker["5e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["5e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5e"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5e"]["Name"] = [[InnerLine]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display
-						ColorPicker["5f"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["5f"]["ZIndex"] = 2;
-						ColorPicker["5f"]["BorderSizePixel"] = 0;
-						ColorPicker["5f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["5f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["5f"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["5f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["5f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["5f"]["Name"] = [[Display]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display.UIGradient
-						ColorPicker["60"] = Instance.new("UIGradient", ColorPicker["5f"]);
-						ColorPicker["60"]["Rotation"] = 90;
-						ColorPicker["60"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerButton
-						ColorPicker["61"] = Instance.new("TextButton", ColorPicker["5e"]);
-						ColorPicker["61"]["BorderSizePixel"] = 0;
-						ColorPicker["61"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["TextTransparency"] = 1;
-						ColorPicker["61"]["AutoButtonColor"] = false;
-						ColorPicker["61"]["TextSize"] = 14;
-						ColorPicker["61"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["61"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["61"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["61"]["Size"] = UDim2.new(1, 0, 1, 0);
-						ColorPicker["61"]["BackgroundTransparency"] = 1;
-						ColorPicker["61"]["Name"] = [[ColorPickerButton]];
-						ColorPicker["61"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["61"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain
-						ColorPicker["62"] = Instance.new("Frame", ColorPicker["5e"]);
-						ColorPicker["62"]["Visible"] = false;
-						ColorPicker["62"]["ZIndex"] = 10000;
-						ColorPicker["62"]["BorderSizePixel"] = 0;
-						ColorPicker["62"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["62"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["62"]["Size"] = UDim2.new(0, 125, 0, 150);
-						ColorPicker["62"]["Position"] = UDim2.new(0, -1, 0, -1);
-						ColorPicker["62"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["62"]["Name"] = [[ColorPickerMain]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline
-						ColorPicker["63"] = Instance.new("Frame", ColorPicker["62"]);
-						ColorPicker["63"]["BorderSizePixel"] = 0;
-						ColorPicker["63"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["63"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["63"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["63"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["63"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["63"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main
-						ColorPicker["64"] = Instance.new("Frame", ColorPicker["63"]);
-						ColorPicker["64"]["BorderSizePixel"] = 0;
-						ColorPicker["64"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["64"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["64"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["64"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["64"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["64"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIGradient
-						ColorPicker["65"] = Instance.new("UIGradient", ColorPicker["64"]);
-						ColorPicker["65"]["Rotation"] = 90;
-						ColorPicker["65"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIPadding
-						ColorPicker["66"] = Instance.new("UIPadding", ColorPicker["64"]);
-						ColorPicker["66"]["PaddingTop"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingRight"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingLeft"] = UDim.new(0, 3);
-						ColorPicker["66"]["PaddingBottom"] = UDim.new(0, 3);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder
-						ColorPicker["67"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["67"]["BorderSizePixel"] = 0;
-						ColorPicker["67"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["67"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["67"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["67"]["Position"] = UDim2.new(0, 0, 1, 0);
-						ColorPicker["67"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["67"]["Name"] = [[RGBtextHolder]];
-						ColorPicker["67"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.UIListLayout
-						ColorPicker["68"] = Instance.new("UIListLayout", ColorPicker["67"]);
-						ColorPicker["68"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-						ColorPicker["68"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-						ColorPicker["68"]["Padding"] = UDim.new(0, 1);
-						ColorPicker["68"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-						ColorPicker["68"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R
-						ColorPicker["69"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["69"]["BorderSizePixel"] = 0;
-						ColorPicker["69"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["69"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["69"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["69"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["69"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["69"]["Name"] = [[R]];
-						ColorPicker["69"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline
-						ColorPicker["6a"] = Instance.new("Frame", ColorPicker["69"]);
-						ColorPicker["6a"]["BorderSizePixel"] = 0;
-						ColorPicker["6a"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["6a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6a"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6a"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline
-						ColorPicker["6b"] = Instance.new("Frame", ColorPicker["6a"]);
-						ColorPicker["6b"]["BorderSizePixel"] = 0;
-						ColorPicker["6b"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6b"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6b"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main
-						ColorPicker["6c"] = Instance.new("Frame", ColorPicker["6b"]);
-						ColorPicker["6c"]["BorderSizePixel"] = 0;
-						ColorPicker["6c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6c"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6c"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.R
-						ColorPicker["6d"] = Instance.new("TextBox", ColorPicker["6c"]);
-						ColorPicker["6d"]["TextStrokeTransparency"] = 0;
-						ColorPicker["6d"]["Name"] = [[R]];
-						ColorPicker["6d"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["6d"]["BorderSizePixel"] = 0;
-						ColorPicker["6d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["6d"]["TextSize"] = 13;
-						ColorPicker["6d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["6d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["6d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["6d"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["6d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["6d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6d"]["Text"] = [[255]];
-						ColorPicker["6d"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.UIGradient
-						ColorPicker["6e"] = Instance.new("UIGradient", ColorPicker["6c"]);
-						ColorPicker["6e"]["Rotation"] = 90;
-						ColorPicker["6e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G
-						ColorPicker["6f"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["6f"]["BorderSizePixel"] = 0;
-						ColorPicker["6f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["6f"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["6f"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["6f"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["6f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["6f"]["Name"] = [[G]];
-						ColorPicker["6f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline
-						ColorPicker["70"] = Instance.new("Frame", ColorPicker["6f"]);
-						ColorPicker["70"]["BorderSizePixel"] = 0;
-						ColorPicker["70"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["70"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["70"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["70"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["70"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["70"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline
-						ColorPicker["71"] = Instance.new("Frame", ColorPicker["70"]);
-						ColorPicker["71"]["BorderSizePixel"] = 0;
-						ColorPicker["71"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["71"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["71"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["71"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["71"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["71"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main
-						ColorPicker["72"] = Instance.new("Frame", ColorPicker["71"]);
-						ColorPicker["72"]["BorderSizePixel"] = 0;
-						ColorPicker["72"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["72"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["72"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["72"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["72"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["72"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.G
-						ColorPicker["73"] = Instance.new("TextBox", ColorPicker["72"]);
-						ColorPicker["73"]["TextStrokeTransparency"] = 0;
-						ColorPicker["73"]["Name"] = [[G]];
-						ColorPicker["73"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["73"]["BorderSizePixel"] = 0;
-						ColorPicker["73"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["73"]["TextSize"] = 13;
-						ColorPicker["73"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["73"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["73"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["73"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["73"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["73"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["73"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["73"]["Text"] = [[255]];
-						ColorPicker["73"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.UIGradient
-						ColorPicker["74"] = Instance.new("UIGradient", ColorPicker["72"]);
-						ColorPicker["74"]["Rotation"] = 90;
-						ColorPicker["74"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B
-						ColorPicker["75"] = Instance.new("Frame", ColorPicker["67"]);
-						ColorPicker["75"]["BorderSizePixel"] = 0;
-						ColorPicker["75"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["75"]["AnchorPoint"] = Vector2.new(0, 1);
-						ColorPicker["75"]["Size"] = UDim2.new(0, 33, 0, 15);
-						ColorPicker["75"]["Position"] = UDim2.new(0, 37, 1, 0);
-						ColorPicker["75"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["75"]["Name"] = [[B]];
-						ColorPicker["75"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline
-						ColorPicker["76"] = Instance.new("Frame", ColorPicker["75"]);
-						ColorPicker["76"]["BorderSizePixel"] = 0;
-						ColorPicker["76"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["76"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["76"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["76"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["76"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["76"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline
-						ColorPicker["77"] = Instance.new("Frame", ColorPicker["76"]);
-						ColorPicker["77"]["BorderSizePixel"] = 0;
-						ColorPicker["77"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["77"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["77"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["77"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["77"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["77"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main
-						ColorPicker["78"] = Instance.new("Frame", ColorPicker["77"]);
-						ColorPicker["78"]["BorderSizePixel"] = 0;
-						ColorPicker["78"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["78"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["78"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["78"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["78"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["78"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.B
-						ColorPicker["79"] = Instance.new("TextBox", ColorPicker["78"]);
-						ColorPicker["79"]["TextStrokeTransparency"] = 0;
-						ColorPicker["79"]["Name"] = [[B]];
-						ColorPicker["79"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["79"]["BorderSizePixel"] = 0;
-						ColorPicker["79"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["79"]["TextSize"] = 13;
-						ColorPicker["79"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["79"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["79"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["79"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["79"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["79"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["79"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["79"]["Text"] = [[255]];
-						ColorPicker["79"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.UIGradient
-						ColorPicker["7a"] = Instance.new("UIGradient", ColorPicker["78"]);
-						ColorPicker["7a"]["Rotation"] = 90;
-						ColorPicker["7a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue
-						ColorPicker["7b"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7b"]["BorderSizePixel"] = 0;
-						ColorPicker["7b"]["AutoButtonColor"] = false;
-						ColorPicker["7b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7b"]["Selectable"] = false;
-						ColorPicker["7b"]["AnchorPoint"] = Vector2.new(1, 0);
-						ColorPicker["7b"]["Image"] = [[rbxassetid://2615692420]];
-						ColorPicker["7b"]["Size"] = UDim2.new(0, 15, 0, 95);
-						ColorPicker["7b"]["Name"] = [[Hue]];
-						ColorPicker["7b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7b"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue.huecursor
-						ColorPicker["7c"] = Instance.new("Frame", ColorPicker["7b"]);
-						ColorPicker["7c"]["BorderSizePixel"] = 0;
-						ColorPicker["7c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["7c"]["AnchorPoint"] = Vector2.new(0.5, 0);
-						ColorPicker["7c"]["Size"] = UDim2.new(1, 6, 0, 3);
-						ColorPicker["7c"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-						ColorPicker["7c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7c"]["Name"] = [[huecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme
-						ColorPicker["7d"] = Instance.new("ImageButton", ColorPicker["64"]);
-						ColorPicker["7d"]["BorderSizePixel"] = 0;
-						ColorPicker["7d"]["AutoButtonColor"] = false;
-						ColorPicker["7d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7d"]["Selectable"] = false;
-						ColorPicker["7d"]["Image"] = [[rbxassetid://2615689005]];
-						ColorPicker["7d"]["Size"] = UDim2.new(0, 95, 0, 95);
-						ColorPicker["7d"]["Name"] = [[Scheme]];
-						ColorPicker["7d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme.schemecursor
-						ColorPicker["7e"] = Instance.new("ImageLabel", ColorPicker["7d"]);
-						ColorPicker["7e"]["ZIndex"] = 5;
-						ColorPicker["7e"]["BorderSizePixel"] = 0;
-						ColorPicker["7e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["ImageColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["Image"] = [[http://www.roblox.com/asset/?id=16006380635]];
-						ColorPicker["7e"]["ImageRectSize"] = Vector2.new(1000, 1000);
-						ColorPicker["7e"]["Size"] = UDim2.new(0, 5, 0, 5);
-						ColorPicker["7e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7e"]["BackgroundTransparency"] = 1;
-						ColorPicker["7e"]["Name"] = [[schemecursor]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency
-						ColorPicker["7f"] = Instance.new("Frame", ColorPicker["64"]);
-						ColorPicker["7f"]["BorderSizePixel"] = 0;
-						ColorPicker["7f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["7f"]["AnchorPoint"] = Vector2.new(0.5, 1);
-						ColorPicker["7f"]["Size"] = UDim2.new(1, 0, 0, 18);
-						ColorPicker["7f"]["Position"] = UDim2.new(0.5, 0, 1, -20);
-						ColorPicker["7f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["7f"]["Name"] = [[Transparency]];
-						ColorPicker["7f"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline
-						ColorPicker["80"] = Instance.new("Frame", ColorPicker["7f"]);
-						ColorPicker["80"]["BorderSizePixel"] = 0;
-						ColorPicker["80"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-						ColorPicker["80"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["80"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["80"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["80"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["80"]["Name"] = [[Outline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline
-						ColorPicker["81"] = Instance.new("Frame", ColorPicker["80"]);
-						ColorPicker["81"]["BorderSizePixel"] = 0;
-						ColorPicker["81"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["81"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["81"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["81"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["81"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["81"]["Name"] = [[Innerline]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main
-						ColorPicker["82"] = Instance.new("Frame", ColorPicker["81"]);
-						ColorPicker["82"]["BorderSizePixel"] = 0;
-						ColorPicker["82"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["82"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["82"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["82"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["82"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["82"]["Name"] = [[Main]];
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.Transparency
-						ColorPicker["83"] = Instance.new("TextBox", ColorPicker["82"]);
-						ColorPicker["83"]["TextStrokeTransparency"] = 0;
-						ColorPicker["83"]["Name"] = [[Transparency]];
-						ColorPicker["83"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-						ColorPicker["83"]["BorderSizePixel"] = 0;
-						ColorPicker["83"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-						ColorPicker["83"]["TextSize"] = 13;
-						ColorPicker["83"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["83"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-						ColorPicker["83"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-						ColorPicker["83"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["83"]["PlaceholderText"] = [[Transparency:]];
-						ColorPicker["83"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["83"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-						ColorPicker["83"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["83"]["Text"] = [[100]];
-						ColorPicker["83"]["BackgroundTransparency"] = 1;
-
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.UIGradient
-						ColorPicker["84"] = Instance.new("UIGradient", ColorPicker["82"]);
-						ColorPicker["84"]["Rotation"] = 90;
-						ColorPicker["84"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-						-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Frame
-						ColorPicker["86"] = Instance.new("ImageLabel", ColorPicker["5e"]);
-						ColorPicker["86"]["BorderSizePixel"] = 0;
-						ColorPicker["86"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-						ColorPicker["86"]["ScaleType"] = Enum.ScaleType.Crop;
-						ColorPicker["86"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-						ColorPicker["86"]["Image"] = [[rbxassetid://98372645101260]];
-						ColorPicker["86"]["ImageRectSize"] = Vector2.new(100, 100);
-						ColorPicker["86"]["Size"] = UDim2.new(1, -2, 1, -2);
-						ColorPicker["86"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-						ColorPicker["86"]["Name"] = [[Frame]];
-						ColorPicker["86"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					end
-
-					do -- logic
-						local opened = false
-
-						ColorPicker["61"].MouseButton1Click:Connect(function()
-							ColorPicker["62"].Visible = not opened
-							opened = not opened
-						end)
-
-						local colorPickerMain = ColorPicker["62"]
-						local scrollFrame = Tab["1e"]
-
-						-- Function to update position and anchor point
-						local function updatePosition()
-							local pickerAbsPos = colorPickerMain.AbsolutePosition
-							local scrollFrameAbsPos = scrollFrame.AbsolutePosition
-							local scrollFrameSize = scrollFrame.AbsoluteSize
-
-							-- Check if touching the top
-							if pickerAbsPos.Y < scrollFrameAbsPos.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 1, 1) -- Position at the top
-								colorPickerMain.AnchorPoint = Vector2.new(0, 0) -- Anchor point at the top
-								print("Moved to top with AnchorPoint 0,0 and Position {0, -1}, {1, 1}")
-							end
-
-							-- Check if touching the bottom
-							if pickerAbsPos.Y + colorPickerMain.AbsoluteSize.Y > scrollFrameAbsPos.Y + scrollFrameSize.Y then
-								colorPickerMain.Position = UDim2.new(0, -1, 0, -1) -- Position at the bottom
-								colorPickerMain.AnchorPoint = Vector2.new(0, 1) -- Anchor point at the bottom
-								print("Moved to bottom with AnchorPoint 0,1 and Position {0, -1}, {0, -1}")
-							end
-						end
-
-						-- Connect to the RenderStepped event for constant checking
-						game:GetService("RunService").RenderStepped:Connect(updatePosition)
-
-						local white, black = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
-						local colors = {
-							Color3.new(1, 0, 0), Color3.new(1, 1, 0), Color3.new(0, 1, 0),
-							Color3.new(0, 1, 1), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 0, 0)
-						}
-
-						local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-						local UserInputService = game:GetService("UserInputService")
-
-						-- UI elements
-						local Schema = ColorPicker["7d"] -- Gradient area
-						local SchemaCursor = ColorPicker["7e"] -- Cursor for the scheme
-						local HUE = ColorPicker["7b"] -- Hue bar
-						local HueCursor = ColorPicker["7c"] -- Cursor for the hue bar
-						local Display = ColorPicker["5f"] -- Color display
-						local TransparencyTextBox = ColorPicker["83"] -- Transparency input box
-						local TextBoxR = ColorPicker["6d"] -- Red input box
-						local TextBoxG = ColorPicker["73"] -- Green input box
-						local TextBoxB = ColorPicker["79"] -- Blue input box
-
-						-- Function: Convert RGB to HSV
-						local function rgbToHSV(color)
-							local r, g, b = color.R, color.G, color.B
-							local max, min = math.max(r, g, b), math.min(r, g, b)
-							local delta = max - min
-
-							local h = 0
-							if delta > 0 then
-								if max == r then
-									h = (g - b) / delta % 6
-								elseif max == g then
-									h = (b - r) / delta + 2
-								elseif max == b then
-									h = (r - g) / delta + 4
-								end
-								h = h / 6
-							end
-
-							local s = (max == 0) and 0 or delta / max
-							local v = max
-							return h, s, v
-						end
-
-						-- Function: Clamp a value between min and max
-						local function clamp(value, min, max)
-							return math.max(min, math.min(max, value))
-						end
-
-						-- Function: Update the color display
-						local function updateColor(outputColor)
-							if typeof(outputColor) ~= "Color3" then
-								error("Invalid color value: Expected Color3, got " .. typeof(outputColor))
-							end
-
-							Display.BackgroundColor3 = outputColor
-							option.color = outputColor
-
-							local r = math.floor(outputColor.R * 255 + 0.5)
-							local g = math.floor(outputColor.G * 255 + 0.5)
-							local b = math.floor(outputColor.B * 255 + 0.5)
-
-							TextBoxR.Text = tostring(r)
-							TextBoxG.Text = tostring(g)
-							TextBoxB.Text = tostring(b)
-
-							if option.callback then
-								option.callback(outputColor)
-							end
-						end
-
-						-- Function to update the hue-based color dynamically
-						local function updateHueColor(huePercent)
-							-- Calculate the color from the hue percentage
-							local hueColor = Color3.fromHSV(huePercent, 1, 1)
-
-							-- Update the scheme's background color to reflect the hue
-							Schema.BackgroundColor3 = hueColor
-
-							-- Calculate the scheme cursor's position and update the final color
-							local xP = math.clamp((SchemaCursor.AbsolutePosition.X - Schema.AbsolutePosition.X) / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp((SchemaCursor.AbsolutePosition.Y - Schema.AbsolutePosition.Y) / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(hueColor, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function to update the scheme-based color dynamically
-						local function updateSchemeColor(relativeX, relativeY)
-							-- Calculate the interpolated color based on cursor position
-							local xP = math.clamp(relativeX / Schema.AbsoluteSize.X, 0, 1)
-							local yP = math.clamp(relativeY / Schema.AbsoluteSize.Y, 0, 1)
-							local outputColor = white:Lerp(Schema.BackgroundColor3, xP):Lerp(black, yP)
-
-							-- Update the display, text boxes, and trigger callbacks
-							updateColor(outputColor)
-						end
-
-						-- Function: Sync color picker cursors and display based on a Color3 value
-						local function syncColor()
-							local h, s, v = rgbToHSV(option.color)
-
-							local huePosition = h * HUE.AbsoluteSize.Y
-							HueCursor.Position = UDim2.new(0.5, 0, 0, huePosition - (HueCursor.AbsoluteSize.Y / 2))
-
-							local hueColor = Color3.fromHSV(h, 1, 1)
-							Schema.BackgroundColor3 = hueColor
-
-							local schemeX = s * Schema.AbsoluteSize.X
-							local schemeY = (1 - v) * Schema.AbsoluteSize.Y
-							SchemaCursor.Position = UDim2.new(0, schemeX - (SchemaCursor.AbsoluteSize.X / 2), 0, schemeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-							updateColor(option.color)
-						end
-
-						-- Function: Update transparency
-						local function updateTransparency(transparencyValue)
-							local clampedValue = clamp(transparencyValue, 0, 100)
-							local callbackValue = 1 - (clampedValue / 100)
-
-							Display.BackgroundTransparency = callbackValue
-							option.transparency = clampedValue
-
-							if option.transparencyCallback then
-								option.transparencyCallback(callbackValue)
-							end
-
-							TransparencyTextBox.Text = tostring(clampedValue)
-						end
-
-						-- Connect transparency TextBox changes
-						TransparencyTextBox.FocusLost:Connect(function()
-							local transparencyValue = tonumber(TransparencyTextBox.Text)
-							if transparencyValue then
-								updateTransparency(transparencyValue)
-							else
-								TransparencyTextBox.Text = tostring(option.transparency)
-							end
-						end)
-
-						TransparencyTextBox:GetPropertyChangedSignal("Text"):Connect(function()
-							local inputText = TransparencyTextBox.Text
-							if not tonumber(inputText) and inputText ~= "" then
-								TransparencyTextBox.Text = inputText:gsub("%D", "")
-							end
-						end)
-
-						-- Function: Handle RGB input changes
-						local function handleRGBInputChange(textBox, component)
-							textBox.FocusLost:Connect(function()
-								local inputValue = tonumber(textBox.Text)
-								if inputValue then
-									local r = component == "R" and inputValue or math.floor(option.color.R * 255 + 0.5)
-									local g = component == "G" and inputValue or math.floor(option.color.G * 255 + 0.5)
-									local b = component == "B" and inputValue or math.floor(option.color.B * 255 + 0.5)
-
-									option.color = Color3.fromRGB(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255))
-									syncColor()
-								else
-									textBox.Text = tostring(math.floor(option.color[component] * 255 + 0.5))
-								end
-							end)
-
-							textBox:GetPropertyChangedSignal("Text"):Connect(function()
-								local inputText = textBox.Text
-								if not tonumber(inputText) and inputText ~= "" then
-									textBox.Text = inputText:gsub("%D", "")
-								end
-							end)
-						end
-
-						-- Logic for interacting with the hue bar
-						HUE.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the hue cursor and color
-							local function updateHueCursor()
-								local relativeY = math.clamp(Mouse.Y - HUE.AbsolutePosition.Y, 0, HUE.AbsoluteSize.Y)
-
-								-- Correct the X offset: center the cursor horizontally within the hue bar
-								HueCursor.Position = UDim2.new(0.5, 0, 0, relativeY - (HueCursor.AbsoluteSize.Y / 2))
-
-								-- Calculate hue as a percentage (0 to 1) and update the color
-								local huePercent = math.clamp(relativeY / HUE.AbsoluteSize.Y, 0, 1)
-								updateHueColor(huePercent)
-							end
-
-							-- Initial update
-							updateHueCursor()
-
-							-- Connect mouse movement for dragging
-							local hueConnection
-							hueConnection = Mouse.Move:Connect(updateHueCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if hueConnection then
-										hueConnection:Disconnect()
-										hueConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						-- Logic for interacting with the scheme area
-						Schema.MouseButton1Down:Connect(function()
-							-- Function to dynamically update the scheme cursor and color
-							local function updateSchemeCursor()
-								local relativeX = math.clamp(Mouse.X - Schema.AbsolutePosition.X, 0, Schema.AbsoluteSize.X)
-								local relativeY = math.clamp(Mouse.Y - Schema.AbsolutePosition.Y, 0, Schema.AbsoluteSize.Y)
-
-								-- Update the cursor position
-								SchemaCursor.Position = UDim2.new(0, relativeX - (SchemaCursor.AbsoluteSize.X / 2), 0, relativeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-								-- Update the scheme-based color
-								updateSchemeColor(relativeX, relativeY)
-							end
-
-							-- Initial update
-							updateSchemeCursor()
-
-							-- Connect mouse movement for dragging
-							local schemeConnection
-							schemeConnection = Mouse.Move:Connect(updateSchemeCursor)
-
-							-- Detect when the mouse button is released
-							local inputEndedConnection
-							inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-								if input.UserInputType == Enum.UserInputType.MouseButton1 then
-									-- Disconnect connections safely
-									if schemeConnection then
-										schemeConnection:Disconnect()
-										schemeConnection = nil
-									end
-									if inputEndedConnection then
-										inputEndedConnection:Disconnect()
-										inputEndedConnection = nil
-									end
-								end
-							end)
-						end)
-
-						handleRGBInputChange(TextBoxR, "R")
-						handleRGBInputChange(TextBoxG, "G")
-						handleRGBInputChange(TextBoxB, "B")
-
-						-- Initialize color picker
-						syncColor()
-						updateTransparency(option.transparency)
-					end
-
-					return ColorPicker
-				end
-
-				return Toggle
-			end
-
-			function section:NewButton(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "Button"
-				option.callback = option.callback or function() end
-
-				local Button = {}
-
-				do -- button
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder
-					Button["54"] = Instance.new("Frame", section["b3"]);
-					Button["54"]["BorderSizePixel"] = 0;
-					Button["54"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Button["54"]["Size"] = UDim2.new(1, 0, 0, 18);
-					Button["54"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["54"]["Name"] = [[ButtonHolder]];
-					Button["54"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline
-					Button["55"] = Instance.new("Frame", Button["54"]);
-					Button["55"]["BorderSizePixel"] = 0;
-					Button["55"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Button["55"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["55"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Button["55"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Button["55"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["55"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline
-					Button["56"] = Instance.new("Frame", Button["55"]);
-					Button["56"]["BorderSizePixel"] = 0;
-					Button["56"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Button["56"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["56"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Button["56"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Button["56"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["56"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline.Main
-					Button["57"] = Instance.new("Frame", Button["56"]);
-					Button["57"]["BorderSizePixel"] = 0;
-					Button["57"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Button["57"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["57"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Button["57"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Button["57"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["57"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline.Main.UIGradient
-					Button["58"] = Instance.new("UIGradient", Button["57"]);
-					Button["58"]["Rotation"] = 90;
-					Button["58"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Outline.Innerline.Main.TextLabel
-					Button["59"] = Instance.new("TextLabel", Button["57"]);
-					Button["59"]["TextStrokeTransparency"] = 0;
-					Button["59"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Button["59"]["BorderSizePixel"] = 0;
-					Button["59"]["TextSize"] = 14;
-					Button["59"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Button["59"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Button["59"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Button["59"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Button["59"]["BackgroundTransparency"] = 1;
-					Button["59"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Button["59"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Button["59"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["59"]["Text"] = option.text;
-					Button["59"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ButtonHolder.Button
-					Button["5a"] = Instance.new("TextButton", Button["54"]);
-					Button["5a"]["BorderSizePixel"] = 0;
-					Button["5a"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Button["5a"]["TextTransparency"] = 1;
-					Button["5a"]["TextSize"] = 14;
-					Button["5a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Button["5a"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Button["5a"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Button["5a"]["BackgroundTransparency"] = 1;
-					Button["5a"]["Name"] = [[Button]];
-					Button["5a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-				end
-
-				do -- logic
-					local btnButton = Button["5a"]
-					local basiccolor = Color3.fromRGB(31,31,31)
-
-					btnButton.MouseButton1Click:Connect(function()
-						pcall(option.callback)
-						Button["56"]["BackgroundColor3"] = basiccolor
-						wait(0.05)
-						Button["56"]["BackgroundColor3"] = Color3.fromRGB(50,50,50)
-						tweenObject(Button["56"], {BackgroundColor3 = basiccolor}, 2)
-					end)
-
-					btnButton.MouseEnter:Connect(function()
-						Button["59"]["TextColor3"] = Color3.fromRGB(112, 112, 112);
-					end)
-
-					btnButton.MouseLeave:Connect(function()
-						Button["59"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					end)
-				end
-
-				return Button
-			end
-
-			function section:NewKeybind(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text
-				option.key = option.key or Enum.KeyCode.World95
-				option.flag = option.flag or option.text
-				option.callback = option.callback or function() end
-				option.utilitytype = "keybind"
-
-				local Keybind = {}
-
-				do -- keybind
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder
-					Keybind["87"] = Instance.new("Frame", section["b3"]);
-					Keybind["87"]["BorderSizePixel"] = 0;
-					Keybind["87"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["87"]["Size"] = UDim2.new(1, 0, 0, 15);
-					Keybind["87"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["87"]["Name"] = [[KeybindHolder]];
-					Keybind["87"]["BackgroundTransparency"] = 1;
-					Keybind["87"]["ZIndex"] = 10
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline
-					Keybind["88"] = Instance.new("Frame", Keybind["87"]);
-					Keybind["88"]["BorderSizePixel"] = 0;
-					Keybind["88"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Keybind["88"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Keybind["88"]["Size"] = UDim2.new(0, 25, 1, 0);
-					Keybind["88"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-					Keybind["88"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["88"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline
-					Keybind["89"] = Instance.new("Frame", Keybind["88"]);
-					Keybind["89"]["BorderSizePixel"] = 0;
-					Keybind["89"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["89"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["89"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["89"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["89"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["89"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main
-					Keybind["8a"] = Instance.new("Frame", Keybind["89"]);
-					Keybind["8a"]["BorderSizePixel"] = 0;
-					Keybind["8a"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["8a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8a"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["8a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["8a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8a"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.UIGradient
-					Keybind["8b"] = Instance.new("UIGradient", Keybind["8a"]);
-					Keybind["8b"]["Rotation"] = 90;
-					Keybind["8b"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Keybind
-					Keybind["8c"] = Instance.new("TextLabel", Keybind["8a"]);
-					Keybind["8c"]["TextStrokeTransparency"] = 0;
-					Keybind["8c"]["ZIndex"] = 1;
-					Keybind["8c"]["BorderSizePixel"] = 0;
-					Keybind["8c"]["TextSize"] = 12;
-					Keybind["8c"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["8c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["8c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["8c"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["8c"]["BackgroundTransparency"] = 1;
-					Keybind["8c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8c"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Keybind["8c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8c"]["Text"] = [[...]];
-					Keybind["8c"]["Name"] = [[Keybind]];
-					Keybind["8c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings
-					Keybind["8d"] = Instance.new("Frame", Keybind["8a"]);
-					Keybind["8d"]["Visible"] = false;
-					Keybind["8d"]["BorderSizePixel"] = 0;
-					Keybind["8d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Keybind["8d"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Keybind["8d"]["Size"] = UDim2.new(0, 50, 0, 50);
-					Keybind["8d"]["Position"] = UDim2.new(0.5, 0, 1, 1);
-					Keybind["8d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8d"]["Name"] = [[Settings]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline
-					Keybind["8e"] = Instance.new("Frame", Keybind["8d"]);
-					Keybind["8e"]["BorderSizePixel"] = 0;
-					Keybind["8e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["8e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8e"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["8e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["8e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8e"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main
-					Keybind["8f"] = Instance.new("Frame", Keybind["8e"]);
-					Keybind["8f"]["BorderSizePixel"] = 0;
-					Keybind["8f"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Keybind["8f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["8f"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Keybind["8f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Keybind["8f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["8f"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIGradient
-					Keybind["90"] = Instance.new("UIGradient", Keybind["8f"]);
-					Keybind["90"]["Rotation"] = 90;
-					Keybind["90"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.UIListLayout
-					Keybind["91"] = Instance.new("UIListLayout", Keybind["8f"]);
-					Keybind["91"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-					Keybind["91"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-					Keybind["91"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-					Keybind["91"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Always
-					Keybind["92"] = Instance.new("TextButton", Keybind["8f"]);
-					Keybind["92"]["TextStrokeTransparency"] = 0;
-					Keybind["92"]["BorderSizePixel"] = 0;
-					Keybind["92"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["92"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["92"]["TextSize"] = 12;
-					Keybind["92"]["BackgroundColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["92"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["92"]["Size"] = UDim2.new(0, 200, 0, 50);
-					Keybind["92"]["BackgroundTransparency"] = 1;
-					Keybind["92"]["Name"] = [[Always]];
-					Keybind["92"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["92"]["Text"] = [[always]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.Toggle
-					Keybind["93"] = Instance.new("TextButton", Keybind["8f"]);
-					Keybind["93"]["TextStrokeTransparency"] = 0;
-					Keybind["93"]["BorderSizePixel"] = 0;
-					Keybind["93"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["93"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["93"]["TextSize"] = 12;
-					Keybind["93"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["93"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["93"]["Size"] = UDim2.new(0, 200, 0, 50);
-					Keybind["93"]["BackgroundTransparency"] = 1;
-					Keybind["93"]["Name"] = [[Toggle]];
-					Keybind["93"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["93"]["Text"] = [[toggle]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.Innerline.Main.Settings.Innerline.Main.OnHold
-					Keybind["94"] = Instance.new("TextButton", Keybind["8f"]);
-					Keybind["94"]["TextStrokeTransparency"] = 0;
-					Keybind["94"]["BorderSizePixel"] = 0;
-					Keybind["94"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["94"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["94"]["TextSize"] = 12;
-					Keybind["94"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["94"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["94"]["Size"] = UDim2.new(0, 200, 0, 50);
-					Keybind["94"]["BackgroundTransparency"] = 1;
-					Keybind["94"]["Name"] = [[OnHold]];
-					Keybind["94"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["94"]["Text"] = [[on hold]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.Outline.SetKeybindButton
-					Keybind["95"] = Instance.new("TextButton", Keybind["88"]);
-					Keybind["95"]["BorderSizePixel"] = 0;
-					Keybind["95"]["ZIndex"] = 5
-					Keybind["95"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["95"]["TextTransparency"] = 1;
-					Keybind["95"]["TextSize"] = 14;
-					Keybind["95"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["95"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["95"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Keybind["95"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Keybind["95"]["BackgroundTransparency"] = 1;
-					Keybind["95"]["Name"] = [[SetKeybindButton]];
-					Keybind["95"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["95"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.KeybindHolder.KeybindText
-					Keybind["96"] = Instance.new("TextLabel", Keybind["87"]);
-					Keybind["96"]["TextStrokeTransparency"] = 0;
-					Keybind["96"]["BorderSizePixel"] = 0;
-					Keybind["96"]["TextSize"] = 14;
-					Keybind["96"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Keybind["96"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Keybind["96"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Keybind["96"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Keybind["96"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Keybind["96"]["BackgroundTransparency"] = 1;
-					Keybind["96"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					Keybind["96"]["Size"] = UDim2.new(1, -25, 1, 0);
-					Keybind["96"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Keybind["96"]["Text"] = option.text;
-					Keybind["96"]["Name"] = [[KeybindText]];
-					Keybind["96"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-				end
-
-				do -- logic				
-
-					local hold = false
-					local onhold = false
-					local opened = false
-					local activecolor = Color3.fromRGB(255, 255, 255)
-					local notactivecolor = Color3.fromRGB(92, 92, 92)
-					local activebutton = "button92"
-
-					local shorts = {
-						RightAlt = "RA",
-						LeftAlt = "LA",
-						RightControl = "RC",
-						LeftControl = "LC",
-						LeftShift = "LS",
-						RightShift = "RS",
-						MouseButton1 = "M1",
-						MouseButton2 = "M2",
-						Return = "ENT",
-						Backspace = "BP",
-						Tab = "TAB",
-						CapsLock = "CL",
-						Escape = "ESC",
-						Insert = "INS",
-						PageUp = "UP",
-						PageDown = "DOWN",
-						KeypadMultiply = "*",
-						KeypadDivide = "/",
-						End = "END",
-						Unknown = "?",
-						World95 = "?"
-					}
-
-					local ignored = {
-						W = true,
-						A = true,
-						S = true,
-						D = true,
-						Space = true,
-						F = true,
-						R = true
-					}
-
-					Keybind["8c"].Text = tostring(shorts[option.key.Name]) or tostring(option.key.Name)
-					if Keybind["8c"].Text:match("nil") then
-						Keybind["8c"].Text = tostring(option.key.Name)
-					end
-
-					local newBindButtonSize =
-						game:GetService("TextService"):GetTextSize(
-							Keybind["8c"].Text,
-							Keybind["8c"].TextSize,
-							Keybind["8c"].Font,
-							Vector2.new(math.huge, math.huge)
-						)
-					Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-
-					Keybind["95"].MouseButton2Click:Connect(function()
-						if opened == true then
-							Keybind["8d"].Visible = false
-							opened = false
-						elseif opened == false then
-							Keybind["8d"].Visible = true
-							opened = true
-						end
-					end)
-
-					Keybind["92"].MouseButton1Click:Connect(function()
-						if activebutton ~= "button92" then
-							if activebutton == "button93" then
-								Keybind["93"].TextColor3 = notactivecolor
-							elseif activebutton == "button94" then
-								Keybind["94"].TextColor3 = notactivecolor
-							end	
-						end
-
-						Keybind["92"].TextColor3 = activecolor
-						activebutton = "button92"
-					end)
-
-					Keybind["93"].MouseButton1Click:Connect(function()
-						if activebutton ~= "button93" then
-							if activebutton == "button92" then
-								Keybind["92"].TextColor3 = notactivecolor
-							elseif activebutton == "button94" then
-								Keybind["94"].TextColor3 = notactivecolor
-							end						
-						end
-
-						Keybind["93"].TextColor3 = activecolor
-						activebutton = "button93"
-					end)
-
-
-
-					Keybind["94"].MouseButton1Click:Connect(function()
-						if activebutton ~= "button94" then
-							if activebutton == "button92" then
-								Keybind["92"].TextColor3 = notactivecolor
-							elseif activebutton == "button93" then
-								Keybind["93"].TextColor3 = notactivecolor
-							end	
-						end
-
-						Keybind["94"].TextColor3 = activecolor
-						activebutton = "button94"
-					end)
-
-					Keybind["95"].MouseButton1Click:Connect(function()
-						hold = true
-						if hold == true then
-							Keybind["8c"].Text = " ... "
-							local newBindButtonSize =
-								game:GetService("TextService"):GetTextSize(
-									Keybind["8c"].Text,
-									Keybind["8c"].TextSize,
-									Keybind["8c"].Font,
-									Vector2.new(math.huge, math.huge)
-								)
-							Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-							local Input
-							repeat Input = game:GetService("UserInputService").InputBegan:Wait() until not ignored[Input.KeyCode.Name] do end
-							if Input.KeyCode.Name ~= "Unknown" and not ignored[Input.KeyCode.Name] then
-								local K = shorts[Input.KeyCode.Name] or Input.KeyCode.Name
-								Keybind["8c"].Text = K
-								option.key = Input.KeyCode
-								local newBindButtonSize =
-									game:GetService("TextService"):GetTextSize(
-										Keybind["8c"].Text,
-										Keybind["8c"].TextSize,
-										Keybind["8c"].Font,
-										Vector2.new(math.huge, math.huge)
-									)
-								Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-								Library.Flags[option.flag] = option.key.Name									
-							end
-						end
-						wait()
-						hold = false
-					end)
-
-					if activebutton == "button92" then
-						print("lol")
-					end
-
-					UserInputService.InputBegan:Connect(function(k, t)
-						if activebutton == "button93" then
-							if t then return end
-							if k.KeyCode == option.key then
-								if not option.hold then
-									option.callback(option.key)
-								end
-							end
-						elseif activebutton == "button94" then
-							if t then return end
-							if k.KeyCode == option.key then
-								if not option.hold then
-									if not onhold then
-										onhold = true
-										print("holding")
-									end
-								end
-							end
-						end
-					end)
-
-					UserInputService.InputEnded:Connect(function(k, t)
-						if activebutton == "button94" then
-							if t then return end
-							if k.KeyCode == option.key then
-								if not option.hold then
-									if onhold then
-										onhold = false
-										print("released")
-									end
-								end
-							end
-						end
-					end)
-
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.key.Name
-						Library.Items[option.flag] = option
-					end
-
-					function option:SetValue(key)
-						option.key = key
-						local text = shorts[option.key.Name] or option.key.Name
-						Keybind["8c"].Text = text
-						local newBindButtonSize =
-							game:GetService("TextService"):GetTextSize(
-								Keybind["8c"].Text,
-								Keybind["8c"].TextSize,
-								Keybind["8c"].Font,
-								Vector2.new(math.huge, math.huge)
-							)
-						Keybind["8c"].Size = UDim2.new(0, 0 + newBindButtonSize.X, 0, 15)
-						Library.Flags[option.flag] = option.key.Name
-					end
-				end
-
-				return Keybind
-			end
-
-			function section:NewLabel(option)
-				option = typeof(option) and option or {}
-				option.text = option.text or "New Label"
-
-				local Label = {}
-
-				do -- label
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.LabelHolder
-					Label["3c"] = Instance.new("Frame", section["b3"]);
-					Label["3c"]["BorderSizePixel"] = 0;
-					Label["3c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Label["3c"]["Size"] = UDim2.new(1, 0, 0, 15);
-					Label["3c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Label["3c"]["Name"] = [[LabelHolder]];
-					Label["3c"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.LabelHolder.LabelText
-					Label["3d"] = Instance.new("TextLabel", Label["3c"]);
-					Label["3d"]["TextStrokeTransparency"] = 0;
-					Label["3d"]["BorderSizePixel"] = 0;
-					Label["3d"]["TextSize"] = 14;
-					Label["3d"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Label["3d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Label["3d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Label["3d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Label["3d"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Label["3d"]["BackgroundTransparency"] = 1;
-					Label["3d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Label["3d"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Label["3d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Label["3d"]["Text"] = option.text;
-					Label["3d"]["Name"] = [[LabelText]];
-					Label["3d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-				end
-
-				return Label
-			end
-
-			function section:NewSlider(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "New Slider"
-				option.min = option.min or 0
-				option.max = option.max  or 100
-				option.value = option.value or 0
-				option.flag = option.flag or option.text
-				option.float = typeof(option.float) == "number" and option.float or 0
-				option.suffix = option.suffix or ""
-				option.callback = option.callback or function() end
-				option.utilitytype = "slider"
-
-				local Slider = {}
-
-				do -- slider
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder
-					Slider["31"] = Instance.new("Frame", section["b3"]);
-					Slider["31"]["BorderSizePixel"] = 0;
-					Slider["31"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["31"]["Size"] = UDim2.new(1, 0, 0, 33);
-					Slider["31"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["31"]["Name"] = [[SliderHolder]];
-					Slider["31"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderTextHolder
-					Slider["32"] = Instance.new("Frame", Slider["31"]);
-					Slider["32"]["BorderSizePixel"] = 0;
-					Slider["32"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["32"]["Size"] = UDim2.new(1, 0, 0.5, -1);
-					Slider["32"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["32"]["Name"] = [[SliderTextHolder]];
-					Slider["32"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderTextHolder.SliderText
-					Slider["33"] = Instance.new("TextLabel", Slider["32"]);
-					Slider["33"]["TextStrokeTransparency"] = 0;
-					Slider["33"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Slider["33"]["BorderSizePixel"] = 0;
-					Slider["33"]["TextSize"] = 14;
-					Slider["33"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Slider["33"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Slider["33"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["33"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Slider["33"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Slider["33"]["BackgroundTransparency"] = 1;
-					Slider["33"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["33"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Slider["33"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["33"]["Text"] = option.text;
-					Slider["33"]["Name"] = [[SliderText]];
-					Slider["33"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder
-					Slider["34"] = Instance.new("Frame", Slider["31"]);
-					Slider["34"]["BorderSizePixel"] = 0;
-					Slider["34"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["34"]["AnchorPoint"] = Vector2.new(0, 1);
-					Slider["34"]["Size"] = UDim2.new(1, 0, 0.5, 2);
-					Slider["34"]["Position"] = UDim2.new(0, 0, 1, 0);
-					Slider["34"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["34"]["Name"] = [[SliderMainHolder]];
-					Slider["34"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline
-					Slider["35"] = Instance.new("Frame", Slider["34"]);
-					Slider["35"]["BorderSizePixel"] = 0;
-					Slider["35"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Slider["35"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["35"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Slider["35"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Slider["35"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["35"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline
-					Slider["36"] = Instance.new("Frame", Slider["35"]);
-					Slider["36"]["BorderSizePixel"] = 0;
-					Slider["36"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Slider["36"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["36"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Slider["36"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Slider["36"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["36"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderBackground
-					Slider["37"] = Instance.new("Frame", Slider["36"]);
-					Slider["37"]["Active"] = true;
-					Slider["37"]["ZIndex"] = 0;
-					Slider["37"]["BorderSizePixel"] = 0;
-					Slider["37"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Slider["37"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Slider["37"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Slider["37"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Slider["37"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["37"]["Name"] = [[SliderBackground]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderBackground.UIGradient
-					Slider["38"] = Instance.new("UIGradient", Slider["37"]);
-					Slider["38"]["Rotation"] = 90;
-					Slider["38"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderFill
-					Slider["39"] = Instance.new("Frame", Slider["36"]);
-					Slider["39"]["BorderSizePixel"] = 0;
-					Slider["39"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["39"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					Slider["39"]["Size"] = UDim2.new(0.5, 0, 1, 0);
-					Slider["39"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-					Slider["39"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["39"]["Name"] = [[SliderFill]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderFill.UIGradient
-					Slider["3a"] = Instance.new("UIGradient", Slider["39"]);
-					Slider["3a"]["Rotation"] = 90;
-					Slider["3a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.SliderHolder.SliderMainHolder.Outline.Innerline.SliderFill.TextLabel
-					Slider["3b"] = Instance.new("TextBox", Slider["39"]);
-					Slider["3b"]["TextStrokeTransparency"] = 0;
-					Slider["3b"]["Name"] = [[TextLabel]];
-					Slider["3b"]["BorderSizePixel"] = 0;
-					Slider["3b"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Slider["3b"]["TextSize"] = 13;
-					Slider["3b"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["3b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Slider["3b"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Slider["3b"]["Selectable"] = false;
-					Slider["3b"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Slider["3b"]["Size"] = UDim2.new(0, 1, 1, 0);
-					Slider["3b"]["Position"] = UDim2.new(1, 1, 0.5, 0);
-					Slider["3b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Slider["3b"]["Text"] = [[50/100]];
-				end
-
-				do -- logic
-					local frameSlider = Slider["39"]
-					local ignoreSliderValue = Slider["3b"]
-					local btnSlider = Slider["37"]
-
-					local dragging = false
-					local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-
-					if option.value > option.max then
-						option.value = option.max
-						frameSlider.Size = UDim2.new(0, option.value == option.min and 0 or math.floor((((option.value - option.min) / (option.max - option.min)) * 178) + 0.5), 0, 15)
-
-						ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					elseif option.value < option.min then
-						option.value = option.min
-						frameSlider.Size = UDim2.new(0, option.value == option.min and 0 or math.floor((((option.value - option.min) / (option.max - option.min)) * 178) + 0.5), 0, 15)
-						ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					else
-						option.value = option.value
-						frameSlider.Size = UDim2.new(0, option.value == option.min and 0 or math.floor((((option.value - option.min) / (option.max - option.min)) * 178) + 0.5), 0, 15)
-
-						ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					end
-					option.callback(option.value)
-
-					frameSlider.Size = UDim2.new(0, math.floor(((((option.value - option.min) / (option.max - option.min)) * 178) + 0) * 100) / 100, 0, 15)
-
-					ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-					option.callback(option.value)
-
-					local UIS = game:GetService("UserInputService")
-
-					local function updateSlider()
-						frameSlider.Size = UDim2.new(0, math.clamp(math.floor(((option.value - option.min) / (option.max - option.min)) * 178), 0, 178), 0, 15)
-						ignoreSliderValue.Text = tostring(option.value) .. "/" .. tostring(option.max) .. option.suffix
-						if option.callback then
-							pcall(option.callback, option.value)
-						end
-					end
-
-
-					btnSlider.InputBegan:Connect(function(input)
-						if input.UserInputType == Enum.UserInputType.MouseButton1 then
-							dragging = true
-							local moveConnection
-							moveConnection = Mouse.Move:Connect(function()
-								local mouseDelta = math.clamp(Mouse.X - frameSlider.AbsolutePosition.X, 0, 178)
-								option.value = tonumber(string.format("%." .. option.float .. "f", (mouseDelta / 178) * (option.max - option.min) + option.min))
-								updateSlider()
-							end)
-
-							local releaseConnection
-							releaseConnection = UIS.InputEnded:Connect(function(releaseInput)
-								if releaseInput.UserInputType == Enum.UserInputType.MouseButton1 then
-									moveConnection:Disconnect()
-									releaseConnection:Disconnect()
-									dragging = false
-								end
-							end)
-						end
-					end)
-
-					-- Add a listener for the TextBox to handle user input
-					ignoreSliderValue.FocusLost:Connect(function(enterPressed)
-						if enterPressed then
-							-- Try to parse the user input as a number
-							local inputValue = tonumber(ignoreSliderValue.Text)
-
-							if inputValue then
-								-- Clamp the input value to the valid range
-								if inputValue < option.min then
-									option.value = option.min
-								elseif inputValue > option.max then
-									option.value = option.max
-								else
-									option.value = tonumber(string.format("%." .. option.float .. "f", inputValue))
-								end
-
-								-- Update the slider's size and text display
-								frameSlider.Size = UDim2.new(0, math.floor(((option.value - option.min) / (option.max - option.min)) * 178), 0, 15)
-								ignoreSliderValue.Text = tostring(option.value) .. "/" .. tostring(option.max) .. option.suffix
-
-								-- Call the callback function if it exists
-								if option.callback then
-									pcall(option.callback, option.value)
-								end
-
-								-- Update the flag if applicable
-								if option.flag then
-									Library.Flags[option.flag] = option.value
-								end
-							else
-								-- If input is invalid, reset the TextBox to the current value
-								ignoreSliderValue.Text = tostring(option.value) .. "/" .. tostring(option.max) .. option.suffix
-							end
-						end
-					end)
-
-					btnSlider.MouseEnter:Connect(function()
-						--UISbtnSlider.Color = Library.Theme.Accent
-					end)
-					btnSlider.MouseLeave:Connect(function()
-						if not dragging then
-							--UISbtnSlider.Color = Library.Theme.Border
-						end
-					end)
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.value
-						Library.Items[option.flag] = option
-					end
-
-					function option:SetValue(int)
-						if int > option.max then
-							option.value = option.max
-							frameSlider.Size =  UDim2.new(0, math.floor((((option.value - option.min) / (option.max - option.min)) * 279) + 0.5), 0, 15)
-							ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-						elseif int < option.min then
-							option.value = option.min
-							frameSlider.Size =  UDim2.new(0, math.floor((((option.value - option.min) / (option.max - option.min)) * 279) + 0.5), 0, 15)
-							ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-						else
-							option.value = int
-							frameSlider.Size =  UDim2.new(0, math.floor((((option.value - option.min) / (option.max - option.min)) * 279) + 0.5), 0, 15)
-							ignoreSliderValue.Text = option.value.."/"..option.max..option.suffix
-						end
-						option.callback(option.value)
-						Library.Flags[option.flag] = option.value
-					end
-				end
-
-				return Slider
-			end
-
-			function section:NewDropdown(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "nil"
-				option.multi = option.multi or false
-				option.value = typeof(option.value) == "table" and option.value or option.value or ""
-				option.values = typeof(option.values) == "table" and option.values or {}
-				option.flag = option.flag or option.text or "DDYDR"
-				option.callback = option.callback or function() end
-				option.utilitytype = "dropdown"
-
-				local Dropdown = {}
-
-				do -- dropdown
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder
-					Dropdown["3e"] = Instance.new("Frame", section["b3"]);
-					Dropdown["3e"]["ZIndex"] = 2;
-					Dropdown["3e"]["BorderSizePixel"] = 0;
-					Dropdown["3e"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["3e"]["Size"] = UDim2.new(1, 0, 0, 33);
-					Dropdown["3e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["3e"]["Name"] = [[DropdownHolder]];
-					Dropdown["3e"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownTextHolder
-					Dropdown["3f"] = Instance.new("Frame", Dropdown["3e"]);
-					Dropdown["3f"]["BorderSizePixel"] = 0;
-					Dropdown["3f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["3f"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Dropdown["3f"]["Size"] = UDim2.new(1, 0, 0.5, -1);
-					Dropdown["3f"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					Dropdown["3f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["3f"]["Name"] = [[DropdownTextHolder]];
-					Dropdown["3f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownTextHolder.DropdownText
-					Dropdown["40"] = Instance.new("TextLabel", Dropdown["3f"]);
-					Dropdown["40"]["TextStrokeTransparency"] = 0;
-					Dropdown["40"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Dropdown["40"]["BorderSizePixel"] = 0;
-					Dropdown["40"]["TextSize"] = 14;
-					Dropdown["40"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Dropdown["40"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Dropdown["40"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["40"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["40"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					Dropdown["40"]["BackgroundTransparency"] = 1;
-					Dropdown["40"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["40"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["40"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["40"]["Text"] = option.text;
-					Dropdown["40"]["Name"] = [[DropdownText]];
-					Dropdown["40"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder
-					Dropdown["41"] = Instance.new("Frame", Dropdown["3e"]);
-					Dropdown["41"]["BorderSizePixel"] = 0;
-					Dropdown["41"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["41"]["AnchorPoint"] = Vector2.new(0.5, 1);
-					Dropdown["41"]["Size"] = UDim2.new(1, 0, 0.5, 2);
-					Dropdown["41"]["Position"] = UDim2.new(0.5, 0, 1, 0);
-					Dropdown["41"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["41"]["Name"] = [[DropdownMainHolder]];
-					Dropdown["41"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline
-					Dropdown["42"] = Instance.new("Frame", Dropdown["41"]);
-					Dropdown["42"]["BorderSizePixel"] = 0;
-					Dropdown["42"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Dropdown["42"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["42"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["42"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["42"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["42"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline
-					Dropdown["43"] = Instance.new("Frame", Dropdown["42"]);
-					Dropdown["43"]["BorderSizePixel"] = 0;
-					Dropdown["43"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["43"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["43"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Dropdown["43"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["43"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["43"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main
-					Dropdown["44"] = Instance.new("Frame", Dropdown["43"]);
-					Dropdown["44"]["BorderSizePixel"] = 0;
-					Dropdown["44"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["44"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["44"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Dropdown["44"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["44"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["44"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.UIGradient
-					Dropdown["45"] = Instance.new("UIGradient", Dropdown["44"]);
-					Dropdown["45"]["Rotation"] = 90;
-					Dropdown["45"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownValueText
-					Dropdown["46"] = Instance.new("TextLabel", Dropdown["44"]);
-					Dropdown["46"]["TextStrokeTransparency"] = 0;
-					Dropdown["46"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					Dropdown["46"]["ZIndex"] = 2;
-					Dropdown["46"]["BorderSizePixel"] = 0;
-					Dropdown["46"]["TextSize"] = 13;
-					Dropdown["46"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					Dropdown["46"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Dropdown["46"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["46"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["46"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["46"]["BackgroundTransparency"] = 1;
-					Dropdown["46"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					Dropdown["46"]["Size"] = UDim2.new(1, -15, 1, 0);
-					Dropdown["46"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["46"]["Name"] = [[DropdownValueText]];
-					Dropdown["46"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownValueText.UIPadding
-					Dropdown["47"] = Instance.new("UIPadding", Dropdown["46"]);
-					Dropdown["47"]["PaddingRight"] = UDim.new(0, 1);
-					Dropdown["47"]["PaddingLeft"] = UDim.new(0, 1);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.+/-
-					Dropdown["48"] = Instance.new("TextLabel", Dropdown["44"]);
-					Dropdown["48"]["TextStrokeTransparency"] = 0;
-					Dropdown["48"]["ZIndex"] = 2;
-					Dropdown["48"]["BorderSizePixel"] = 0;
-					Dropdown["48"]["TextSize"] = 12;
-					Dropdown["48"]["TextXAlignment"] = Enum.TextXAlignment.Right;
-					Dropdown["48"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					Dropdown["48"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["48"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["48"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["48"]["BackgroundTransparency"] = 1;
-					Dropdown["48"]["AnchorPoint"] = Vector2.new(1, 0.5);
-					Dropdown["48"]["Size"] = UDim2.new(0, 15, 1, 0);
-					Dropdown["48"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["48"]["Text"] = [[+]];
-					Dropdown["48"]["Name"] = [[+/-]];
-					Dropdown["48"]["Position"] = UDim2.new(1, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.+/-.UIPadding
-					Dropdown["49"] = Instance.new("UIPadding", Dropdown["48"]);
-					Dropdown["49"]["PaddingRight"] = UDim.new(0, 2);
-					Dropdown["49"]["PaddingLeft"] = UDim.new(0, 2);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownButton
-					Dropdown["4a"] = Instance.new("TextButton", Dropdown["44"]);
-					Dropdown["4a"]["BorderSizePixel"] = 0;
-					Dropdown["4a"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4a"]["TextTransparency"] = 1;
-					Dropdown["4a"]["TextSize"] = 14;
-					Dropdown["4a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["4a"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					Dropdown["4a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["4a"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["4a"]["BackgroundTransparency"] = 1;
-					Dropdown["4a"]["Name"] = [[DropdownButton]];
-					Dropdown["4a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder
-					Dropdown["4b"] = Instance.new("Frame", Dropdown["44"]);
-					Dropdown["4b"]["Visible"] = false;
-					Dropdown["4b"]["BorderSizePixel"] = 0;
-					Dropdown["4b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["4b"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Dropdown["4b"]["Size"] = UDim2.new(1, 4, 0, 45);
-					Dropdown["4b"]["Position"] = UDim2.new(0.5, 0, 1, 0);
-					Dropdown["4b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4b"]["Name"] = [[DropdownOpenedHolder]];
-					Dropdown["4b"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline
-					Dropdown["4c"] = Instance.new("Frame", Dropdown["4b"]);
-					Dropdown["4c"]["BorderSizePixel"] = 0;
-					Dropdown["4c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					Dropdown["4c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["4c"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["4c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["4c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4c"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline
-					Dropdown["4d"] = Instance.new("Frame", Dropdown["4c"]);
-					Dropdown["4d"]["BorderSizePixel"] = 0;
-					Dropdown["4d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["4d"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					Dropdown["4d"]["Size"] = UDim2.new(1, -2, 1, -1);
-					Dropdown["4d"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					Dropdown["4d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4d"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main
-					Dropdown["4e"] = Instance.new("Frame", Dropdown["4d"]);
-					Dropdown["4e"]["BorderSizePixel"] = 0;
-					Dropdown["4e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					Dropdown["4e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["4e"]["Size"] = UDim2.new(1, -2, 1, -2);
-					Dropdown["4e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["4e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["4e"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main.UIGradient
-					Dropdown["4f"] = Instance.new("UIGradient", Dropdown["4e"]);
-					Dropdown["4f"]["Rotation"] = 90;
-					Dropdown["4f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main.VariantsHolder
-					Dropdown["50"] = Instance.new("ScrollingFrame", Dropdown["4e"]);
-					Dropdown["50"]["Active"] = true;
-					Dropdown["50"]["ScrollingDirection"] = Enum.ScrollingDirection.Y;
-					Dropdown["50"]["BorderSizePixel"] = 0;
-					Dropdown["50"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
-					Dropdown["50"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					Dropdown["50"]["Name"] = [[VariantsHolder]];
-					Dropdown["50"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					Dropdown["50"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y;
-					Dropdown["50"]["Size"] = UDim2.new(1, 0, 1, 0);
-					Dropdown["50"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["50"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					Dropdown["50"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					Dropdown["50"]["ScrollBarThickness"] = 0;
-					Dropdown["50"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.DropdownHolder.DropdownMainHolder.Outline.Innerline.Main.DropdownOpenedHolder.Outline.Innerline.Main.VariantsHolder.UIListLayout
-					Dropdown["51"] = Instance.new("UIListLayout", Dropdown["50"]);
-					Dropdown["51"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-				end
-
-				do -- logic
-					local selected = {}
-					local dropped = false
-
-					-- Dropdown elements
-					local btnDD = Dropdown["46"]
-					local D = Dropdown["4b"]
-
-					-- Dropdown toggle
-					Dropdown["4a"].MouseButton1Click:Connect(function()
-						D.Visible = not dropped
-						if D.Visible == true then
-							Dropdown["3e"]["ZIndex"] = 3152
-							Dropdown["48"]["Text"] = [[-]];
-						else
-							Dropdown["3e"]["ZIndex"] = 2
-							Dropdown["48"]["Text"] = [[+]];
-						end
-						dropped = not dropped
-					end)
-
-					-- Helper function for updating dropdown text
-					local function updateDropdownText()
-						if option.multi then
-							btnDD.Text = (#selected > 0) and table.concat(selected, ", ") or "None"
-						else
-							btnDD.Text = tostring(option.value)
-						end
-					end
-
-					-- Helper function for selecting or deselecting an option
-					local function toggleOption(button, value)
-						local activeColor = Color3.fromRGB(255, 255, 255)
-						local inactiveColor = Color3.fromRGB(91, 91, 91)
-
-						if option.multi then
-							if table.find(selected, value) then
-								table.remove(selected, table.find(selected, value))
-								button.TextColor3 = inactiveColor
-							else
-								table.insert(selected, value)
-								button.TextColor3 = activeColor
-							end
-							option.value = selected
-						else
-							option.value = value
-							for _, sibling in ipairs(button.Parent:GetChildren()) do
-								if sibling:IsA("TextButton") then
-									sibling.TextColor3 = inactiveColor
-								end
-							end
-							button.TextColor3 = activeColor
-						end
-
-						updateDropdownText()
-						option.callback(option.value)
-					end
-
-					-- Create dropdown buttons for each option
-					for _, value in ipairs(option.values) do
-						local button = Instance.new("TextButton", Dropdown["50"]) -- Correct parent
-						button.Name = "Option" -- Rename from "Variant" to something descriptive
-						button.Size = UDim2.new(1, 0, 0, 15)
-						button.BackgroundTransparency = 1
-						button.Text = tostring(value) -- Set text to the dropdown value
-						button.TextColor3 = Color3.fromRGB(91, 91, 91) -- Default text color
-						button.TextXAlignment = Enum.TextXAlignment.Left
-						button.Font = Enum.Font.SourceSans
-						button.TextSize = 13
-
-						local padding = Instance.new("UIPadding", button)
-						padding.PaddingRight = UDim.new(0, 2)
-						padding.PaddingLeft = UDim.new(0, 2)
-
-						-- Ensure no extra buttons are preselected incorrectly
-						if option.multi then
-							if table.find(selected, value) then
-								button.TextColor3 = Color3.fromRGB(255, 255, 255)
-							end
-						else
-							if option.value == value then
-								button.TextColor3 = Color3.fromRGB(255, 255, 255)
-							end
-						end
-
-						-- Attach button click functionality
-						button.MouseButton1Click:Connect(function()
-							toggleOption(button, value)
-						end)
-					end
-
-					-- Initialization
-					updateDropdownText()
-					option.callback(option.value)
-
-					-- Store option in library
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.value
-						Library.Items[option.flag] = option
-					end
-
-					-- Function to set values programmatically
-					function option:SetValue(newValue)
-						if option.multi then
-							selected = type(newValue) == "table" and newValue or {}
-							for _, button in ipairs(D:GetChildren()) do
-								if button:IsA("TextButton") then
-									button.TextColor3 = table.find(selected, button.Text) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(91, 91, 91)
-								end
-							end
-						else
-							option.value = newValue
-						end
-						updateDropdownText()
-						option.callback(option.value)
-					end
-
-					function option:SetValues(newValues)
-						-- Clear out existing dropdown buttons
-						for _, child in ipairs(Dropdown["50"]:GetChildren()) do
-							if child:IsA("TextButton") and child.Name == "Option" then
-								child:Destroy()
-							end
-						end
-
-						-- Update the values array
-						option.values = newValues or {}
-
-						-- Set the first value in the dropdown automatically, if it exists
-						if #option.values > 0 then
-							if option.multi then
-								selected = { option.values[1] }
-							else
-								option.value = option.values[1]
-							end
-						else
-							-- Handle the case where the newValues array is empty
-							if option.multi then
-								selected = {}
-							else
-								option.value = nil
-							end
-						end
-
-						-- Create new buttons for the dropdown
-						for _, value in ipairs(option.values) do
-							local button = Instance.new("TextButton", Dropdown["50"]) -- Correct parent
-							button.Name = "Option" -- Name the button for easier identification
-							button.Size = UDim2.new(1, 0, 0, 15)
-							button.BackgroundTransparency = 1
-							button.Text = tostring(value) -- Set text to the dropdown value
-							button.TextColor3 = Color3.fromRGB(91, 91, 91) -- Default text color
-							button.TextXAlignment = Enum.TextXAlignment.Left
-							button.Font = Enum.Font.SourceSans
-							button.TextSize = 13
-
-							local padding = Instance.new("UIPadding", button)
-							padding.PaddingRight = UDim.new(0, 2)
-							padding.PaddingLeft = UDim.new(0, 2)
-
-							-- Ensure no extra buttons are preselected incorrectly
-							if option.multi then
-								if table.find(selected, value) then
-									button.TextColor3 = Color3.fromRGB(255, 255, 255)
-								end
-							else
-								if option.value == value then
-									button.TextColor3 = Color3.fromRGB(255, 255, 255)
-								end
-							end
-
-							-- Attach button click functionality
-							button.MouseButton1Click:Connect(function()
-								toggleOption(button, value)
-							end)
-						end
-
-						-- Update the dropdown display text
-						updateDropdownText()
-
-						-- Call the callback with the updated value
-						option.callback(option.value)
-					end
-				end
-
-				return Dropdown
-			end
-
-			function section:NewTextBox(option)
-				option = typeof(option) == "table" and option or {}
-				option.textr = option.textr or "new text box"
-				option.text = option.text or "nil"
-				option.placeholder = option.placeholder or "Value"
-				option.value = option.value or ""
-				option.clearonfocus = option.clearonfocus or false
-				option.flag = option.flag or option.text or option.value or option.placeholder
-				option.callback = option.callback or function() end
-				option.utilitytype = "textbox"
-
-				local TextBox = {}
-
-				do -- textbox
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder
-					TextBox["97"] = Instance.new("Frame", section["b3"]);
-					TextBox["97"]["BorderSizePixel"] = 0;
-					TextBox["97"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["97"]["Size"] = UDim2.new(1, 0, 0, 33);
-					TextBox["97"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["97"]["Name"] = [[TextBoxHolder]];
-					TextBox["97"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxText
-					TextBox["98"] = Instance.new("Frame", TextBox["97"]);
-					TextBox["98"]["BorderSizePixel"] = 0;
-					TextBox["98"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["98"]["Size"] = UDim2.new(1, 0, 0.5, -1);
-					TextBox["98"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["98"]["Name"] = [[TextBoxText]];
-					TextBox["98"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxText.TextBoxTXT
-					TextBox["99"] = Instance.new("TextLabel", TextBox["98"]);
-					TextBox["99"]["TextStrokeTransparency"] = 0;
-					TextBox["99"]["BorderSizePixel"] = 0;
-					TextBox["99"]["TextSize"] = 14;
-					TextBox["99"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					TextBox["99"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					TextBox["99"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["99"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					TextBox["99"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					TextBox["99"]["BackgroundTransparency"] = 1;
-					TextBox["99"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["99"]["Size"] = UDim2.new(1, 0, 1, 0);
-					TextBox["99"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["99"]["Text"] = option.textr;
-					TextBox["99"]["Name"] = [[TextBoxTXT]];
-					TextBox["99"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain
-					TextBox["9a"] = Instance.new("Frame", TextBox["97"]);
-					TextBox["9a"]["BorderSizePixel"] = 0;
-					TextBox["9a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["9a"]["AnchorPoint"] = Vector2.new(0, 1);
-					TextBox["9a"]["Size"] = UDim2.new(1, 0, 0.5, 2);
-					TextBox["9a"]["Position"] = UDim2.new(0, 0, 1, 0);
-					TextBox["9a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9a"]["Name"] = [[TextBoxMain]];
-					TextBox["9a"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline
-					TextBox["9b"] = Instance.new("Frame", TextBox["9a"]);
-					TextBox["9b"]["BorderSizePixel"] = 0;
-					TextBox["9b"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					TextBox["9b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9b"]["Size"] = UDim2.new(1, 0, 1, 0);
-					TextBox["9b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9b"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline
-					TextBox["9c"] = Instance.new("Frame", TextBox["9b"]);
-					TextBox["9c"]["BorderSizePixel"] = 0;
-					TextBox["9c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					TextBox["9c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9c"]["Size"] = UDim2.new(1, -2, 1, -2);
-					TextBox["9c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9c"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main
-					TextBox["9d"] = Instance.new("Frame", TextBox["9c"]);
-					TextBox["9d"]["BorderSizePixel"] = 0;
-					TextBox["9d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					TextBox["9d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9d"]["Size"] = UDim2.new(1, -2, 1, -2);
-					TextBox["9d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9d"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main.UIGradient
-					TextBox["9e"] = Instance.new("UIGradient", TextBox["9d"]);
-					TextBox["9e"]["Rotation"] = 90;
-					TextBox["9e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main.TextBox
-					TextBox["9f"] = Instance.new("TextBox", TextBox["9d"]);
-					TextBox["9f"]["CursorPosition"] = -1;
-					TextBox["9f"]["TextStrokeTransparency"] = 0;
-					TextBox["9f"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					TextBox["9f"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					TextBox["9f"]["BorderSizePixel"] = 0;
-					TextBox["9f"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					TextBox["9f"]["TextSize"] = 13;
-					TextBox["9f"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["9f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					TextBox["9f"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					TextBox["9f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					TextBox["9f"]["PlaceholderText"] = option.placeholder;
-					TextBox["9f"]["Size"] = UDim2.new(1, 0, 1, 0);
-					TextBox["9f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					TextBox["9f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					TextBox["9f"]["BackgroundTransparency"] = 1;
-					TextBox["9f"].Text = tostring(option.text)
-					TextBox["9f"].ClearTextOnFocus = typeof(option.clearonfocus) == "boolean" and option.clearonfocus or false
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.TextBoxHolder.TextBoxMain.Outline.Innerline.Main.TextBox.UIPadding
-					TextBox["a0"] = Instance.new("UIPadding", TextBox["9f"]);
-					TextBox["a0"]["PaddingRight"] = UDim.new(0, 1);
-					TextBox["a0"]["PaddingLeft"] = UDim.new(0, 1);
-				end
-
-				do -- logic
-					local txt = TextBox["9f"]
-					local down = false
-
-					game:GetService("UserInputService").InputBegan:Connect(function(input) if input.KeyCode == Enum.KeyCode.Return then  down = true end end)
-
-					game:GetService("UserInputService").InputEnded:Connect(function(input) if input.KeyCode == Enum.KeyCode.Return then  down = false  end end)
-
-					txt.FocusLost:Connect(function()
-						task.wait()
-						if down then 
-							option.value = txt.Text
-							option.callback(option.value)
-							Library.Flags[option.flag] = option.value
-						end 
-					end)
-
-					if option.flag and option.flag ~= "" then
-						Library.Flags[option.flag] = option.value
-						Library.Items[option.flag] = option
-					end
-
-					option.callback(option.value)
-
-					function option:SetValue(str)
-						option.value = tostring(str)
-						txt.Text = option.value
-						Library.Flags[option.flag] = option.value
-						option.callback(option.value)
-					end
-				end
-
-				return TextBox
-			end
-
-			function section:NewColorpicker(option)
-				option = typeof(option) == "table" and option or {}
-				option.text = option.text or "New Color" or "nil"
-				option.color = option.color or Color3.fromRGB(255, 255, 255)
-				option.transparency = typeof(option.transparency) == "number" and option.transparency or typeof(option.transparency) == "boolean" and option.transparency or false
-				option.flag = option.flag or option.text
-				option.callback = option.callback or function() end
-				option.transparencyCallback = option.transparencyCallback or function() end
-				option.utilitytype = "color"
-
-				local ColorPicker = {}
-
-				do -- colorpicker
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder
-					ColorPicker["5b"] = Instance.new("Frame", section["b3"]);
-					ColorPicker["5b"]["ZIndex"] = 999;
-					ColorPicker["5b"]["BorderSizePixel"] = 0;
-					ColorPicker["5b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["5b"]["Size"] = UDim2.new(1, 0, 0, 15);
-					ColorPicker["5b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5b"]["Name"] = [[ColorpickerHolder]];
-					ColorPicker["5b"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.ColorpickerText
-					ColorPicker["5c"] = Instance.new("TextLabel", ColorPicker["5b"]);
-					ColorPicker["5c"]["TextStrokeTransparency"] = 0;
-					ColorPicker["5c"]["TextTruncate"] = Enum.TextTruncate.SplitWord;
-					ColorPicker["5c"]["BorderSizePixel"] = 0;
-					ColorPicker["5c"]["TextSize"] = 14;
-					ColorPicker["5c"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-					ColorPicker["5c"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["5c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["5c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["5c"]["TextColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["5c"]["BackgroundTransparency"] = 1;
-					ColorPicker["5c"]["AnchorPoint"] = Vector2.new(0, 0.5);
-					ColorPicker["5c"]["Size"] = UDim2.new(1, -20, 1, 0);
-					ColorPicker["5c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5c"]["Text"] = [[ColorPicker preview]];
-					ColorPicker["5c"]["Name"] = [[ColorpickerText]];
-					ColorPicker["5c"]["Position"] = UDim2.new(0, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline
-					ColorPicker["5d"] = Instance.new("Frame", ColorPicker["5b"]);
-					ColorPicker["5d"]["BorderSizePixel"] = 0;
-					ColorPicker["5d"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["5d"]["AnchorPoint"] = Vector2.new(1, 0);
-					ColorPicker["5d"]["Size"] = UDim2.new(0, 25, 1, 0);
-					ColorPicker["5d"]["Position"] = UDim2.new(1, 0, 0, 0);
-					ColorPicker["5d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5d"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine
-					ColorPicker["5e"] = Instance.new("Frame", ColorPicker["5d"]);
-					ColorPicker["5e"]["BorderSizePixel"] = 0;
-					ColorPicker["5e"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["5e"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["5e"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["5e"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["5e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5e"]["Name"] = [[InnerLine]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display
-					ColorPicker["5f"] = Instance.new("Frame", ColorPicker["5e"]);
-					ColorPicker["5f"]["ZIndex"] = 2;
-					ColorPicker["5f"]["BorderSizePixel"] = 0;
-					ColorPicker["5f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["5f"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["5f"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["5f"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["5f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["5f"]["Name"] = [[Display]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Display.UIGradient
-					ColorPicker["60"] = Instance.new("UIGradient", ColorPicker["5f"]);
-					ColorPicker["60"]["Rotation"] = 90;
-					ColorPicker["60"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerButton
-					ColorPicker["61"] = Instance.new("TextButton", ColorPicker["5e"]);
-					ColorPicker["61"]["BorderSizePixel"] = 0;
-					ColorPicker["61"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["61"]["TextTransparency"] = 1;
-					ColorPicker["61"]["AutoButtonColor"] = false;
-					ColorPicker["61"]["TextSize"] = 14;
-					ColorPicker["61"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["61"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["61"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["61"]["Size"] = UDim2.new(1, 0, 1, 0);
-					ColorPicker["61"]["BackgroundTransparency"] = 1;
-					ColorPicker["61"]["Name"] = [[ColorPickerButton]];
-					ColorPicker["61"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["61"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain
-					ColorPicker["62"] = Instance.new("Frame", ColorPicker["5e"]);
-					ColorPicker["62"]["Visible"] = false;
-					ColorPicker["62"]["ZIndex"] = 10000;
-					ColorPicker["62"]["BorderSizePixel"] = 0;
-					ColorPicker["62"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["62"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["62"]["Size"] = UDim2.new(0, 125, 0, 150);
-					ColorPicker["62"]["Position"] = UDim2.new(0, -1, 0, -1);
-					ColorPicker["62"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["62"]["Name"] = [[ColorPickerMain]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline
-					ColorPicker["63"] = Instance.new("Frame", ColorPicker["62"]);
-					ColorPicker["63"]["BorderSizePixel"] = 0;
-					ColorPicker["63"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["63"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["63"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["63"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["63"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["63"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main
-					ColorPicker["64"] = Instance.new("Frame", ColorPicker["63"]);
-					ColorPicker["64"]["BorderSizePixel"] = 0;
-					ColorPicker["64"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["64"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["64"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["64"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["64"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["64"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIGradient
-					ColorPicker["65"] = Instance.new("UIGradient", ColorPicker["64"]);
-					ColorPicker["65"]["Rotation"] = 90;
-					ColorPicker["65"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.UIPadding
-					ColorPicker["66"] = Instance.new("UIPadding", ColorPicker["64"]);
-					ColorPicker["66"]["PaddingTop"] = UDim.new(0, 3);
-					ColorPicker["66"]["PaddingRight"] = UDim.new(0, 3);
-					ColorPicker["66"]["PaddingLeft"] = UDim.new(0, 3);
-					ColorPicker["66"]["PaddingBottom"] = UDim.new(0, 3);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder
-					ColorPicker["67"] = Instance.new("Frame", ColorPicker["64"]);
-					ColorPicker["67"]["BorderSizePixel"] = 0;
-					ColorPicker["67"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["67"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["67"]["Size"] = UDim2.new(1, 0, 0, 18);
-					ColorPicker["67"]["Position"] = UDim2.new(0, 0, 1, 0);
-					ColorPicker["67"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["67"]["Name"] = [[RGBtextHolder]];
-					ColorPicker["67"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.UIListLayout
-					ColorPicker["68"] = Instance.new("UIListLayout", ColorPicker["67"]);
-					ColorPicker["68"]["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
-					ColorPicker["68"]["HorizontalFlex"] = Enum.UIFlexAlignment.Fill;
-					ColorPicker["68"]["VerticalFlex"] = Enum.UIFlexAlignment.Fill;
-					ColorPicker["68"]["Padding"] = UDim.new(0, 1);
-					ColorPicker["68"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-					ColorPicker["68"]["FillDirection"] = Enum.FillDirection.Horizontal;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R
-					ColorPicker["69"] = Instance.new("Frame", ColorPicker["67"]);
-					ColorPicker["69"]["BorderSizePixel"] = 0;
-					ColorPicker["69"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["69"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["69"]["Size"] = UDim2.new(0, 33, 0, 15);
-					ColorPicker["69"]["Position"] = UDim2.new(0, 37, 1, 0);
-					ColorPicker["69"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["69"]["Name"] = [[R]];
-					ColorPicker["69"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline
-					ColorPicker["6a"] = Instance.new("Frame", ColorPicker["69"]);
-					ColorPicker["6a"]["BorderSizePixel"] = 0;
-					ColorPicker["6a"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["6a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6a"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6a"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline
-					ColorPicker["6b"] = Instance.new("Frame", ColorPicker["6a"]);
-					ColorPicker["6b"]["BorderSizePixel"] = 0;
-					ColorPicker["6b"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["6b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6b"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6b"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main
-					ColorPicker["6c"] = Instance.new("Frame", ColorPicker["6b"]);
-					ColorPicker["6c"]["BorderSizePixel"] = 0;
-					ColorPicker["6c"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["6c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6c"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6c"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6c"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.R
-					ColorPicker["6d"] = Instance.new("TextBox", ColorPicker["6c"]);
-					ColorPicker["6d"]["TextStrokeTransparency"] = 0;
-					ColorPicker["6d"]["Name"] = [[R]];
-					ColorPicker["6d"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["6d"]["BorderSizePixel"] = 0;
-					ColorPicker["6d"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["6d"]["TextSize"] = 13;
-					ColorPicker["6d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["6d"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["6d"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["6d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["6d"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["6d"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["6d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6d"]["Text"] = [[255]];
-					ColorPicker["6d"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.R.Outline.Innerline.Main.UIGradient
-					ColorPicker["6e"] = Instance.new("UIGradient", ColorPicker["6c"]);
-					ColorPicker["6e"]["Rotation"] = 90;
-					ColorPicker["6e"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G
-					ColorPicker["6f"] = Instance.new("Frame", ColorPicker["67"]);
-					ColorPicker["6f"]["BorderSizePixel"] = 0;
-					ColorPicker["6f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["6f"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["6f"]["Size"] = UDim2.new(0, 33, 0, 15);
-					ColorPicker["6f"]["Position"] = UDim2.new(0, 37, 1, 0);
-					ColorPicker["6f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["6f"]["Name"] = [[G]];
-					ColorPicker["6f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline
-					ColorPicker["70"] = Instance.new("Frame", ColorPicker["6f"]);
-					ColorPicker["70"]["BorderSizePixel"] = 0;
-					ColorPicker["70"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["70"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["70"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["70"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["70"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["70"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline
-					ColorPicker["71"] = Instance.new("Frame", ColorPicker["70"]);
-					ColorPicker["71"]["BorderSizePixel"] = 0;
-					ColorPicker["71"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["71"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["71"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["71"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["71"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["71"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main
-					ColorPicker["72"] = Instance.new("Frame", ColorPicker["71"]);
-					ColorPicker["72"]["BorderSizePixel"] = 0;
-					ColorPicker["72"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["72"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["72"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["72"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["72"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["72"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.G
-					ColorPicker["73"] = Instance.new("TextBox", ColorPicker["72"]);
-					ColorPicker["73"]["TextStrokeTransparency"] = 0;
-					ColorPicker["73"]["Name"] = [[G]];
-					ColorPicker["73"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["73"]["BorderSizePixel"] = 0;
-					ColorPicker["73"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["73"]["TextSize"] = 13;
-					ColorPicker["73"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["73"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["73"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["73"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["73"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["73"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["73"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["73"]["Text"] = [[255]];
-					ColorPicker["73"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.G.Outline.Innerline.Main.UIGradient
-					ColorPicker["74"] = Instance.new("UIGradient", ColorPicker["72"]);
-					ColorPicker["74"]["Rotation"] = 90;
-					ColorPicker["74"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B
-					ColorPicker["75"] = Instance.new("Frame", ColorPicker["67"]);
-					ColorPicker["75"]["BorderSizePixel"] = 0;
-					ColorPicker["75"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["75"]["AnchorPoint"] = Vector2.new(0, 1);
-					ColorPicker["75"]["Size"] = UDim2.new(0, 33, 0, 15);
-					ColorPicker["75"]["Position"] = UDim2.new(0, 37, 1, 0);
-					ColorPicker["75"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["75"]["Name"] = [[B]];
-					ColorPicker["75"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline
-					ColorPicker["76"] = Instance.new("Frame", ColorPicker["75"]);
-					ColorPicker["76"]["BorderSizePixel"] = 0;
-					ColorPicker["76"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["76"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["76"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["76"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["76"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["76"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline
-					ColorPicker["77"] = Instance.new("Frame", ColorPicker["76"]);
-					ColorPicker["77"]["BorderSizePixel"] = 0;
-					ColorPicker["77"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["77"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["77"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["77"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["77"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["77"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main
-					ColorPicker["78"] = Instance.new("Frame", ColorPicker["77"]);
-					ColorPicker["78"]["BorderSizePixel"] = 0;
-					ColorPicker["78"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["78"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["78"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["78"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["78"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["78"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.B
-					ColorPicker["79"] = Instance.new("TextBox", ColorPicker["78"]);
-					ColorPicker["79"]["TextStrokeTransparency"] = 0;
-					ColorPicker["79"]["Name"] = [[B]];
-					ColorPicker["79"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["79"]["BorderSizePixel"] = 0;
-					ColorPicker["79"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["79"]["TextSize"] = 13;
-					ColorPicker["79"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["79"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["79"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["79"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["79"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["79"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["79"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["79"]["Text"] = [[255]];
-					ColorPicker["79"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.RGBtextHolder.B.Outline.Innerline.Main.UIGradient
-					ColorPicker["7a"] = Instance.new("UIGradient", ColorPicker["78"]);
-					ColorPicker["7a"]["Rotation"] = 90;
-					ColorPicker["7a"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue
-					ColorPicker["7b"] = Instance.new("ImageButton", ColorPicker["64"]);
-					ColorPicker["7b"]["BorderSizePixel"] = 0;
-					ColorPicker["7b"]["AutoButtonColor"] = false;
-					ColorPicker["7b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["7b"]["Selectable"] = false;
-					ColorPicker["7b"]["AnchorPoint"] = Vector2.new(1, 0);
-					ColorPicker["7b"]["Image"] = [[rbxassetid://2615692420]];
-					ColorPicker["7b"]["Size"] = UDim2.new(0, 15, 0, 95);
-					ColorPicker["7b"]["Name"] = [[Hue]];
-					ColorPicker["7b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7b"]["Position"] = UDim2.new(1, 0, 0, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Hue.huecursor
-					ColorPicker["7c"] = Instance.new("Frame", ColorPicker["7b"]);
-					ColorPicker["7c"]["BorderSizePixel"] = 0;
-					ColorPicker["7c"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["7c"]["AnchorPoint"] = Vector2.new(0.5, 0);
-					ColorPicker["7c"]["Size"] = UDim2.new(1, 6, 0, 3);
-					ColorPicker["7c"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-					ColorPicker["7c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7c"]["Name"] = [[huecursor]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme
-					ColorPicker["7d"] = Instance.new("ImageButton", ColorPicker["64"]);
-					ColorPicker["7d"]["BorderSizePixel"] = 0;
-					ColorPicker["7d"]["AutoButtonColor"] = false;
-					ColorPicker["7d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["7d"]["Selectable"] = false;
-					ColorPicker["7d"]["Image"] = [[rbxassetid://2615689005]];
-					ColorPicker["7d"]["Size"] = UDim2.new(0, 95, 0, 95);
-					ColorPicker["7d"]["Name"] = [[Scheme]];
-					ColorPicker["7d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Scheme.schemecursor
-					ColorPicker["7e"] = Instance.new("ImageLabel", ColorPicker["7d"]);
-					ColorPicker["7e"]["ZIndex"] = 5;
-					ColorPicker["7e"]["BorderSizePixel"] = 0;
-					ColorPicker["7e"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7e"]["ImageColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7e"]["Image"] = [[http://www.roblox.com/asset/?id=16006380635]];
-					ColorPicker["7e"]["ImageRectSize"] = Vector2.new(1000, 1000);
-					ColorPicker["7e"]["Size"] = UDim2.new(0, 5, 0, 5);
-					ColorPicker["7e"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7e"]["BackgroundTransparency"] = 1;
-					ColorPicker["7e"]["Name"] = [[schemecursor]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency
-					ColorPicker["7f"] = Instance.new("Frame", ColorPicker["64"]);
-					ColorPicker["7f"]["BorderSizePixel"] = 0;
-					ColorPicker["7f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["7f"]["AnchorPoint"] = Vector2.new(0.5, 1);
-					ColorPicker["7f"]["Size"] = UDim2.new(1, 0, 0, 18);
-					ColorPicker["7f"]["Position"] = UDim2.new(0.5, 0, 1, -20);
-					ColorPicker["7f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["7f"]["Name"] = [[Transparency]];
-					ColorPicker["7f"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline
-					ColorPicker["80"] = Instance.new("Frame", ColorPicker["7f"]);
-					ColorPicker["80"]["BorderSizePixel"] = 0;
-					ColorPicker["80"]["BackgroundColor3"] = Color3.fromRGB(21, 21, 21);
-					ColorPicker["80"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["80"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["80"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["80"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["80"]["Name"] = [[Outline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline
-					ColorPicker["81"] = Instance.new("Frame", ColorPicker["80"]);
-					ColorPicker["81"]["BorderSizePixel"] = 0;
-					ColorPicker["81"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["81"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["81"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["81"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["81"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["81"]["Name"] = [[Innerline]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main
-					ColorPicker["82"] = Instance.new("Frame", ColorPicker["81"]);
-					ColorPicker["82"]["BorderSizePixel"] = 0;
-					ColorPicker["82"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["82"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["82"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["82"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["82"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["82"]["Name"] = [[Main]];
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.Transparency
-					ColorPicker["83"] = Instance.new("TextBox", ColorPicker["82"]);
-					ColorPicker["83"]["TextStrokeTransparency"] = 0;
-					ColorPicker["83"]["Name"] = [[Transparency]];
-					ColorPicker["83"]["PlaceholderColor3"] = Color3.fromRGB(92, 92, 92);
-					ColorPicker["83"]["BorderSizePixel"] = 0;
-					ColorPicker["83"]["TextStrokeColor3"] = Color3.fromRGB(11, 11, 11);
-					ColorPicker["83"]["TextSize"] = 13;
-					ColorPicker["83"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["83"]["BackgroundColor3"] = Color3.fromRGB(31, 31, 31);
-					ColorPicker["83"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-					ColorPicker["83"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["83"]["PlaceholderText"] = [[Transparency:]];
-					ColorPicker["83"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["83"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-					ColorPicker["83"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["83"]["Text"] = [[100]];
-					ColorPicker["83"]["BackgroundTransparency"] = 1;
-
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.ColorPickerMain.Innerline.Main.Transparency.Outline.Innerline.Main.UIGradient
-					ColorPicker["84"] = Instance.new("UIGradient", ColorPicker["82"]);
-					ColorPicker["84"]["Rotation"] = 90;
-					ColorPicker["84"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(255, 255, 255)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(213, 213, 213))};
-
-					-- StarterGui.UILIBMAIN.UIHolder.Outline.Accent.Innerline.Main.Innerline.Outline.insideMain.insideHolder.TabEverythingHolder.CombatTabEverythingHolder.Outline.Innerline.Main.SectionsHolder.SectionHolder.Outline.Main.ColorpickerHolder.Outline.InnerLine.Frame
-					ColorPicker["86"] = Instance.new("ImageLabel", ColorPicker["5e"]);
-					ColorPicker["86"]["BorderSizePixel"] = 0;
-					ColorPicker["86"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-					ColorPicker["86"]["ScaleType"] = Enum.ScaleType.Crop;
-					ColorPicker["86"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-					ColorPicker["86"]["Image"] = [[rbxassetid://98372645101260]];
-					ColorPicker["86"]["ImageRectSize"] = Vector2.new(100, 100);
-					ColorPicker["86"]["Size"] = UDim2.new(1, -2, 1, -2);
-					ColorPicker["86"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-					ColorPicker["86"]["Name"] = [[Frame]];
-					ColorPicker["86"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-				end
-
-				do -- logic
-					local opened = false
-
-					ColorPicker["61"].MouseButton1Click:Connect(function()
-						ColorPicker["62"].Visible = not opened
-						opened = not opened
-					end)
-
-					local colorPickerMain = ColorPicker["62"]
-					local scrollFrame = Tab["1e"]
-
-					-- Function to update position and anchor point
-					local function updatePosition()
-						local pickerAbsPos = colorPickerMain.AbsolutePosition
-						local scrollFrameAbsPos = scrollFrame.AbsolutePosition
-						local scrollFrameSize = scrollFrame.AbsoluteSize
-
-						-- Check if touching the top
-						if pickerAbsPos.Y < scrollFrameAbsPos.Y then
-							colorPickerMain.Position = UDim2.new(0, -1, 1, 1) -- Position at the top
-							colorPickerMain.AnchorPoint = Vector2.new(0, 0) -- Anchor point at the top
-							print("Moved to top with AnchorPoint 0,0 and Position {0, -1}, {1, 1}")
-						end
-
-						-- Check if touching the bottom
-						if pickerAbsPos.Y + colorPickerMain.AbsoluteSize.Y > scrollFrameAbsPos.Y + scrollFrameSize.Y then
-							colorPickerMain.Position = UDim2.new(0, -1, 0, -1) -- Position at the bottom
-							colorPickerMain.AnchorPoint = Vector2.new(0, 1) -- Anchor point at the bottom
-							print("Moved to bottom with AnchorPoint 0,1 and Position {0, -1}, {0, -1}")
-						end
-					end
-
-					-- Connect to the RenderStepped event for constant checking
-					game:GetService("RunService").RenderStepped:Connect(updatePosition)
-
-					local white, black = Color3.new(1, 1, 1), Color3.new(0, 0, 0)
-					local colors = {
-						Color3.new(1, 0, 0), Color3.new(1, 1, 0), Color3.new(0, 1, 0),
-						Color3.new(0, 1, 1), Color3.new(0, 0, 1), Color3.new(1, 0, 1), Color3.new(1, 0, 0)
-					}
-
-					local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-					local UserInputService = game:GetService("UserInputService")
-
-					-- UI elements
-					local Schema = ColorPicker["7d"] -- Gradient area
-					local SchemaCursor = ColorPicker["7e"] -- Cursor for the scheme
-					local HUE = ColorPicker["7b"] -- Hue bar
-					local HueCursor = ColorPicker["7c"] -- Cursor for the hue bar
-					local Display = ColorPicker["5f"] -- Color display
-					local TransparencyTextBox = ColorPicker["83"] -- Transparency input box
-					local TextBoxR = ColorPicker["6d"] -- Red input box
-					local TextBoxG = ColorPicker["73"] -- Green input box
-					local TextBoxB = ColorPicker["79"] -- Blue input box
-
-					-- Function: Convert RGB to HSV
-					local function rgbToHSV(color)
-						local r, g, b = color.R, color.G, color.B
-						local max, min = math.max(r, g, b), math.min(r, g, b)
-						local delta = max - min
-
-						local h = 0
-						if delta > 0 then
-							if max == r then
-								h = (g - b) / delta % 6
-							elseif max == g then
-								h = (b - r) / delta + 2
-							elseif max == b then
-								h = (r - g) / delta + 4
-							end
-							h = h / 6
-						end
-
-						local s = (max == 0) and 0 or delta / max
-						local v = max
-						return h, s, v
-					end
-
-					-- Function: Clamp a value between min and max
-					local function clamp(value, min, max)
-						return math.max(min, math.min(max, value))
-					end
-
-					-- Function: Update the color display
-					local function updateColor(outputColor)
-						if typeof(outputColor) ~= "Color3" then
-							error("Invalid color value: Expected Color3, got " .. typeof(outputColor))
-						end
-
-						Display.BackgroundColor3 = outputColor
-						option.color = outputColor
-
-						local r = math.floor(outputColor.R * 255 + 0.5)
-						local g = math.floor(outputColor.G * 255 + 0.5)
-						local b = math.floor(outputColor.B * 255 + 0.5)
-
-						TextBoxR.Text = tostring(r)
-						TextBoxG.Text = tostring(g)
-						TextBoxB.Text = tostring(b)
-
-						if option.callback then
-							option.callback(outputColor)
-						end
-					end
-
-					-- Function to update the hue-based color dynamically
-					local function updateHueColor(huePercent)
-						-- Calculate the color from the hue percentage
-						local hueColor = Color3.fromHSV(huePercent, 1, 1)
-
-						-- Update the scheme's background color to reflect the hue
-						Schema.BackgroundColor3 = hueColor
-
-						-- Calculate the scheme cursor's position and update the final color
-						local xP = math.clamp((SchemaCursor.AbsolutePosition.X - Schema.AbsolutePosition.X) / Schema.AbsoluteSize.X, 0, 1)
-						local yP = math.clamp((SchemaCursor.AbsolutePosition.Y - Schema.AbsolutePosition.Y) / Schema.AbsoluteSize.Y, 0, 1)
-						local outputColor = white:Lerp(hueColor, xP):Lerp(black, yP)
-
-						-- Update the display, text boxes, and trigger callbacks
-						updateColor(outputColor)
-					end
-
-					-- Function to update the scheme-based color dynamically
-					local function updateSchemeColor(relativeX, relativeY)
-						-- Calculate the interpolated color based on cursor position
-						local xP = math.clamp(relativeX / Schema.AbsoluteSize.X, 0, 1)
-						local yP = math.clamp(relativeY / Schema.AbsoluteSize.Y, 0, 1)
-						local outputColor = white:Lerp(Schema.BackgroundColor3, xP):Lerp(black, yP)
-
-						-- Update the display, text boxes, and trigger callbacks
-						updateColor(outputColor)
-					end
-
-					-- Function: Sync color picker cursors and display based on a Color3 value
-					local function syncColor()
-						local h, s, v = rgbToHSV(option.color)
-
-						local huePosition = h * HUE.AbsoluteSize.Y
-						HueCursor.Position = UDim2.new(0.5, 0, 0, huePosition - (HueCursor.AbsoluteSize.Y / 2))
-
-						local hueColor = Color3.fromHSV(h, 1, 1)
-						Schema.BackgroundColor3 = hueColor
-
-						local schemeX = s * Schema.AbsoluteSize.X
-						local schemeY = (1 - v) * Schema.AbsoluteSize.Y
-						SchemaCursor.Position = UDim2.new(0, schemeX - (SchemaCursor.AbsoluteSize.X / 2), 0, schemeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-						updateColor(option.color)
-					end
-
-					-- Function: Update transparency
-					local function updateTransparency(transparencyValue)
-						local clampedValue = clamp(transparencyValue, 0, 100)
-						local callbackValue = 1 - (clampedValue / 100)
-
-						Display.BackgroundTransparency = callbackValue
-						option.transparency = clampedValue
-
-						if option.transparencyCallback then
-							option.transparencyCallback(callbackValue)
-						end
-
-						TransparencyTextBox.Text = tostring(clampedValue)
-					end
-
-					-- Connect transparency TextBox changes
-					TransparencyTextBox.FocusLost:Connect(function()
-						local transparencyValue = tonumber(TransparencyTextBox.Text)
-						if transparencyValue then
-							updateTransparency(transparencyValue)
-						else
-							TransparencyTextBox.Text = tostring(option.transparency)
-						end
-					end)
-
-					TransparencyTextBox:GetPropertyChangedSignal("Text"):Connect(function()
-						local inputText = TransparencyTextBox.Text
-						if not tonumber(inputText) and inputText ~= "" then
-							TransparencyTextBox.Text = inputText:gsub("%D", "")
-						end
-					end)
-
-					-- Function: Handle RGB input changes
-					local function handleRGBInputChange(textBox, component)
-						textBox.FocusLost:Connect(function()
-							local inputValue = tonumber(textBox.Text)
-							if inputValue then
-								local r = component == "R" and inputValue or math.floor(option.color.R * 255 + 0.5)
-								local g = component == "G" and inputValue or math.floor(option.color.G * 255 + 0.5)
-								local b = component == "B" and inputValue or math.floor(option.color.B * 255 + 0.5)
-
-								option.color = Color3.fromRGB(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255))
-								syncColor()
-							else
-								textBox.Text = tostring(math.floor(option.color[component] * 255 + 0.5))
-							end
-						end)
-
-						textBox:GetPropertyChangedSignal("Text"):Connect(function()
-							local inputText = textBox.Text
-							if not tonumber(inputText) and inputText ~= "" then
-								textBox.Text = inputText:gsub("%D", "")
-							end
-						end)
-					end
-
-					-- Logic for interacting with the hue bar
-					HUE.MouseButton1Down:Connect(function()
-						-- Function to dynamically update the hue cursor and color
-						local function updateHueCursor()
-							local relativeY = math.clamp(Mouse.Y - HUE.AbsolutePosition.Y, 0, HUE.AbsoluteSize.Y)
-
-							-- Correct the X offset: center the cursor horizontally within the hue bar
-							HueCursor.Position = UDim2.new(0.5, 0, 0, relativeY - (HueCursor.AbsoluteSize.Y / 2))
-
-							-- Calculate hue as a percentage (0 to 1) and update the color
-							local huePercent = math.clamp(relativeY / HUE.AbsoluteSize.Y, 0, 1)
-							updateHueColor(huePercent)
-						end
-
-						-- Initial update
-						updateHueCursor()
-
-						-- Connect mouse movement for dragging
-						local hueConnection
-						hueConnection = Mouse.Move:Connect(updateHueCursor)
-
-						-- Detect when the mouse button is released
-						local inputEndedConnection
-						inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-							if input.UserInputType == Enum.UserInputType.MouseButton1 then
-								-- Disconnect connections safely
-								if hueConnection then
-									hueConnection:Disconnect()
-									hueConnection = nil
-								end
-								if inputEndedConnection then
-									inputEndedConnection:Disconnect()
-									inputEndedConnection = nil
-								end
-							end
-						end)
-					end)
-
-					-- Logic for interacting with the scheme area
-					Schema.MouseButton1Down:Connect(function()
-						-- Function to dynamically update the scheme cursor and color
-						local function updateSchemeCursor()
-							local relativeX = math.clamp(Mouse.X - Schema.AbsolutePosition.X, 0, Schema.AbsoluteSize.X)
-							local relativeY = math.clamp(Mouse.Y - Schema.AbsolutePosition.Y, 0, Schema.AbsoluteSize.Y)
-
-							-- Update the cursor position
-							SchemaCursor.Position = UDim2.new(0, relativeX - (SchemaCursor.AbsoluteSize.X / 2), 0, relativeY - (SchemaCursor.AbsoluteSize.Y / 2))
-
-							-- Update the scheme-based color
-							updateSchemeColor(relativeX, relativeY)
-						end
-
-						-- Initial update
-						updateSchemeCursor()
-
-						-- Connect mouse movement for dragging
-						local schemeConnection
-						schemeConnection = Mouse.Move:Connect(updateSchemeCursor)
-
-						-- Detect when the mouse button is released
-						local inputEndedConnection
-						inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
-							if input.UserInputType == Enum.UserInputType.MouseButton1 then
-								-- Disconnect connections safely
-								if schemeConnection then
-									schemeConnection:Disconnect()
-									schemeConnection = nil
-								end
-								if inputEndedConnection then
-									inputEndedConnection:Disconnect()
-									inputEndedConnection = nil
-								end
-							end
-						end)
-					end)
-
-					handleRGBInputChange(TextBoxR, "R")
-					handleRGBInputChange(TextBoxG, "G")
-					handleRGBInputChange(TextBoxB, "B")
-
-					-- Initialize color picker
-					syncColor()
-					updateTransparency(option.transparency)
-				end
-
-				return ColorPicker
-			end
-
-			return MultiSection
-		end
-
-		return Tab
-	end
-
-	return Window
-end
-
-local function dropdownChangeValues(flag, newValues)
-	local dropdownOption = Library.Items[flag] -- Retrieve the dropdown by its flag
-	if dropdownOption and dropdownOption.SetValues then
-		dropdownOption:SetValues(newValues) -- Call the SetValues method to update the dropdown
-	else
-		warn("Dropdown with flag '" .. tostring(flag) .. "' not found or does not support SetValues.")
-	end
-end
-
-print("lol")
 return Library
