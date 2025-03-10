@@ -77,7 +77,7 @@ local Utility = {}
 --
 getgenv().Library = Library
 getgenv().Utility = Utility
----
+--protectadpadpp
 -----------------------------------------------------------------
 do
     Utility.AddInstance = function(NewInstance, Properties)
@@ -4280,3 +4280,5 @@ Maid.DisconnectAll = function()
 end
 
 return Library
+
+--skidded
